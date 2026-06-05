@@ -6,7 +6,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
   try {
     const { messages, system } = req.body
-    const apiKey = process.env.ANTHROPIC_API_KEY || 'sk-ant-api03-Tnhv67onfw19TCSXJBEKRz9zs1Uil-SvCOwIXf0lZGM6IkrD1dd8HgOK3sbaDW5wesDvc0zZkyeKq17OBN_h2w-7VquKwAA'
+    const apiKey = process.env.ANTHROPIC_API_KEY || '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'
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -22,11 +22,8 @@ export default async function handler(req, res) {
       })
     })
     const data = await response.json()
-    // Log para debug
-    console.log('Anthropic response:', JSON.stringify(data).substring(0, 200))
     return res.status(200).json(data)
   } catch (err) {
-    console.log('Error:', err.message)
     return res.status(500).json({ error: err.message })
   }
 }
