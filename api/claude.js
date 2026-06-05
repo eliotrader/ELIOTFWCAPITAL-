@@ -10,13 +10,13 @@ export default async function handler(req, res) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': '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',
+        'x-api-key': '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',
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5',
+        model: 'claude-haiku-4-5-20251001',
         max_tokens: 500,
-        system: system || 'Eres Elio AI, asistente de trading. Responde en español, máximo 3 oraciones.',
+        system: system || 'Eres Elio AI, asistente de trading de ELIOTFW CAPITAL. Responde en español, conciso y profesional.',
         messages
       })
     })
