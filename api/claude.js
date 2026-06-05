@@ -6,7 +6,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
   try {
     const { messages, system } = req.body
-    const apiKey = process.env.ANTHROPIC_API_KEY || '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'
+    const apiKey = process.env.ANTHROPIC_API_KEY
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -15,9 +15,9 @@ export default async function handler(req, res) {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5',
-        max_tokens: 1000,
-        system: system || 'Eres Elio AI, asistente de trading de ELIOTFW CAPITAL. Respondes en español, conciso y profesional.',
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 500,
+        system: system || 'Eres Elio AI, asistente de trading de ELIOTFW CAPITAL. Responde en español, conciso y profesional.',
         messages
       })
     })
