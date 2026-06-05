@@ -1042,7 +1042,7 @@ async function sendMessage(){
   input.value='';appendMsg('user',text);chatHistory.push({role:'user',content:text});
   document.getElementById('ai-send-btn').disabled=true;appendTyping();
   try{
-    const res=await fetch('/.netlify/functions/claude',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:chatHistory})});
+    const res=await fetch('/api/claude',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:chatHistory})});
     const data=await res.json();removeTyping();
     const reply=data.content?.[0]?.text||'Sin respuesta.';
     chatHistory.push({role:'assistant',content:reply});appendMsg('ai',reply);
@@ -1055,7 +1055,7 @@ function clearChat(){chatHistory=[];document.getElementById('ai-messages').inner
 // ── FUNDAMENTALES ─────────────────────────────────────────────
 async function fetchGoldPrice() {
   try {
-    const res = await fetch('/.netlify/functions/market-data');
+    const res = await fetch('/./api/market-data');
     const data = await res.json();
     if (data.xauusd) {
       const price = data.xauusd;
@@ -1150,7 +1150,7 @@ const MACRO_DATA = {
 async function fetchMacroData() {
   try {
     // Usar proxy serverless para evitar CORS
-    const res = await fetch('/.netlify/functions/market-data');
+    const res = await fetch('/./api/market-data');
     const data = await res.json();
     if (data.xauusd) { MACRO_DATA.xauusd = data.xauusd; }
     if (data.dxy)    { MACRO_DATA.dxy = data.dxy; }
@@ -1308,7 +1308,7 @@ const PRICE_MAP={XAUUSD:null,BTCUSDT:null,EURUSD:null,GBPUSD:null,USDJPY:null,ET
 
 async function fetchLivePrices() {
   try {
-    const res = await fetch('/.netlify/functions/market-data');
+    const res = await fetch('/./api/market-data');
     const data = await res.json();
     if (data.xauusd) PRICE_MAP.XAUUSD = data.xauusd;
     if (data.btc)    PRICE_MAP.BTCUSDT = parseFloat(data.btc);
@@ -1631,7 +1631,7 @@ DATOS MACRO EN VIVO:
 
 Responde SOLO con el análisis de confluencias que confirman o alertan sobre la señal. En español, máximo 4 oraciones.`;
 
-    const res = await fetch('/.netlify/functions/claude', {
+    const res = await fetch('/api/claude', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
