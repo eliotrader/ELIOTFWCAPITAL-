@@ -15,15 +15,18 @@ export default async function handler(req, res) {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-haiku-4-5-20251001',
         max_tokens: 1000,
         system: system || 'Eres Elio AI, asistente de trading de ELIOTFW CAPITAL. Respondes en español, conciso y profesional.',
         messages
       })
     })
     const data = await response.json()
+    // Log para debug
+    console.log('Anthropic response:', JSON.stringify(data).substring(0, 200))
     return res.status(200).json(data)
   } catch (err) {
+    console.log('Error:', err.message)
     return res.status(500).json({ error: err.message })
   }
 }
