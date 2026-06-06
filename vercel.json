@@ -1,6 +1,0 @@
-{
-  "rewrites": [
-    { "source": "/.netlify/functions/claude", "destination": "/api/claude" },
-    { "source": "/.netlify/functions/market-data", "destination": "/api/market-data" }
-  ]
-}
