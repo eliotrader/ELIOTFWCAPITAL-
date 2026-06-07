@@ -1491,17 +1491,19 @@ function initFundChart() {
   document.head.appendChild(script);
 }
 
+let _macroWidgetsInit = false;
 function initMacroWidgets() {
+  if (_macroWidgetsInit) return;
+  _macroWidgetsInit = true;
   var widgets = [
     {id: 'tv-vix', symbol: 'TVC:VIX'},
     {id: 'tv-tnx', symbol: 'TVC:TNX'},
     {id: 'tv-dxy', symbol: 'TVC:DXY'},
     {id: 'tv-gold-mini', symbol: 'OANDA:XAUUSD'}
   ];
-  
   widgets.forEach(function(w) {
     var container = document.getElementById(w.id);
-    if (!container || container.children.length > 0) return;
+    if (!container) return;
     container.innerHTML = '';
     var script = document.createElement('script');
     script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js';
