@@ -859,6 +859,11 @@ function isPremium() {
   return currentUser.plan === 'premium';
 }
 
+function removePaywall() {
+  var el = document.getElementById('paywall-overlay');
+  if (el) el.remove();
+}
+
 function showPaywall(type) {
   var title = type === 'trial' ? '¡Tu período de prueba ha terminado!' : 'Contenido Premium';
   var msg = type === 'trial' 
@@ -873,11 +878,11 @@ function showPaywall(type) {
     '<div style="font-family:Orbitron,sans-serif;font-size:14px;letter-spacing:2px;color:#e8c84a;margin-bottom:0.5rem;">' + title + '</div>' +
     '<div style="font-size:13px;color:#9090a8;margin-bottom:2rem;line-height:1.7;">' + msg + '</div>' +
     '<div style="display:flex;flex-direction:column;gap:12px;">' +
-    '<a href="' + 'https://s.binance.com/yX53ZSz7'" target="_blank" style="display:block;background:rgba(196,160,60,0.12);border:1px solid rgba(232,200,74,0.4);color:#e8c84a;padding:12px 20px;border-radius:4px;text-decoration:none;font-family:Rajdhani,sans-serif;font-size:14px;font-weight:600;letter-spacing:1px;">💳 Plan Básico — $9.99 USDT/mes<br><span style="font-size:11px;color:#9090a8;font-weight:400;">Acceso completo a la plataforma</span></a>' +
-    '<a href="' + 'https://s.binance.com/V0t6lndo'" target="_blank" style="display:block;background:rgba(240,180,41,0.15);border:1px solid rgba(240,180,41,0.6);color:#f0d060;padding:12px 20px;border-radius:4px;text-decoration:none;font-family:Rajdhani,sans-serif;font-size:14px;font-weight:600;letter-spacing:1px;">⭐ Plan Premium — $49.99 USDT/mes<br><span style="font-size:11px;color:#a09060;font-weight:400;">Todo + Señales diarias con análisis IA</span></a>' +
+    '<a href="https://s.binance.com/yX53ZSz7" target="_blank" style="display:block;background:rgba(196,160,60,0.12);border:1px solid rgba(232,200,74,0.4);color:#e8c84a;padding:12px 20px;border-radius:4px;text-decoration:none;font-family:Rajdhani,sans-serif;font-size:14px;font-weight:600;letter-spacing:1px;">💳 Plan Básico — $9.99 USDT/mes<br><span style="font-size:11px;color:#9090a8;font-weight:400;">Acceso completo a la plataforma</span></a>' +
+    '<a href="https://s.binance.com/V0t6lndo" target="_blank" style="display:block;background:rgba(240,180,41,0.15);border:1px solid rgba(240,180,41,0.6);color:#f0d060;padding:12px 20px;border-radius:4px;text-decoration:none;font-family:Rajdhani,sans-serif;font-size:14px;font-weight:600;letter-spacing:1px;">⭐ Plan Premium — $49.99 USDT/mes<br><span style="font-size:11px;color:#a09060;font-weight:400;">Todo + Señales diarias con análisis IA</span></a>' +
     '</div>' +
     '<div style="margin-top:1.5rem;font-size:11px;color:#606878;">Pago via Binance Pay · USDT · Acceso inmediato</div>' +
-    (type !== 'trial' ? '<button onclick="document.getElementById('paywall-overlay').remove()" style="margin-top:1rem;background:transparent;border:none;color:#606878;cursor:pointer;font-size:12px;">← Volver</button>' : '') +
+    (type !== 'trial' ? '<button onclick="removePaywall()" style="margin-top:1rem;background:transparent;border:none;color:#606878;cursor:pointer;font-size:12px;">← Volver</button>' : '') +
     '</div>';
   document.body.appendChild(overlay);
 }
@@ -919,7 +924,7 @@ function showApp() {
   if (currentUser && currentUser.plan === 'trial' && daysLeft > 0) {
     var badge = document.createElement('div');
     badge.style.cssText = 'position:fixed;bottom:20px;right:20px;background:rgba(232,200,74,0.15);border:1px solid rgba(232,200,74,0.4);color:#e8c84a;padding:8px 14px;border-radius:4px;font-size:12px;z-index:999;font-family:Rajdhani,sans-serif;';
-    badge.innerHTML = '⏳ Prueba gratuita: <strong>' + daysLeft + ' día' + (daysLeft !== 1 ? 's' : '') + '</strong> restante' + (daysLeft !== 1 ? 's' : '') + ' · <a href="' + 'https://s.binance.com/yX53ZSz7'" target="_blank" style="color:#f0d060;text-decoration:none;">Suscribirse</a>';
+    badge.innerHTML = '⏳ Prueba gratuita: <strong>' + daysLeft + ' día' + (daysLeft !== 1 ? 's' : '') + '</strong> restante' + (daysLeft !== 1 ? 's' : '') + ' · <a href="https://s.binance.com/yX53ZSz7" target="_blank" style="color:#f0d060;text-decoration:none;">Suscribirse</a>';
     document.body.appendChild(badge);
   }
 }
