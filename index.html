@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ELIOTFW CAPITAL — Trading Hub</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 <style>
@@ -827,17 +828,13 @@ body{font-family:'Rajdhani',sans-serif;background:#050810;color:#f0eadc;min-heig
 </div>
 
 <script>
-// ── AUTH CON SUPABASE ──────────────────────────────────────
-// Supabase removido temporalmente
-let currentUser = null;
-let trades = JSON.parse(localStorage.getItem('eliotfw_trades') || '[]');
+// ── AUTH CON SUPABASE REAL ──────────────────────────────────────
+const SUPABASE_URL = 'https://geyosraoygsdpllhlrjc.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdleW9zcmFveWdzZHBsbGhscmpjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0NzU0NjAsImV4cCI6MjA5NjA1MTQ2MH0.pdz5HjhdBxiuxM8TMZXRoYpFJQ4sd1IWxKBUZOUzF-I';
+const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-function getUsers() {
-  return JSON.parse(localStorage.getItem('eliotfw_users') || '[]');
-}
-function saveUsers(users) {
-  localStorage.setItem('eliotfw_users', JSON.stringify(users));
-}
+let currentUser = null;
+let trades = [];
 
 async function getTrialDaysLeft() {
   if (!currentUser) return 0;
@@ -885,12 +882,21 @@ function showPaywall(type) {
   document.body.appendChild(overlay);
 }
 
-function initAuth() {
-  var saved = localStorage.getItem('eliotfw_session');
-  if (saved) {
-    try { currentUser = JSON.parse(saved); showApp(); } 
-    catch(e) { localStorage.removeItem('eliotfw_session'); }
+async function initAuth() {
+  var { data: { session } } = await _supabase.auth.getSession();
+  if (session && session.user) {
+    await loadUserProfile(session.user);
+    showApp();
   }
+  _supabase.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN' && session) {
+      await loadUserProfile(session.user);
+      showApp();
+    } else if (event === 'SIGNED_OUT') {
+      currentUser = null;
+      showAuthScreen();
+    }
+  });
 }
 
 function showApp() {
@@ -931,46 +937,75 @@ function switchAuthTab(tab) {
   document.getElementById('tab-register').classList.toggle('active', tab === 'register');
 }
 
-function signInWithGoogle() {
-  document.getElementById('login-error').textContent = 'Usa email y contraseña.';
+async function signInWithGoogle() {
+  var errEl = document.getElementById('login-error');
+  errEl.textContent = '';
+  var { error } = await _supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.href }
+  });
+  if (error) errEl.textContent = error.message;
 }
 
-function signInWithEmail() {
+async function signInWithEmail() {
   var email = document.getElementById('login-email').value.trim();
   var password = document.getElementById('login-password').value;
   var errEl = document.getElementById('login-error');
+  var btn = document.querySelector('#form-login .auth-btn:not(.google)');
   if (!email || !password) { errEl.textContent = 'Completa todos los campos'; return; }
-  var users = JSON.parse(localStorage.getItem('eliotfw_users') || '[]');
-  var user = null;
-  for (var i = 0; i < users.length; i++) {
-    if (users[i].email === email && users[i].password === password) { user = users[i]; break; }
-  }
-  if (!user) { errEl.textContent = 'Email o contraseña incorrectos'; return; }
-  currentUser = {id: user.id, email: user.email, name: user.name, plan: user.plan || 'basic'};
-  localStorage.setItem('eliotfw_session', JSON.stringify(currentUser));
   errEl.textContent = '';
+  btn.textContent = 'INGRESANDO...';
+  btn.disabled = true;
+  var { data, error } = await _supabase.auth.signInWithPassword({ email, password });
+  btn.textContent = 'INGRESAR';
+  btn.disabled = false;
+  if (error) { errEl.textContent = error.message === 'Invalid login credentials' ? 'Email o contraseña incorrectos' : error.message; return; }
+  await loadUserProfile(data.user);
   showApp();
 }
 
-function signUpWithEmail() {
+async function signUpWithEmail() {
   var name = document.getElementById('reg-name').value.trim();
   var email = document.getElementById('reg-email').value.trim();
   var password = document.getElementById('reg-password').value;
   var errEl = document.getElementById('register-error');
+  var btn = document.querySelector('#form-register .auth-btn');
   if (!name || !email || !password) { errEl.textContent = 'Completa todos los campos'; return; }
   if (password.length < 6) { errEl.textContent = 'Contraseña mínimo 6 caracteres'; return; }
-  var users = JSON.parse(localStorage.getItem('eliotfw_users') || '[]');
-  for (var i = 0; i < users.length; i++) {
-    if (users[i].email === email) { errEl.textContent = 'Email ya registrado'; return; }
-  }
-  var trialEnd = Date.now() + (3 * 24 * 60 * 60 * 1000); // 3 días
-  var newUser = {id: String(Date.now()), name: name, email: email, password: password, plan: 'trial', trialEnd: trialEnd};
-  users.push(newUser);
-  localStorage.setItem('eliotfw_users', JSON.stringify(users));
-  currentUser = newUser;
-  localStorage.setItem('eliotfw_session', JSON.stringify(newUser));
   errEl.textContent = '';
-  showApp();
+  btn.textContent = 'CREANDO CUENTA...';
+  btn.disabled = true;
+  var { data, error } = await _supabase.auth.signUp({ email, password, options: { data: { name: name } } });
+  btn.textContent = 'CREAR CUENTA';
+  btn.disabled = false;
+  if (error) { errEl.textContent = error.message; return; }
+  // Crear perfil en tabla profiles
+  if (data.user) {
+    await _supabase.from('profiles').upsert({
+      id: data.user.id,
+      email: email,
+      name: name,
+      plan: 'trial',
+      trial_end: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
+    });
+    await loadUserProfile(data.user);
+    errEl.style.color = '#70e0a8';
+    errEl.textContent = '¡Cuenta creada! Revisa tu email para confirmar.';
+    setTimeout(() => { errEl.textContent = ''; errEl.style.color = ''; showApp(); }, 2000);
+  }
+}
+
+async function loadUserProfile(authUser) {
+  var { data: profile } = await _supabase.from('profiles').select('*').eq('id', authUser.id).single();
+  currentUser = {
+    id: authUser.id,
+    email: authUser.email,
+    name: profile?.name || authUser.user_metadata?.name || authUser.email.split('@')[0],
+    plan: profile?.plan || 'trial',
+    trialEnd: profile?.trial_end ? new Date(profile.trial_end).getTime() : (Date.now() + 3*24*60*60*1000)
+  };
+  // Admin siempre premium
+  if (currentUser.email === 'eliotrader21@gmail.com') currentUser.plan = 'premium';
 }
 
 function showForgotPassword(show) {
@@ -980,23 +1015,23 @@ function showForgotPassword(show) {
   else { if(fl)fl.style.display='none'; if(ff)ff.style.display='block'; }
 }
 
-function recoverPassword() {
+async function recoverPassword() {
   var email = document.getElementById('forgot-email').value.trim();
   var errEl = document.getElementById('forgot-error');
   var sucEl = document.getElementById('forgot-success');
   if (!email) { errEl.textContent = 'Ingresa tu email'; return; }
-  var users = JSON.parse(localStorage.getItem('eliotfw_users') || '[]');
-  var user = null;
-  for (var i = 0; i < users.length; i++) { if (users[i].email === email) { user = users[i]; break; } }
-  if (!user) { errEl.textContent = 'Email no encontrado'; return; }
   errEl.textContent = '';
-  sucEl.textContent = 'Tu contraseña es: ' + user.password;
+  var { error } = await _supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.href
+  });
+  if (error) { errEl.textContent = error.message; return; }
+  sucEl.textContent = '✓ Te enviamos un link para restablecer tu contraseña.';
   sucEl.style.color = '#70e0a8';
 }
 
-function signOut() {
+async function signOut() {
+  await _supabase.auth.signOut();
   currentUser = null;
-  localStorage.removeItem('eliotfw_session');
   showAuthScreen();
 }
 
@@ -1205,16 +1240,18 @@ async function fetchGoldPrice() {
     const data = await res.json();
     if (data.xauusd) {
       const price = data.xauusd;
-      const prev = price * 0.9985;
-      const chg = price - prev;
-      const chgPct = (chg/prev*100).toFixed(2);
+      const prevClose = data.xauusd_close_prev ? parseFloat(data.xauusd_close_prev) : price * 0.9985;
+      const chg = price - prevClose;
+      const chgPct = (chg / prevClose * 100).toFixed(2);
       const isUp = chg >= 0;
+      const high = data.xauusd_high || (price * 1.008).toFixed(2);
+      const low  = data.xauusd_low  || (price * 0.992).toFixed(2);
       const set = (id, val, color) => { const el=document.getElementById(id); if(el){el.textContent=val; if(color) el.style.color=color;} };
-      set('f-price', '$'+price.toFixed(2), '#f0d060');
-      set('f-change', (isUp?'+$':'-$')+Math.abs(chg).toFixed(2)+' ('+chgPct+'%)', isUp?'#70e0a8':'#e08080');
-      set('f-chg24', (isUp?'+':'')+chgPct+'%', isUp?'#70e0a8':'#e08080');
-      set('f-high', '$'+(price*1.008).toFixed(2));
-      set('f-low', '$'+(price*0.992).toFixed(2));
+      set('f-price',  '$' + price.toFixed(2), '#f0d060');
+      set('f-change', (isUp?'+$':'-$') + Math.abs(chg).toFixed(2) + ' (' + chgPct + '%)', isUp?'#70e0a8':'#e08080');
+      set('f-chg24',  (isUp?'+':'') + chgPct + '%', isUp?'#70e0a8':'#e08080');
+      set('f-high',   '$' + high);
+      set('f-low',    '$' + low);
       MACRO_DATA.xauusd = price;
     }
   } catch(e) { const el=document.getElementById('f-price'); if(el) el.textContent='Ver TradingView'; }
@@ -1289,20 +1326,31 @@ function renderFundSemaforo() {
 
 // Caché de datos macro
 const MACRO_DATA = {
-  xauusd: null, dxy: null, vix: null, usTreasury: null,
-  fedRate: 5.25, cpi: 3.2, cftc: '+128K'
+  xauusd: null, xauusd_high: null, xauusd_low: null, xauusd_open: null, xauusd_close_prev: null,
+  dxy: null, vix: null, usTreasury: null,
+  fedRate: null, cpi: null, cftc: '+128K',
+  eurusd: null, gbpusd: null, usdjpy: null, ethusd: null
 };
 
 async function fetchMacroData() {
   try {
-    // Usar proxy serverless para evitar CORS
     const res = await fetch('/api/market-data');
     const data = await res.json();
-    if (data.xauusd) { MACRO_DATA.xauusd = data.xauusd; }
-    if (data.dxy)    { MACRO_DATA.dxy = data.dxy; }
-    if (data.vix)    { MACRO_DATA.vix = data.vix; }
-    if (data.tnx)    { MACRO_DATA.usTreasury = data.tnx; }
-    if (data.btc)    { PRICE_MAP.BTCUSDT = parseFloat(data.btc); }
+    if (data.xauusd)            { MACRO_DATA.xauusd = data.xauusd; }
+    if (data.xauusd_high)       { MACRO_DATA.xauusd_high = data.xauusd_high; }
+    if (data.xauusd_low)        { MACRO_DATA.xauusd_low = data.xauusd_low; }
+    if (data.xauusd_open)       { MACRO_DATA.xauusd_open = data.xauusd_open; }
+    if (data.xauusd_close_prev) { MACRO_DATA.xauusd_close_prev = data.xauusd_close_prev; }
+    if (data.dxy)               { MACRO_DATA.dxy = data.dxy; }
+    if (data.vix)               { MACRO_DATA.vix = data.vix; }
+    if (data.tnx)               { MACRO_DATA.usTreasury = data.tnx; }
+    if (data.fed_rate)          { MACRO_DATA.fedRate = data.fed_rate; }
+    if (data.cpi)               { MACRO_DATA.cpi = data.cpi; }
+    if (data.btc)               { PRICE_MAP.BTCUSDT = parseFloat(data.btc); }
+    if (data.eurusd)            { MACRO_DATA.eurusd = data.eurusd; PRICE_MAP.EURUSD = parseFloat(data.eurusd); }
+    if (data.gbpusd)            { MACRO_DATA.gbpusd = data.gbpusd; PRICE_MAP.GBPUSD = parseFloat(data.gbpusd); }
+    if (data.usdjpy)            { MACRO_DATA.usdjpy = data.usdjpy; PRICE_MAP.USDJPY = parseFloat(data.usdjpy); }
+    if (data.ethusd)            { MACRO_DATA.ethusd = data.ethusd; PRICE_MAP.ETHUSD = parseFloat(data.ethusd); }
   } catch(e) { console.log('market-data error:', e); }
   renderFundMacro();
 }
@@ -1350,17 +1398,17 @@ function renderFundMacro() {
     },
     {
       label:'Fed Funds Rate',
-      val: MACRO_DATA.fedRate + '%',
-      trend:'→ En pausa',
+      val: MACRO_DATA.fedRate ? MACRO_DATA.fedRate + '%' : '5.25% (ref)',
+      trend: MACRO_DATA.fedRate ? (parseFloat(MACRO_DATA.fedRate) >= 5.0 ? '→ Restrictiva' : '↓ Bajando') : '→ Referencia',
       c:'#a0c0ff',
-      note:'Política monetaria restrictiva'
+      note:'Política monetaria de la Fed'
     },
     {
       label:'Inflación USA (IPC)',
-      val: MACRO_DATA.cpi + '%',
-      trend:'↓ Moderando',
-      c:'#70e0a8',
-      note:'Favorece pausa de la Fed'
+      val: MACRO_DATA.cpi ? MACRO_DATA.cpi + '%' : '3.4% (ref)',
+      trend: MACRO_DATA.cpi ? (parseFloat(MACRO_DATA.cpi) > 3 ? '↑ Elevada' : '↓ Moderando') : '→ Referencia',
+      c: MACRO_DATA.cpi ? (parseFloat(MACRO_DATA.cpi) > 3 ? '#e8c84a' : '#70e0a8') : '#e8c84a',
+      note:'CPI interanual — favorece oro si sube'
     },
     {
       label:'CFTC MM Largos',
@@ -1490,18 +1538,12 @@ async function fetchLivePrices() {
   try {
     const res = await fetch('/api/market-data');
     const data = await res.json();
-    if (data.xauusd) PRICE_MAP.XAUUSD = data.xauusd;
-    if (data.btc)    PRICE_MAP.BTCUSDT = parseFloat(data.btc);
-  } catch(e){}
-  // Forex via Frankfurter (funciona sin CORS desde browser también)
-  try {
-    const res=await fetch('https://api.frankfurter.app/latest?from=USD&to=EUR,GBP,JPY');
-    const data=await res.json();
-    if(data.rates){
-      PRICE_MAP.EURUSD=data.rates.EUR?+(1/data.rates.EUR).toFixed(5):null;
-      PRICE_MAP.GBPUSD=data.rates.GBP?+(1/data.rates.GBP).toFixed(5):null;
-      PRICE_MAP.USDJPY=data.rates.JPY||null;
-    }
+    if (data.xauusd)  PRICE_MAP.XAUUSD  = data.xauusd;
+    if (data.btc)     PRICE_MAP.BTCUSDT  = parseFloat(data.btc);
+    if (data.eurusd)  PRICE_MAP.EURUSD   = parseFloat(data.eurusd);
+    if (data.gbpusd)  PRICE_MAP.GBPUSD   = parseFloat(data.gbpusd);
+    if (data.usdjpy)  PRICE_MAP.USDJPY   = parseFloat(data.usdjpy);
+    if (data.ethusd)  PRICE_MAP.ETHUSD   = parseFloat(data.ethusd);
   } catch(e){}
   const t=new Date().toTimeString().split(' ')[0];
   const el=document.getElementById('port-last-update');
