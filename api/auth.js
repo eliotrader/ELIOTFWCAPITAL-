@@ -41,6 +41,14 @@ export default async function handler(req, res) {
       const data = await r.json();
       if (!r.ok) return res.status(500).json({ error: 'Error creando cuenta' });
       const user = data[0];
+      // Enviar email de bienvenida (no bloqueante)
+      try {
+        await fetch(process.env.VERCEL_URL ? 'https://' + process.env.VERCEL_URL + '/api/send-welcome' : 'http://localhost:3000/api/send-welcome', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: user.name, email: user.email })
+        });
+      } catch(e) { /* email falla silenciosamente */ }
       return res.status(200).json({ id: user.id, email: user.email, name: user.name, plan: user.plan, trialEnd: user.trial_end });
     }
 
