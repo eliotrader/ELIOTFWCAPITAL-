@@ -987,25 +987,19 @@ async function signInWithEmail() {
   if (!email || !password) { errEl.textContent = 'Completa todos los campos'; return; }
   errEl.textContent = 'Verificando...';
   try {
-    // Buscar usuario en Supabase
-    var res = await sbFetch('eliotfw_users?email=eq.' + encodeURIComponent(email) + '&select=*', {method:'GET'});
+    var res = await fetch('/api/auth', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({action: 'login', email, password})
+    });
     var data = await res.json();
-    if (!data || data.length === 0) { errEl.textContent = 'Email no registrado'; return; }
-    var user = data[0];
-    if (user.password !== password) { errEl.textContent = 'Contraseña incorrecta'; return; }
-    currentUser = {id: user.id, email: user.email, name: user.name, plan: user.plan || 'basic', trialEnd: user.trial_end};
+    if (!res.ok) { errEl.textContent = data.error || 'Error al ingresar'; return; }
+    currentUser = data;
     localStorage.setItem('eliotfw_session', JSON.stringify(currentUser));
     errEl.textContent = '';
     showApp();
   } catch(e) {
-    // Fallback a localStorage si Supabase falla
-    var users = JSON.parse(localStorage.getItem('eliotfw_users') || '[]');
-    var user = users.find(function(u){ return u.email === email && u.password === password; });
-    if (!user) { errEl.textContent = 'Error de conexión. Intenta de nuevo.'; return; }
-    currentUser = {id: user.id, email: user.email, name: user.name, plan: user.plan || 'basic', trialEnd: user.trialEnd};
-    localStorage.setItem('eliotfw_session', JSON.stringify(currentUser));
-    errEl.textContent = '';
-    showApp();
+    errEl.textContent = 'Error de conexión. Intenta de nuevo.';
   }
 }
 
@@ -1020,41 +1014,21 @@ async function signUpWithEmail() {
   errEl.textContent = '';
   sucEl.textContent = 'Creando cuenta...';
   try {
-    // Verificar si email ya existe
-    var checkRes = await sbFetch('eliotfw_users?email=eq.' + encodeURIComponent(email) + '&select=id', {method:'GET'});
-    var checkData = await checkRes.json();
-    if (checkData && checkData.length > 0) { sucEl.textContent = ''; errEl.textContent = 'Email ya registrado'; return; }
-    // Crear usuario en Supabase
-    var trialEnd = Date.now() + (3 * 24 * 60 * 60 * 1000);
-    var newUser = {name: name, email: email, password: password, plan: 'trial', trial_end: trialEnd};
-    var res = await sbFetch('eliotfw_users', {method:'POST', body: JSON.stringify(newUser)});
+    var res = await fetch('/api/auth', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({action: 'register', name, email, password})
+    });
     var data = await res.json();
-    if (res.ok && data && data[0]) {
-      currentUser = {id: data[0].id, email: data[0].email, name: data[0].name, plan: data[0].plan, trialEnd: data[0].trial_end};
-    } else {
-      // Fallback localStorage
-      var uid = String(Date.now());
-      currentUser = {id: uid, email: email, name: name, plan: 'trial', trialEnd: trialEnd};
-      var localUsers = JSON.parse(localStorage.getItem('eliotfw_users') || '[]');
-      localUsers.push({...currentUser, password: password});
-      localStorage.setItem('eliotfw_users', JSON.stringify(localUsers));
-    }
+    if (!res.ok) { sucEl.textContent = ''; errEl.textContent = data.error || 'Error al registrar'; return; }
+    currentUser = data;
     localStorage.setItem('eliotfw_session', JSON.stringify(currentUser));
     sucEl.textContent = '';
     errEl.textContent = '';
     showApp();
   } catch(e) {
-    // Fallback total a localStorage
-    var trialEnd = Date.now() + (3 * 24 * 60 * 60 * 1000);
-    var uid = String(Date.now());
-    currentUser = {id: uid, email: email, name: name, plan: 'trial', trialEnd: trialEnd};
-    var localUsers = JSON.parse(localStorage.getItem('eliotfw_users') || '[]');
-    localUsers.push({id: uid, name: name, email: email, password: password, plan: 'trial', trialEnd: trialEnd});
-    localStorage.setItem('eliotfw_users', JSON.stringify(localUsers));
-    localStorage.setItem('eliotfw_session', JSON.stringify(currentUser));
     sucEl.textContent = '';
-    errEl.textContent = '';
-    showApp();
+    errEl.textContent = 'Error de conexión. Intenta de nuevo.';
   }
 }
 
