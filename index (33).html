@@ -1,0 +1,2771 @@
+<!DOCTYPE html><!-- build:1780980264 -->
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ELIOTFW CAPITAL — Trading Hub</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js">
+// ── LANDING PAGE ────────────────────────────────────────
+function showAuthFromLanding(tab) {
+  hideLanding();
+  var authOverlay = document.getElementById('auth-overlay');
+  if (authOverlay) authOverlay.style.display = 'flex';
+  if (tab) switchAuthTab(tab);
+}
+
+function hideLanding() {
+  var landing = document.getElementById('ld-landing-page');
+  if (landing) landing.style.display = 'none';
+}
+
+// Mover el auth-box dentro del panel derecho de la landing
+function showLanding() { var l=document.getElementById("ld-landing-page"); if(l) l.style.display="flex"; }
+
+function initLanding() {
+  var session = localStorage.getItem('eliotfw_session');
+  if (session) {
+    try {
+      currentUser = JSON.parse(session);
+      hideLanding();
+      document.getElementById('auth-overlay').style.display = 'none';
+      showApp();
+      return;
+    } catch(e) { localStorage.removeItem('eliotfw_session'); }
+  }
+  // Sin sesión — mostrar landing y ocultar el overlay de auth
+  showLanding();
+  document.getElementById('auth-overlay').style.display = 'none';
+}
+
+// Ticker de precios en landing
+async function loadLandingTicker() {
+  try {
+    // Precios crypto via CoinGecko
+    const cg = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true');
+    const cgData = await cg.json();
+    if (cgData.bitcoin) {
+      document.getElementById('lt-btc').textContent = '$' + cgData.bitcoin.usd.toLocaleString();
+      var btcC = cgData.bitcoin.usd_24h_change;
+      var btcEl = document.getElementById('lt-btc-c');
+      btcEl.textContent = (btcC > 0 ? '+' : '') + btcC.toFixed(2) + '%';
+      btcEl.className = 'ticker-change ' + (btcC > 0 ? 'ticker-up' : 'ticker-down');
+    }
+    if (cgData.ethereum) {
+      document.getElementById('lt-eth').textContent = '$' + cgData.ethereum.usd.toLocaleString();
+      var ethC = cgData.ethereum.usd_24h_change;
+      var ethEl = document.getElementById('lt-eth-c');
+      ethEl.textContent = (ethC > 0 ? '+' : '') + ethC.toFixed(2) + '%';
+      ethEl.className = 'ticker-change ' + (ethC > 0 ? 'ticker-up' : 'ticker-down');
+    }
+  } catch(e) {}
+
+  try {
+    // Gold y DXY via Frankfurter/Twelve Data
+    const td = await fetch('/api/market-data');
+    const tdData = await td.json();
+    if (tdData.gold) {
+      document.getElementById('lt-gold').textContent = '$' + parseFloat(tdData.gold).toLocaleString();
+      document.getElementById('lt-gold-c').textContent = 'XAU/USD';
+      document.getElementById('lt-gold-c').className = 'ticker-change ticker-up';
+    }
+    if (tdData.dxy) {
+      document.getElementById('lt-dxy').textContent = parseFloat(tdData.dxy).toFixed(2);
+      document.getElementById('lt-dxy-c').textContent = 'DXY';
+    }
+    if (tdData.eurusd) {
+      document.getElementById('lt-eur').textContent = parseFloat(tdData.eurusd).toFixed(4);
+      document.getElementById('lt-eur-c').textContent = 'EUR/USD';
+    }
+    if (tdData.spx) {
+      document.getElementById('lt-spx').textContent = parseFloat(tdData.spx).toLocaleString();
+      document.getElementById('lt-spx-c').textContent = 'SPX';
+    }
+  } catch(e) {}
+}
+
+initLanding();
+
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Cormorant+SC:wght@400;500;600&family=Didact+Gothic&display=swap">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Rajdhani',sans-serif;background:#050810;color:#f0eadc;min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden;font-size:15px;}
+.bg-grid{position:fixed;top:0;left:0;right:0;bottom:0;background-image:linear-gradient(rgba(196,160,60,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(196,160,60,0.04) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+.orb{position:fixed;border-radius:50%;pointer-events:none;z-index:0;}
+.orb1{width:500px;height:500px;top:-200px;left:-150px;background:radial-gradient(circle,rgba(196,160,60,0.07) 0%,transparent 70%);}
+.orb2{width:400px;height:400px;bottom:-100px;right:-100px;background:radial-gradient(circle,rgba(100,140,220,0.06) 0%,transparent 70%);}
+.app{display:flex;min-height:100vh;position:relative;z-index:1;}
+.sidebar{width:210px;min-width:210px;background:rgba(8,12,24,0.97);border-right:1px solid rgba(196,160,60,0.18);display:flex;flex-direction:column;padding-bottom:1rem;}
+.sidebar-logo{padding:1.1rem 1rem 0.9rem;border-bottom:1px solid rgba(196,160,60,0.12);margin-bottom:0.4rem;}
+.logo-mark{font-family:'Orbitron',sans-serif;font-weight:800;font-size:13px;letter-spacing:2px;color:#e8c84a;line-height:1.2;}
+.logo-sub{font-size:10px;color:rgba(232,200,74,0.55);letter-spacing:3px;text-transform:uppercase;margin-top:2px;}
+.sidebar-section-label{font-size:10px;letter-spacing:2px;color:rgba(232,200,74,0.45);padding:0.75rem 1rem 0.25rem;text-transform:uppercase;}
+.sidebar-item{display:flex;align-items:center;gap:9px;padding:0.42rem 1rem;font-size:14px;color:#a8a090;cursor:pointer;border-left:2px solid transparent;transition:all 0.2s;letter-spacing:0.5px;}
+.sidebar-item:hover,.sidebar-item.active{color:#e8c84a;background:rgba(196,160,60,0.07);border-left-color:#e8c84a;}
+.sidebar-item i{font-size:14px;}
+.main{flex:1;display:flex;flex-direction:column;min-width:0;}
+.topbar{padding:0.7rem 1.4rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(196,160,60,0.13);background:rgba(5,8,16,0.9);flex-shrink:0;}
+.topbar-left{font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:3px;color:rgba(232,200,74,0.65);}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.status-badge{font-size:10px;padding:3px 9px;border:1px solid rgba(80,220,130,0.5);color:rgba(100,235,150,0.95);border-radius:2px;letter-spacing:1px;}
+.avatar{width:28px;height:28px;border-radius:50%;border:1px solid rgba(232,200,74,0.5);background:rgba(196,160,60,0.12);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:9px;color:#e8c84a;cursor:pointer;}
+.content{flex:1;overflow-y:auto;padding:1.3rem;}
+.hero{border:1px solid rgba(196,160,60,0.28);border-radius:6px;padding:1.3rem 1.8rem;margin-bottom:1.3rem;position:relative;overflow:hidden;background:rgba(196,160,60,0.04);}
+.hero::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#e8c84a,rgba(232,200,74,0.3),transparent);}
+.hero-name{font-family:'Orbitron',sans-serif;font-size:20px;font-weight:800;letter-spacing:4px;color:#f0d060;}
+.hero-tagline{font-size:13px;letter-spacing:3px;color:rgba(232,200,74,0.6);margin-top:3px;text-transform:uppercase;}
+.hero-meta{display:flex;align-items:center;gap:14px;margin-top:10px;}
+.hero-meta-item{font-size:13px;color:#c8b878;display:flex;align-items:center;gap:5px;letter-spacing:1px;}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:1.3rem;}
+.stat-card,.session-card{background:rgba(12,18,36,0.85);border:1px solid rgba(196,160,60,0.15);border-radius:5px;padding:0.75rem 1rem;}
+.stat-label,.session-name{font-size:10px;letter-spacing:2px;color:#9090a0;text-transform:uppercase;margin-bottom:3px;}
+.stat-val,.session-val{font-family:'Orbitron',sans-serif;font-size:15px;font-weight:600;color:#f0d060;}
+.stat-change,.session-status{font-size:11px;color:#78e0a0;margin-top:2px;}
+.session-card{position:relative;overflow:hidden;}
+.session-card.active-session{border-color:rgba(232,200,74,0.5);background:rgba(30,24,8,0.85);}
+.session-card.active-session::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#e8c84a,transparent);}
+.session-card.active-session .session-name{color:#e8c84a;}
+.session-card.active-session .session-val{color:#f0d060;}
+.session-status{color:#606878;}
+.session-card.active-session .session-status{color:#78e0a0;}
+.tabs{display:flex;border-bottom:1px solid rgba(196,160,60,0.18);margin-bottom:1.3rem;}
+.tab{padding:0.55rem 1.1rem;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#808090;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;font-family:'Rajdhani',sans-serif;font-weight:600;}
+.tab:hover{color:#d0c090;}
+.tab.active{color:#f0d060;border-bottom-color:#e8c84a;}
+.apps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;}
+.app-card{background:rgba(12,18,36,0.85);border:1px solid rgba(196,160,60,0.15);border-radius:6px;padding:1.1rem;cursor:pointer;transition:all 0.22s;display:flex;flex-direction:column;align-items:center;gap:9px;text-align:center;position:relative;overflow:hidden;}
+.app-card::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(232,200,74,0.4),transparent);opacity:0;transition:opacity 0.22s;}
+.app-card:hover{border-color:rgba(232,200,74,0.45);background:rgba(20,28,50,0.95);transform:translateY(-2px);}
+.app-card:hover::after{opacity:1;}
+.app-icon-wrap{width:46px;height:46px;border-radius:9px;border:1px solid rgba(196,160,60,0.25);background:rgba(196,160,60,0.07);display:flex;align-items:center;justify-content:center;font-size:20px;transition:all 0.22s;}
+.app-card:hover .app-icon-wrap{border-color:rgba(232,200,74,0.55);background:rgba(196,160,60,0.14);}
+.app-icon-wrap i{color:#e8c84a;}
+.app-name{font-family:'Rajdhani',sans-serif;font-weight:600;font-size:13px;letter-spacing:1px;color:#e8e0cc;}
+.app-type{font-size:11px;letter-spacing:1.5px;color:#8888a0;text-transform:uppercase;}
+.section-title{font-family:'Orbitron',sans-serif;font-size:11px;letter-spacing:3px;color:#a09060;text-transform:uppercase;margin-bottom:0.9rem;display:flex;align-items:center;gap:8px;}
+.section-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(196,160,60,0.2),transparent);}
+.panel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;}
+.panel-title{font-family:'Orbitron',sans-serif;font-size:13px;letter-spacing:3px;color:#f0d060;}
+.btn-gold{background:rgba(196,160,60,0.12);border:1px solid rgba(232,200,74,0.4);color:#e8c84a;padding:7px 16px;font-family:'Rajdhani',sans-serif;font-size:13px;letter-spacing:1.5px;border-radius:3px;cursor:pointer;transition:all 0.2s;}
+.btn-gold:hover{background:rgba(196,160,60,0.22);}
+.btn-ghost{background:transparent;border:1px solid rgba(196,160,60,0.25);color:#b0a070;padding:6px 12px;font-family:'Rajdhani',sans-serif;font-size:13px;letter-spacing:1px;border-radius:3px;cursor:pointer;transition:all 0.2s;}
+.btn-ghost:hover{border-color:rgba(232,200,74,0.5);color:#e8c84a;}
+.form-label{font-size:11px;letter-spacing:2px;color:#9090a8;text-transform:uppercase;margin-bottom:4px;display:block;}
+.form-input{background:rgba(5,8,16,0.85);border:1px solid rgba(196,160,60,0.2);border-radius:3px;padding:8px 12px;font-family:'Rajdhani',sans-serif;font-size:14px;color:#f0eadc;outline:none;transition:border-color 0.2s;width:100%;}
+.form-input:focus{border-color:rgba(232,200,74,0.5);}
+.form-select{background:rgba(5,8,16,0.85);border:1px solid rgba(196,160,60,0.2);border-radius:3px;padding:8px 12px;font-family:'Rajdhani',sans-serif;font-size:14px;color:#f0eadc;outline:none;cursor:pointer;width:100%;}
+.form-textarea{background:rgba(5,8,16,0.85);border:1px solid rgba(196,160,60,0.2);border-radius:3px;padding:7px 10px;font-family:'Rajdhani',sans-serif;font-size:13px;color:#f0eadc;outline:none;resize:vertical;min-height:60px;width:100%;}
+.form-group{display:flex;flex-direction:column;gap:4px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;}
+.trade-form{background:rgba(12,18,36,0.85);border:1px solid rgba(196,160,60,0.15);border-radius:6px;padding:1.2rem;margin-bottom:1.2rem;}
+.trades-table{width:100%;border-collapse:collapse;font-size:13px;}
+.trades-table th{text-align:left;padding:8px 10px;font-size:10px;letter-spacing:2px;color:#9090a8;text-transform:uppercase;border-bottom:1px solid rgba(196,160,60,0.12);font-weight:600;}
+.trades-table td{padding:9px 10px;border-bottom:1px solid rgba(196,160,60,0.07);color:#d8d0bc;vertical-align:middle;font-size:13px;}
+.trades-table tr:hover td{background:rgba(196,160,60,0.04);}
+.badge-buy{font-size:10px;padding:2px 8px;background:rgba(80,220,130,0.12);border:1px solid rgba(80,220,130,0.4);color:#70e0a8;border-radius:2px;letter-spacing:1px;}
+.badge-sell{font-size:10px;padding:2px 8px;background:rgba(220,80,80,0.12);border:1px solid rgba(220,80,80,0.4);color:#e08080;border-radius:2px;letter-spacing:1px;}
+.pnl-pos{color:#70e0a8;font-weight:600;}
+.pnl-neg{color:#e08080;font-weight:600;}
+.btn-del{background:transparent;border:none;color:#c06060;cursor:pointer;font-size:15px;padding:2px 4px;transition:color 0.2s;}
+.btn-del:hover{color:#e08080;}
+.summary-row{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:1.2rem;}
+.sum-card{background:rgba(12,18,36,0.85);border:1px solid rgba(196,160,60,0.12);border-radius:5px;padding:0.7rem 0.9rem;}
+.sum-label{font-size:11px;letter-spacing:2px;color:#9090a8;text-transform:uppercase;margin-bottom:3px;}
+.sum-val{font-family:'Orbitron',sans-serif;font-size:14px;font-weight:600;color:#f0d060;}
+.empty-state{text-align:center;padding:2.5rem;color:#707080;font-size:14px;letter-spacing:1px;}
+.empty-state i{font-size:36px;display:block;margin-bottom:10px;opacity:0.3;}
+.calc-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.calc-box{background:rgba(12,18,36,0.85);border:1px solid rgba(196,160,60,0.15);border-radius:6px;padding:1.3rem;}
+.calc-box-title{font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:3px;color:#a09060;text-transform:uppercase;margin-bottom:1rem;display:flex;align-items:center;gap:7px;}
+.result-block{background:rgba(5,8,16,0.7);border:1px solid rgba(196,160,60,0.2);border-radius:5px;padding:1rem 1.2rem;margin-top:1rem;}
+.result-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(196,160,60,0.08);}
+.result-row:last-child{border-bottom:none;}
+.result-key{font-size:11px;letter-spacing:1.5px;color:#9090a8;text-transform:uppercase;}
+.result-val{font-family:'Orbitron',sans-serif;font-size:13px;font-weight:600;color:#f0d060;}
+.result-val.danger{color:#e08080;}
+.result-val.safe{color:#70e0a8;}
+.calc-hint{font-size:11px;color:#606878;margin-top:8px;letter-spacing:0.5px;line-height:1.6;}
+.pip-table{width:100%;border-collapse:collapse;margin-top:0.8rem;}
+.pip-table th{text-align:left;font-size:10px;letter-spacing:1.5px;color:#9090a8;padding:5px 8px;border-bottom:1px solid rgba(196,160,60,0.1);}
+.pip-table td{padding:6px 8px;font-size:12px;color:#d0c8b4;border-bottom:1px solid rgba(196,160,60,0.06);}
+.ai-wrapper{display:flex;flex-direction:column;height:calc(100vh - 120px);min-height:500px;}
+.ai-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-shrink:0;}
+.ai-dot{width:8px;height:8px;border-radius:50%;background:#70e0a8;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+.ai-status-text{font-size:11px;letter-spacing:2px;color:#78e0a0;}
+.ai-messages{flex:1;overflow-y:auto;background:rgba(5,8,16,0.6);border:1px solid rgba(196,160,60,0.13);border-radius:6px 6px 0 0;padding:1rem;display:flex;flex-direction:column;gap:12px;}
+.ai-messages::-webkit-scrollbar{width:4px;}
+.ai-messages::-webkit-scrollbar-thumb{background:rgba(196,160,60,0.2);border-radius:2px;}
+.msg{display:flex;gap:10px;align-items:flex-start;}
+.msg-avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-family:'Orbitron',sans-serif;flex-shrink:0;margin-top:2px;}
+.msg-avatar.user{background:rgba(196,160,60,0.15);border:1px solid rgba(232,200,74,0.4);color:#e8c84a;}
+.msg-avatar.ai{background:rgba(100,140,220,0.15);border:1px solid rgba(120,160,255,0.35);color:#a0c0ff;}
+.msg-name{font-size:10px;letter-spacing:2px;color:#a09060;margin-bottom:4px;text-transform:uppercase;}
+.msg-name.ai-name{color:#7898d8;}
+.msg-text{font-size:14px;line-height:1.75;color:#e8e0cc;}
+.msg-text.ai-text{color:#dce8ff;}
+.typing-dot{width:5px;height:5px;border-radius:50%;background:rgba(140,180,255,0.6);animation:typing 1.2s infinite;display:inline-block;margin:0 2px;}
+.typing-dot:nth-child(2){animation-delay:0.2s;}
+.typing-dot:nth-child(3){animation-delay:0.4s;}
+@keyframes typing{0%,60%,100%{opacity:0.3;transform:translateY(0);}30%{opacity:1;transform:translateY(-3px);}}
+.ai-input-area{display:flex;background:rgba(8,12,24,0.95);border:1px solid rgba(196,160,60,0.22);border-top:none;border-radius:0 0 6px 6px;overflow:hidden;flex-shrink:0;}
+.ai-input{flex:1;background:transparent;border:none;padding:12px 14px;font-family:'Rajdhani',sans-serif;font-size:15px;color:#f0eadc;outline:none;letter-spacing:0.5px;}
+.ai-input::placeholder{color:rgba(196,160,60,0.3);}
+.ai-send{background:rgba(196,160,60,0.08);border:none;border-left:1px solid rgba(196,160,60,0.18);padding:0 16px;cursor:pointer;color:#e8c84a;font-size:18px;transition:background 0.2s;display:flex;align-items:center;}
+.ai-send:hover{background:rgba(196,160,60,0.18);}
+.ai-send:disabled{opacity:0.3;cursor:not-allowed;}
+/* AUTH */
+.auth-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:#050810;z-index:9999;display:flex;align-items:center;justify-content:center;}
+.auth-box{background:rgba(12,18,36,0.97);border:1px solid rgba(196,160,60,0.25);border-radius:8px;padding:2.5rem 2rem;width:360px;position:relative;}
+.auth-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#e8c84a,transparent);border-radius:8px 8px 0 0;}
+.auth-logo{font-family:'Orbitron',sans-serif;font-weight:800;font-size:16px;letter-spacing:3px;color:#f0d060;text-align:center;margin-bottom:4px;}
+.auth-sub{font-size:11px;letter-spacing:3px;color:rgba(232,200,74,0.45);text-align:center;margin-bottom:2rem;text-transform:uppercase;}
+.auth-tabs{display:flex;margin-bottom:1.5rem;border-bottom:1px solid rgba(196,160,60,0.15);}
+.auth-tab{flex:1;padding:8px;text-align:center;font-size:12px;letter-spacing:2px;color:#808090;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;font-family:'Rajdhani',sans-serif;font-weight:600;text-transform:uppercase;}
+.auth-tab.active{color:#f0d060;border-bottom-color:#e8c84a;}
+.auth-field{margin-bottom:1rem;}
+.auth-field label{font-size:10px;letter-spacing:2px;color:#9090a8;text-transform:uppercase;display:block;margin-bottom:4px;}
+.auth-field input{width:100%;background:rgba(5,8,16,0.85);border:1px solid rgba(196,160,60,0.2);border-radius:3px;padding:9px 12px;font-family:'Rajdhani',sans-serif;font-size:13px;color:#f0eadc;outline:none;}
+.auth-field input:focus{border-color:rgba(232,200,74,0.5);}
+.auth-btn{width:100%;background:rgba(196,160,60,0.12);border:1px solid rgba(232,200,74,0.4);color:#e8c84a;padding:10px;font-family:'Orbitron',sans-serif;font-size:11px;letter-spacing:2px;border-radius:3px;cursor:pointer;transition:all 0.2s;margin-top:0.5rem;}
+.auth-btn:hover{background:rgba(196,160,60,0.22);}
+.auth-btn.google{background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.15);color:#e8e0cc;margin-bottom:1rem;display:flex;align-items:center;justify-content:center;gap:8px;}
+.auth-btn.google:hover{background:rgba(255,255,255,0.1);}
+.auth-divider{text-align:center;font-size:11px;color:#505060;margin:0.8rem 0;letter-spacing:1px;}
+.auth-error{font-size:12px;color:#e08080;text-align:center;margin-top:0.5rem;min-height:18px;}
+.auth-success{font-size:12px;color:#70e0a8;text-align:center;margin-top:0.5rem;}
+.user-menu{display:flex;align-items:center;gap:8px;cursor:pointer;}
+.user-email{font-size:11px;color:rgba(196,160,60,0.7);letter-spacing:1px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.logout-btn{font-size:10px;padding:3px 8px;background:transparent;border:1px solid rgba(196,160,60,0.25);color:rgba(196,160,60,0.5);border-radius:2px;cursor:pointer;letter-spacing:1px;transition:all 0.2s;font-family:'Rajdhani',sans-serif;}
+.logout-btn:hover{border-color:rgba(220,80,80,0.4);color:rgba(220,80,80,0.7);}
+
+.quick-btns{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px;flex-shrink:0;}
+.quick-btn{font-size:12px;padding:5px 11px;background:rgba(196,160,60,0.07);border:1px solid rgba(196,160,60,0.22);color:#c8b060;border-radius:3px;cursor:pointer;letter-spacing:0.5px;transition:all 0.2s;font-family:'Rajdhani',sans-serif;}
+.quick-btn:hover{background:rgba(196,160,60,0.14);color:#e8c84a;}
+
+/* ── LANDING PAGE ────────────────────────────────────── */
+#landing-page{position:fixed;top:0;left:0;right:0;bottom:0;background:#050810;z-index:9998;overflow-y:auto;display:flex;}
+.landing-left{flex:1;min-height:100vh;display:flex;flex-direction:column;padding:2rem 3rem;overflow-y:auto;}
+.landing-right{width:400px;min-height:100vh;background:rgba(8,12,28,0.95);border-left:1px solid rgba(196,160,60,0.15);display:flex;align-items:center;justify-content:center;padding:2rem;flex-shrink:0;}
+.landing-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:3rem;}
+.landing-logo-wrap{display:flex;flex-direction:column;}
+.landing-logo-main{font-family:'Orbitron',sans-serif;font-size:18px;font-weight:900;letter-spacing:4px;color:#e8c84a;}
+.landing-logo-sub{font-size:9px;letter-spacing:4px;color:rgba(232,200,74,0.5);text-transform:uppercase;}
+.landing-nav-links{display:flex;gap:2rem;align-items:center;}
+.landing-nav-links a{color:#9090a8;text-decoration:none;font-size:13px;letter-spacing:1px;transition:color 0.2s;}
+.landing-nav-links a:hover{color:#e8c84a;}
+.landing-hero{margin-bottom:3rem;}
+.landing-eyebrow{font-size:10px;letter-spacing:4px;color:#e8c84a;text-transform:uppercase;margin-bottom:1rem;display:flex;align-items:center;gap:8px;}
+.landing-eyebrow::before{content:'';width:24px;height:1px;background:#e8c84a;}
+.landing-headline{font-family:'Orbitron',sans-serif;font-size:clamp(28px,4vw,52px);font-weight:900;line-height:1.1;color:#f0eadc;margin-bottom:1.5rem;letter-spacing:1px;}
+.landing-headline span{color:#e8c84a;}
+.landing-desc{font-size:15px;color:#9090a8;line-height:1.8;max-width:540px;margin-bottom:2rem;}
+.landing-cta-row{display:flex;gap:1rem;align-items:center;flex-wrap:wrap;}
+.btn-landing-primary{background:linear-gradient(135deg,rgba(196,160,60,0.2),rgba(232,200,74,0.1));border:1px solid rgba(232,200,74,0.5);color:#f0d060;padding:14px 28px;border-radius:4px;font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;cursor:pointer;transition:all 0.2s;text-transform:uppercase;}
+.btn-landing-primary:hover{background:rgba(196,160,60,0.25);border-color:#e8c84a;}
+.btn-landing-ghost{background:transparent;border:1px solid rgba(240,234,220,0.2);color:#9090a8;padding:14px 28px;border-radius:4px;font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:600;letter-spacing:2px;cursor:pointer;transition:all 0.2s;text-transform:uppercase;}
+.btn-landing-ghost:hover{border-color:rgba(240,234,220,0.5);color:#f0eadc;}
+
+/* Ticker */
+.landing-ticker{background:rgba(196,160,60,0.05);border:1px solid rgba(196,160,60,0.12);border-radius:6px;padding:1rem 1.5rem;margin-bottom:2.5rem;overflow:hidden;}
+.ticker-label{font-size:9px;letter-spacing:3px;color:rgba(232,200,74,0.5);text-transform:uppercase;margin-bottom:0.75rem;}
+.ticker-row{display:flex;gap:2rem;flex-wrap:wrap;}
+.ticker-item{display:flex;flex-direction:column;gap:2px;min-width:80px;}
+.ticker-sym{font-size:10px;letter-spacing:2px;color:#9090a8;font-weight:600;}
+.ticker-price{font-family:'Orbitron',sans-serif;font-size:15px;color:#f0eadc;font-weight:700;}
+.ticker-change{font-size:11px;font-weight:600;}
+.ticker-up{color:#4ade80;}
+.ticker-down{color:#f87171;}
+
+/* Features */
+.landing-features{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:2.5rem;}
+.feature-card{background:rgba(12,18,36,0.8);border:1px solid rgba(196,160,60,0.1);border-radius:6px;padding:1.25rem;transition:border-color 0.2s;}
+.feature-card:hover{border-color:rgba(196,160,60,0.3);}
+.feature-icon{font-size:20px;margin-bottom:0.75rem;}
+.feature-title{font-size:12px;letter-spacing:2px;color:#e8c84a;text-transform:uppercase;margin-bottom:0.4rem;font-weight:700;}
+.feature-desc{font-size:12px;color:#6870a8;line-height:1.6;}
+
+/* Planes */
+.landing-plans{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:2rem;}
+.plan-card{background:rgba(12,18,36,0.8);border:1px solid rgba(196,160,60,0.1);border-radius:6px;padding:1.5rem;text-align:center;}
+.plan-card.featured{border-color:rgba(232,200,74,0.4);background:rgba(30,24,8,0.6);}
+.plan-name{font-size:10px;letter-spacing:3px;color:#9090a8;text-transform:uppercase;margin-bottom:0.5rem;}
+.plan-price{font-family:'Orbitron',sans-serif;font-size:24px;font-weight:900;color:#f0d060;margin-bottom:0.25rem;}
+.plan-period{font-size:10px;color:#6870a8;margin-bottom:1rem;}
+.plan-features{text-align:left;font-size:11px;color:#9090a8;line-height:2;}
+
+/* Footer */
+.landing-footer{display:flex;align-items:center;justify-content:space-between;padding-top:1.5rem;border-top:1px solid rgba(196,160,60,0.1);margin-top:auto;}
+.footer-copy{font-size:11px;color:#404858;letter-spacing:1px;}
+.footer-links{display:flex;gap:1.5rem;}
+.footer-links a{font-size:11px;color:#606878;text-decoration:none;letter-spacing:1px;}
+.footer-links a:hover{color:#e8c84a;}
+
+@media(max-width:900px){
+  #landing-page{flex-direction:column;}
+  .landing-right{width:100%;min-height:auto;border-left:none;border-top:1px solid rgba(196,160,60,0.15);}
+  .landing-left{padding:1.5rem;}
+  .landing-features{grid-template-columns:repeat(2,1fr);}
+  .landing-plans{grid-template-columns:1fr;}
+}
+
+/* ── LANDING ── */
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:#0a0a0a;color:#e8e0d0;font-family:'Cormorant Garamond',serif;overflow-x:hidden;}
+
+/* ── LAYOUT ── */
+.ld-lp{display:flex;min-height:100vh;}
+.ld-lp-main{flex:1;display:flex;flex-direction:column;}
+.ld-lp-auth{width:340px;background:#080808;border-left:1px solid rgba(184,151,58,0.1);position:sticky;top:0;height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;flex-shrink:0;}
+
+/* ── NAV ── */
+.ld-nav{display:flex;align-items:center;justify-content:space-between;padding:1.25rem 2.5rem;border-bottom:1px solid rgba(184,151,58,0.07);}
+.ld-nav-logo{display:flex;align-items:center;gap:14px;}
+.ld-nav-n1{font-family:'Cormorant SC',serif;font-size:15px;font-weight:500;letter-spacing:4px;color:#F0E8D8;}
+.ld-nav-n1 em{font-style:normal;color:#B8973A;}
+.ld-nav-n2{font-family:'Didact Gothic',sans-serif;font-size:6px;letter-spacing:3px;color:#2a2a2a;text-transform:uppercase;margin-top:2px;}
+.ld-nav-links{display:flex;gap:2rem;align-items:center;}
+.ld-nav-link{font-family:'Didact Gothic',sans-serif;font-size:9px;letter-spacing:2px;color:#2a2a2a;cursor:pointer;text-transform:uppercase;text-decoration:none;transition:color 0.2s;}
+.ld-nav-link:hover{color:#B8973A;}
+.ld-nav-cta{font-family:'Didact Gothic',sans-serif;font-size:9px;letter-spacing:3px;color:#B8973A;border:0.5px solid rgba(184,151,58,0.3);padding:7px 14px;cursor:pointer;background:transparent;text-transform:uppercase;transition:all 0.2s;}
+.ld-nav-cta:hover{background:rgba(184,151,58,0.08);}
+
+/* ── TICKER ── */
+.ld-ticker-wrap{overflow:hidden;background:#060606;padding:8px 0;position:relative;border-bottom:1px solid rgba(184,151,58,0.06);}
+.ld-ticker-wrap::before,.ld-ticker-wrap::after{content:'';position:absolute;top:0;bottom:0;width:80px;z-index:2;pointer-events:none;}
+.ld-ticker-wrap::before{left:0;background:linear-gradient(90deg,#060606,transparent);}
+.ld-ticker-wrap::after{right:0;background:linear-gradient(-90deg,#060606,transparent);}
+.ld-ticker-track{display:flex;white-space:nowrap;animation:tickmove 32s linear infinite;}
+@keyframes tickmove{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.ld-ti{display:inline-flex;align-items:center;gap:0.75rem;padding:0 2rem;border-right:0.5px solid rgba(184,151,58,0.06);}
+.ld-ti-sym{font-family:'Didact Gothic',sans-serif;font-size:8px;letter-spacing:3px;color:#2e2e2e;}
+.ld-ti-val{font-family:'Courier New',monospace;font-size:12px;color:#b0a890;}
+.ld-ti-chg{font-family:'Didact Gothic',sans-serif;font-size:9px;font-weight:700;}
+.ld-up{color:#3d6b4a;}.ld-dn{color:#6b3d3d;}
+
+/* ── VELAS ANIMADAS ── */
+.ld-candles-wrap{overflow:hidden;background:#060606;padding:0.75rem 0;position:relative;border-bottom:1px solid rgba(184,151,58,0.06);}
+.ld-candles-wrap::before,.ld-candles-wrap::after{content:'';position:absolute;top:0;bottom:0;width:100px;z-index:2;pointer-events:none;}
+.ld-candles-wrap::before{left:0;background:linear-gradient(90deg,#060606,transparent);}
+.ld-candles-wrap::after{right:0;background:linear-gradient(-90deg,#060606,transparent);}
+.ld-cv-track{animation:cvmove 26s linear infinite;}
+@keyframes cvmove{0%{transform:translateX(0)}100%{transform:translateX(-700px)}}
+.ld-cb rect{fill:#0a0a0a;stroke:#d0c8b8;stroke-width:0.7;}
+.ld-cb line{stroke:#d0c8b8;stroke-width:0.7;}
+.ld-ca rect{fill:#d0c8b8;}
+.ld-ca line{stroke:#d0c8b8;stroke-width:0.7;}
+
+/* ── HERO ── */
+.ld-hero{padding:4rem 2.5rem 3.5rem;border-bottom:1px solid rgba(184,151,58,0.06);position:relative;}
+.ld-hero-eyebrow{font-family:'Didact Gothic',sans-serif;font-size:8px;letter-spacing:5px;color:#2a2a2a;text-transform:uppercase;margin-bottom:2rem;display:flex;align-items:center;gap:12px;}
+.ld-hero-eyebrow::before{content:'';width:24px;height:0.5px;background:#B8973A;opacity:0.5;}
+.ld-hero-h1{font-size:clamp(32px,4vw,52px);font-weight:400;line-height:1.15;color:#F0E8D8;margin-bottom:0.5rem;letter-spacing:-0.5px;}
+.ld-hero-h1 em{font-style:italic;color:#B8973A;}
+.ld-hero-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(16px,2vw,22px);color:#4a4a40;margin-bottom:2.5rem;font-weight:300;}
+.ld-hero-quote{border-left:1px solid rgba(184,151,58,0.25);padding:0.75rem 1.5rem;margin-bottom:2.5rem;max-width:520px;}
+.ld-hero-quote p{font-style:italic;font-size:17px;color:rgba(184,151,58,0.65);line-height:1.7;}
+.ld-hero-quote cite{font-family:'Didact Gothic',sans-serif;font-size:8px;letter-spacing:3px;color:#2e2e2e;display:block;margin-top:0.6rem;text-transform:uppercase;}
+.ld-hero-cta{display:flex;gap:1rem;align-items:center;flex-wrap:wrap;}
+.ld-cta-main{font-family:'Didact Gothic',sans-serif;font-size:9px;letter-spacing:3px;color:#0a0a0a;background:#B8973A;padding:13px 28px;cursor:pointer;border:none;font-weight:700;text-transform:uppercase;transition:opacity 0.2s;}
+.ld-cta-main:hover{opacity:0.85;}
+.ld-cta-ghost{font-family:'Didact Gothic',sans-serif;font-size:9px;letter-spacing:3px;color:#3a3a3a;background:transparent;border:none;cursor:pointer;text-transform:uppercase;}
+
+/* ── PROBLEMA ── */
+.ld-problem{padding:3rem 2.5rem;border-bottom:1px solid rgba(184,151,58,0.06);background:#070707;}
+.ld-section-label{font-family:'Didact Gothic',sans-serif;font-size:7px;letter-spacing:5px;color:#222;text-transform:uppercase;margin-bottom:2rem;display:flex;align-items:center;gap:12px;}
+.ld-section-label::after{content:'';flex:1;height:0.5px;background:rgba(184,151,58,0.07);}
+.ld-problem-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(184,151,58,0.05);}
+.ld-prob-item{background:#070707;padding:1.5rem;}
+.ld-prob-n{font-family:'Cormorant Garamond',serif;font-size:36px;color:rgba(184,151,58,0.2);margin-bottom:0.5rem;line-height:1;}
+.ld-prob-title{font-family:'Didact Gothic',sans-serif;font-size:10px;letter-spacing:2px;color:#4a4040;text-transform:uppercase;margin-bottom:0.5rem;}
+.ld-prob-desc{font-family:'Cormorant Garamond',serif;font-size:15px;color:#2a2a2a;line-height:1.7;font-style:italic;}
+
+/* ── SOLUCIÓN ── */
+.ld-solution{padding:3rem 2.5rem;border-bottom:1px solid rgba(184,151,58,0.06);}
+.ld-sol-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:rgba(184,151,58,0.05);}
+.ld-sol-item{background:#0a0a0a;padding:1.75rem;border-top:1px solid rgba(184,151,58,0.06);}
+.ld-sol-item:first-child{border-top:none;}
+.ld-sol-num{font-family:'Didact Gothic',sans-serif;font-size:8px;letter-spacing:3px;color:#1a1a1a;margin-bottom:1rem;}
+.ld-sol-title{font-family:'Cormorant SC',serif;font-size:18px;color:#B8973A;margin-bottom:0.5rem;letter-spacing:1px;}
+.ld-sol-desc{font-family:'Didact Gothic',sans-serif;font-size:10px;color:#3a3a3a;line-height:1.9;letter-spacing:0.3px;}
+
+/* ── PLANES ── */
+.ld-plans-section{padding:3rem 2.5rem;border-bottom:1px solid rgba(184,151,58,0.06);background:#070707;}
+.ld-plans{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(184,151,58,0.05);}
+.ld-plan{background:#070707;padding:2rem 1.5rem;}
+.ld-plan.ld-hot{background:#0c0b08;}
+.ld-plan-tier{font-family:'Didact Gothic',sans-serif;font-size:7px;letter-spacing:4px;color:#2a2a2a;text-transform:uppercase;margin-bottom:0.75rem;}
+.ld-plan-price{font-size:30px;font-weight:400;color:#F0E8D8;margin-bottom:0.2rem;font-family:'Cormorant Garamond',serif;}
+.ld-plan-price span{font-family:'Didact Gothic',sans-serif;font-size:10px;color:#2a2a2a;}
+.ld-plan-period{font-family:'Didact Gothic',sans-serif;font-size:7px;letter-spacing:2px;color:#2a2a2a;text-transform:uppercase;margin-bottom:1.25rem;padding-bottom:1.25rem;border-bottom:0.5px solid rgba(184,151,58,0.06);}
+.ld-plan-line{font-family:'Didact Gothic',sans-serif;font-size:9px;color:#2e2e2e;padding:0.4rem 0;display:flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:1px;}
+.ld-plan-line::before{content:'—';color:#1a1a1a;}
+.ld-plan-line.on::before{content:'—';color:#B8973A;}
+.ld-plan-line.on{color:#5a5040;}
+.ld-hot-badge{font-family:'Didact Gothic',sans-serif;font-size:7px;letter-spacing:3px;color:#B8973A;border:0.5px solid rgba(184,151,58,0.2);padding:3px 8px;display:inline-block;margin-bottom:0.75rem;text-transform:uppercase;}
+
+/* ── CIERRE ── */
+.ld-closing{padding:3rem 2.5rem;text-align:center;border-bottom:1px solid rgba(184,151,58,0.06);}
+.ld-closing-h{font-size:clamp(22px,3vw,36px);font-weight:400;color:#F0E8D8;margin-bottom:0.75rem;letter-spacing:-0.5px;}
+.ld-closing-h em{font-style:italic;color:#B8973A;}
+.ld-closing-p{font-family:'Didact Gothic',sans-serif;font-size:10px;color:#2e2e2e;letter-spacing:1px;margin-bottom:2rem;line-height:2;}
+.ld-closing-cta{font-family:'Didact Gothic',sans-serif;font-size:9px;letter-spacing:3px;color:#0a0a0a;background:#B8973A;padding:13px 32px;cursor:pointer;border:none;font-weight:700;text-transform:uppercase;}
+
+/* ── FOOTER ── */
+.ld-footer{padding:1.25rem 2.5rem;display:flex;align-items:center;justify-content:space-between;}
+.ld-foot-copy{font-family:'Didact Gothic',sans-serif;font-size:7px;letter-spacing:2px;color:#1a1a1a;text-transform:uppercase;}
+.ld-foot-links{display:flex;gap:1.5rem;}
+.ld-foot-link{font-family:'Didact Gothic',sans-serif;font-size:7px;letter-spacing:2px;color:#1a1a1a;cursor:pointer;text-transform:uppercase;text-decoration:none;}
+.ld-foot-link:hover{color:#B8973A;}
+
+/* ── AUTH PANEL ── */
+.ld-auth-inner{width:100%;max-width:280px;}
+.ld-auth-seal{display:flex;flex-direction:column;align-items:center;gap:0.75rem;margin-bottom:2rem;padding-bottom:2rem;border-bottom:0.5px solid rgba(184,151,58,0.08);}
+.ld-a-name{font-family:'Cormorant SC',serif;font-size:13px;font-weight:500;letter-spacing:4px;color:#F0E8D8;}
+.ld-a-name em{font-style:normal;color:#B8973A;}
+.ld-a-sub{font-family:'Didact Gothic',sans-serif;font-size:6px;letter-spacing:3px;color:#1e1e1e;text-transform:uppercase;}
+.ld-a-trial{font-family:'Didact Gothic',sans-serif;font-size:8px;letter-spacing:2px;color:#B8973A;text-align:center;margin-bottom:1.5rem;padding:0.5rem;border:0.5px solid rgba(184,151,58,0.12);text-transform:uppercase;}
+.ld-auth-tabs{display:flex;margin-bottom:1.5rem;border-bottom:0.5px solid rgba(184,151,58,0.08);}
+.ld-a-tab{flex:1;padding:0.75rem;font-family:'Didact Gothic',sans-serif;font-size:8px;letter-spacing:3px;color:#1e1e1e;cursor:pointer;border-bottom:0.5px solid transparent;text-align:center;text-transform:uppercase;}
+.ld-a-tab.on{color:#B8973A;border-bottom-color:#B8973A;}
+.ld-a-google{width:100%;background:transparent;border:0.5px solid #1e1e1e;color:#3a3a3a;padding:10px;font-family:'Didact Gothic',sans-serif;font-size:8px;letter-spacing:2px;cursor:pointer;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:center;gap:8px;text-transform:uppercase;transition:border-color 0.2s;}
+.ld-a-google:hover{border-color:#2e2e2e;}
+.ld-a-div{text-align:center;font-family:'Didact Gothic',sans-serif;font-size:7px;letter-spacing:3px;color:#1a1a1a;margin-bottom:1.25rem;}
+.ld-a-field{margin-bottom:1rem;}
+.ld-a-label{font-family:'Didact Gothic',sans-serif;font-size:7px;letter-spacing:3px;color:#2e2e2e;display:block;margin-bottom:0.5rem;text-transform:uppercase;}
+.ld-a-input{width:100%;background:transparent;border:none;border-bottom:0.5px solid #1a1a1a;color:#F0E8D8;padding:8px 0;font-size:14px;outline:none;font-family:'Cormorant Garamond',serif;transition:border-color 0.2s;}
+.ld-a-input:focus{border-bottom-color:#B8973A;}
+.ld-a-btn{width:100%;background:#B8973A;border:none;color:#0a0a0a;padding:12px;font-family:'Didact Gothic',sans-serif;font-size:9px;letter-spacing:4px;font-weight:700;cursor:pointer;margin-top:1rem;text-transform:uppercase;transition:opacity 0.2s;}
+.ld-a-btn:hover{opacity:0.88;}
+.ld-a-rec{text-align:center;font-family:'Didact Gothic',sans-serif;font-size:8px;color:#1a1a1a;margin-top:1rem;letter-spacing:1px;}
+.ld-a-rec a{color:#2e2e2e;text-decoration:none;}
+.ld-a-rec a:hover{color:#B8973A;}
+</style>
+</head>
+<body>
+
+
+<!-- LANDING PAGE -->
+<div id="landing-page">
+  <div class="landing-left">
+    <nav class="landing-nav">
+      <div class="landing-logo-wrap">
+        <div class="landing-logo-main">ELIOTFW</div>
+        <div class="landing-logo-main" style="font-size:10px;letter-spacing:6px;">CAPITAL</div>
+        <div class="landing-logo-sub">Trading Hub Personal</div>
+      </div>
+      <div class="landing-nav-links">
+        <a href="https://discord.gg/ZJJrSEjS" target="_blank">Discord</a>
+        <a href="https://www.youtube.com/@ELIOTFWCAPITAL" target="_blank">YouTube</a>
+        <button class="btn-landing-primary" onclick="showAuthFromLanding()">Ingresar →</button>
+      </div>
+    </nav>
+
+    <div class="landing-hero">
+      <div class="landing-eyebrow">El verdadero movimiento del precio</div>
+      <h1 class="landing-headline">Trading con <span>inteligencia</span><br>en un solo lugar</h1>
+      <p class="landing-desc">Señales diarias XAU/USD, análisis IA con Claude, journal profesional, calculadora de riesgo y portafolio en tiempo real. Todo lo que necesitas para operar con disciplina.</p>
+      <div class="landing-cta-row">
+        <button class="btn-landing-primary" onclick="showAuthFromLanding('register')">Empezar gratis — 3 días</button>
+        <button class="btn-landing-ghost" onclick="showAuthFromLanding('login')">Ya tengo cuenta</button>
+      </div>
+    </div>
+
+    <!-- Ticker de precios en vivo -->
+    <div class="landing-ticker">
+      <div class="ticker-label">Mercados en vivo</div>
+      <div class="ticker-row" id="landing-ticker-row">
+        <div class="ticker-item"><div class="ticker-sym">XAU/USD</div><div class="ticker-price" id="lt-gold">—</div><div class="ticker-change" id="lt-gold-c">—</div></div>
+        <div class="ticker-item"><div class="ticker-sym">BTC/USD</div><div class="ticker-price" id="lt-btc">—</div><div class="ticker-change" id="lt-btc-c">—</div></div>
+        <div class="ticker-item"><div class="ticker-sym">ETH/USD</div><div class="ticker-price" id="lt-eth">—</div><div class="ticker-change" id="lt-eth-c">—</div></div>
+        <div class="ticker-item"><div class="ticker-sym">DXY</div><div class="ticker-price" id="lt-dxy">—</div><div class="ticker-change" id="lt-dxy-c">—</div></div>
+        <div class="ticker-item"><div class="ticker-sym">EUR/USD</div><div class="ticker-price" id="lt-eur">—</div><div class="ticker-change" id="lt-eur-c">—</div></div>
+        <div class="ticker-item"><div class="ticker-sym">SPX500</div><div class="ticker-price" id="lt-spx">—</div><div class="ticker-change" id="lt-spx-c">—</div></div>
+      </div>
+    </div>
+
+    <!-- Features -->
+    <div class="landing-features">
+      <div class="feature-card"><div class="feature-icon">🤖</div><div class="feature-title">Elio AI</div><div class="feature-desc">Asistente de trading 24/7 con análisis de mercado personalizado vía Claude.</div></div>
+      <div class="feature-card"><div class="feature-icon">⚡</div><div class="feature-title">Señales</div><div class="feature-desc">Señales diarias XAU/USD con zonas de entrada, SL y TP detallados.</div></div>
+      <div class="feature-card"><div class="feature-icon">📊</div><div class="feature-title">Portafolio</div><div class="feature-desc">P&L en tiempo real con gráficos de distribución y rendimiento.</div></div>
+      <div class="feature-card"><div class="feature-icon">📒</div><div class="feature-title">Journal</div><div class="feature-desc">Registra cada trade con notas, emociones y estadísticas automáticas.</div></div>
+      <div class="feature-card"><div class="feature-icon">🧮</div><div class="feature-title">Calculadora</div><div class="feature-desc">Gestión de riesgo por pip, lote y % de cuenta en segundos.</div></div>
+      <div class="feature-card"><div class="feature-icon">📈</div><div class="feature-title">Fundamentales</div><div class="feature-desc">DXY, VIX, TNX y sentimiento de mercado en tiempo real.</div></div>
+    </div>
+
+    <!-- Planes -->
+    <div style="font-size:10px;letter-spacing:3px;color:rgba(232,200,74,0.6);text-transform:uppercase;margin-bottom:1rem;">Planes</div>
+    <div class="landing-plans">
+      <div class="plan-card">
+        <div class="plan-name">Trial</div>
+        <div class="plan-price">GRATIS</div>
+        <div class="plan-period">3 días completos</div>
+        <div class="plan-features">✓ Acceso total<br>✓ Elio AI<br>✓ Señales<br>✓ Sin tarjeta</div>
+      </div>
+      <div class="plan-card">
+        <div class="plan-name">Básico</div>
+        <div class="plan-price">$9.99</div>
+        <div class="plan-period">USDT / mes</div>
+        <div class="plan-features">✓ Portafolio<br>✓ Journal<br>✓ Calculadora<br>✓ Fundamentales</div>
+      </div>
+      <div class="plan-card featured">
+        <div class="plan-name">⭐ Premium</div>
+        <div class="plan-price">$49.99</div>
+        <div class="plan-period">USDT / mes</div>
+        <div class="plan-features">✓ Todo lo anterior<br>✓ Señales diarias<br>✓ Elio AI ilimitado<br>✓ Soporte prioritario</div>
+      </div>
+    </div>
+
+    <div class="landing-footer">
+      <div class="footer-copy">© 2026 ELIOTFW CAPITAL</div>
+      <div class="footer-links">
+        <a href="https://discord.gg/ZJJrSEjS" target="_blank">Discord</a>
+        <a href="https://www.youtube.com/@ELIOTFWCAPITAL" target="_blank">YouTube</a>
+        <a href="mailto:eliotrader21@gmail.com">Soporte</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Login al lado derecho -->
+  <div class="landing-right" id="landing-auth-panel">
+    <!-- El auth-box se clonará aquí -->
+  </div>
+</div>
+
+<!-- LANDING PAGE -->
+<div id="ld-landing-page" style="display:none;">
+<div class="ld-lp">
+  <div class="ld-lp-main">
+
+    <!-- NAV -->
+    <nav class="ld-nav">
+      <div class="ld-nav-logo">
+        <svg width="40" height="40" viewBox="0 0 56 56" fill="none">
+          <circle cx="28" cy="28" r="26" stroke="#B8973A" stroke-width="0.6"/>
+          <circle cx="28" cy="28" r="21" stroke="#B8973A" stroke-width="0.3" opacity="0.4"/>
+          <path id="t1" d="M 8 28 A 20 20 0 0 1 48 28" fill="none"/>
+          <text font-family="Didact Gothic,sans-serif" font-size="5" fill="#B8973A" letter-spacing="2.5" opacity="0.6"><textPath href="#t1" startOffset="10%">ELIOTFW · CAPITAL</textPath></text>
+          <path id="b1" d="M 48 28 A 20 20 0 0 1 8 28" fill="none"/>
+          <text font-family="Didact Gothic,sans-serif" font-size="4" fill="#B8973A" letter-spacing="2" opacity="0.35"><textPath href="#b1" startOffset="8%">ASSET MANAGEMENT · EST. 2024</textPath></text>
+          <text x="28" y="32" font-family="Cormorant SC,serif" font-size="15" font-weight="600" fill="#B8973A" text-anchor="middle">EFC</text>
+        </svg>
+        <div>
+          <div class="ld-nav-n1"><em>Eliotfw</em> Capital</div>
+          <div class="ld-nav-n2">Trading Hub Personal</div>
+        </div>
+      </div>
+      <div class="ld-nav-links">
+        <a class="ld-nav-link" href="https://discord.gg/ZJJrSEjS" target="_blank">Discord</a>
+        <a class="ld-nav-link" href="https://www.youtube.com/@ELIOTFWCAPITAL" target="_blank">YouTube</a>
+        <a class="ld-nav-link" href="mailto:eliotrader21@gmail.com">Soporte</a>
+        <button class="ld-nav-cta" onclick="showAuthFromLanding('login')">Ingresar →</button>
+      </div>
+    </nav>
+
+    <!-- TICKER -->
+    <div class="ld-ticker-wrap">
+      <div class="ld-ticker-track">
+        <div class="ld-ti"><span class="ld-ti-sym">XAU/USD</span><span class="ld-ti-val">3,342.50</span><span class="ld-ti-chg ld-up">▲ +0.42%</span></div>
+        <div class="ld-ti"><span class="ld-ti-sym">BTC/USD</span><span class="ld-ti-val">104,230</span><span class="ld-ti-chg ld-up">▲ +1.24%</span></div>
+        <div class="ld-ti"><span class="ld-ti-sym">ETH/USD</span><span class="ld-ti-val">2,641</span><span class="ld-ti-chg ld-dn">▼ -0.38%</span></div>
+        <div class="ld-ti"><span class="ld-ti-sym">DXY</span><span class="ld-ti-val">99.84</span><span class="ld-ti-chg ld-dn">▼ -0.12%</span></div>
+        <div class="ld-ti"><span class="ld-ti-sym">EUR/USD</span><span class="ld-ti-val">1.0934</span><span class="ld-ti-chg ld-up">▲ +0.09%</span></div>
+        <div class="ld-ti"><span class="ld-ti-sym">SPX 500</span><span class="ld-ti-val">5,842</span><span class="ld-ti-chg ld-up">▲ +0.61%</span></div>
+        <div class="ld-ti"><span class="ld-ti-sym">GBP/USD</span><span class="ld-ti-val">1.2743</span><span class="ld-ti-chg ld-up">▲ +0.15%</span></div>
+        <div class="ld-ti"><span class="ld-ti-sym">VIX</span><span class="ld-ti-val">18.42</span><span class="ld-ti-chg ld-dn">▼ -2.10%</span></div>
+        <div class="ld-ti"><span class="ld-ti-sym">XAU/USD</span><span class="ld-ti-val">3,342.50</span><span class="ld-ti-chg ld-up">▲ +0.42%</span></div>
+        <div class="ld-ti"><span class="ld-ti-sym">BTC/USD</span><span class="ld-ti-val">104,230</span><span class="ld-ti-chg ld-up">▲ +1.24%</span></div>
+        <div class="ld-ti"><span class="ld-ti-sym">ETH/USD</span><span class="ld-ti-val">2,641</span><span class="ld-ti-chg ld-dn">▼ -0.38%</span></div>
+        <div class="ld-ti"><span class="ld-ti-sym">DXY</span><span class="ld-ti-val">99.84</span><span class="ld-ti-chg ld-dn">▼ -0.12%</span></div>
+        <div class="ld-ti"><span class="ld-ti-sym">EUR/USD</span><span class="ld-ti-val">1.0934</span><span class="ld-ti-chg ld-up">▲ +0.09%</span></div>
+        <div class="ld-ti"><span class="ld-ti-sym">SPX 500</span><span class="ld-ti-val">5,842</span><span class="ld-ti-chg ld-up">▲ +0.61%</span></div>
+        <div class="ld-ti"><span class="ld-ti-sym">GBP/USD</span><span class="ld-ti-val">1.2743</span><span class="ld-ti-chg ld-up">▲ +0.15%</span></div>
+        <div class="ld-ti"><span class="ld-ti-sym">VIX</span><span class="ld-ti-val">18.42</span><span class="ld-ti-chg ld-dn">▼ -2.10%</span></div>
+      </div>
+    </div>
+
+    <!-- VELAS ANIMADAS -->
+    <div class="ld-candles-wrap">
+      <svg viewBox="0 0 1400 90" style="width:100%;height:90px;display:block;">
+        <line x1="0" y1="68" x2="1400" y2="68" stroke="rgba(184,151,58,0.1)" stroke-width="0.5" stroke-dasharray="4,6"/>
+        <g class="ld-cv-track">
+          <g class="ld-ca"><line x1="10" y1="18" x2="10" y2="52"/><rect x="4" y="26" width="12" height="18"/></g>
+          <g class="ld-cb"><line x1="32" y1="22" x2="32" y2="58"/><rect x="26" y="30" width="12" height="22"/></g>
+          <g class="ld-cb"><line x1="54" y1="28" x2="54" y2="65"/><rect x="48" y="36" width="12" height="24"/></g>
+          <g class="ld-ca"><line x1="76" y1="32" x2="76" y2="66"/><rect x="70" y="40" width="12" height="16"/></g>
+          <g class="ld-cb"><line x1="98" y1="38" x2="98" y2="74"/><rect x="92" y="46" width="12" height="24"/></g>
+          <g class="ld-cb"><line x1="120" y1="44" x2="120" y2="80"/><rect x="114" y="52" width="12" height="24"/></g>
+          <g class="ld-cb"><line x1="142" y1="50" x2="142" y2="84"/><rect x="136" y="58" width="12" height="22"/></g>
+          <g class="ld-ca"><line x1="164" y1="54" x2="164" y2="82"/><rect x="158" y="62" width="12" height="14"/></g>
+          <g class="ld-cb"><line x1="186" y1="58" x2="186" y2="86"/><rect x="180" y="66" width="12" height="18"/></g>
+          <g class="ld-cb"><line x1="208" y1="62" x2="208" y2="88"/><rect x="202" y="70" width="12" height="16"/></g>
+          <line x1="218" y1="82" x2="330" y2="82" stroke="rgba(184,151,58,0.25)" stroke-width="0.6" stroke-dasharray="3,3"/>
+          <g class="ld-ca"><line x1="228" y1="64" x2="228" y2="84"/><rect x="222" y="70" width="12" height="14"/></g>
+          <g class="ld-cb"><line x1="250" y1="58" x2="250" y2="80"/><rect x="244" y="66" width="12" height="14"/></g>
+          <g class="ld-ca"><line x1="272" y1="50" x2="272" y2="74"/><rect x="266" y="58" width="12" height="16"/></g>
+          <g class="ld-ca"><line x1="294" y1="42" x2="294" y2="66"/><rect x="288" y="50" width="12" height="16"/></g>
+          <g class="ld-cb"><line x1="316" y1="36" x2="316" y2="60"/><rect x="310" y="44" width="12" height="16"/></g>
+          <g class="ld-ca"><line x1="338" y1="28" x2="338" y2="54"/><rect x="332" y="36" width="12" height="16"/></g>
+          <g class="ld-ca"><line x1="360" y1="20" x2="360" y2="46"/><rect x="354" y="28" width="12" height="16"/></g>
+          <g class="ld-cb"><line x1="382" y1="16" x2="382" y2="42"/><rect x="376" y="24" width="12" height="14"/></g>
+          <g class="ld-ca"><line x1="404" y1="10" x2="404" y2="36"/><rect x="398" y="18" width="12" height="16"/></g>
+          <g class="ld-ca"><line x1="426" y1="6" x2="426" y2="30"/><rect x="420" y="12" width="12" height="16"/></g>
+          <g class="ld-cb"><line x1="448" y1="8" x2="448" y2="32"/><rect x="442" y="16" width="12" height="14"/></g>
+          <g class="ld-ca"><line x1="470" y1="4" x2="470" y2="28"/><rect x="464" y="10" width="12" height="16"/></g>
+          <g class="ld-ca"><line x1="492" y1="2" x2="492" y2="24"/><rect x="486" y="6" width="12" height="14"/></g>
+          <g class="ld-cb"><line x1="514" y1="4" x2="514" y2="28"/><rect x="508" y="10" width="12" height="14"/></g>
+          <g class="ld-ca"><line x1="536" y1="1" x2="536" y2="22"/><rect x="530" y="5" width="12" height="14"/></g>
+          <g class="ld-ca"><line x1="558" y1="1" x2="558" y2="20"/><rect x="552" y="4" width="12" height="14"/></g>
+          <g class="ld-cb"><line x1="580" y1="3" x2="580" y2="24"/><rect x="574" y="8" width="12" height="12"/></g>
+          <g class="ld-ca"><line x1="602" y1="1" x2="602" y2="20"/><rect x="596" y="4" width="12" height="14"/></g>
+          <g class="ld-ca"><line x1="624" y1="1" x2="624" y2="18"/><rect x="618" y="3" width="12" height="13"/></g>
+          <g class="ld-cb"><line x1="646" y1="2" x2="646" y2="20"/><rect x="640" y="6" width="12" height="12"/></g>
+          <g class="ld-ca"><line x1="668" y1="1" x2="668" y2="16"/><rect x="662" y="3" width="12" height="12"/></g>
+          <!-- copia offset 700 -->
+          <g class="ld-ca"><line x1="710" y1="18" x2="710" y2="52"/><rect x="704" y="26" width="12" height="18"/></g>
+          <g class="ld-cb"><line x1="732" y1="22" x2="732" y2="58"/><rect x="726" y="30" width="12" height="22"/></g>
+          <g class="ld-cb"><line x1="754" y1="28" x2="754" y2="65"/><rect x="748" y="36" width="12" height="24"/></g>
+          <g class="ld-ca"><line x1="776" y1="32" x2="776" y2="66"/><rect x="770" y="40" width="12" height="16"/></g>
+          <g class="ld-cb"><line x1="798" y1="38" x2="798" y2="74"/><rect x="792" y="46" width="12" height="24"/></g>
+          <g class="ld-cb"><line x1="820" y1="44" x2="820" y2="80"/><rect x="814" y="52" width="12" height="24"/></g>
+          <g class="ld-cb"><line x1="842" y1="50" x2="842" y2="84"/><rect x="836" y="58" width="12" height="22"/></g>
+          <g class="ld-ca"><line x1="864" y1="54" x2="864" y2="82"/><rect x="858" y="62" width="12" height="14"/></g>
+          <g class="ld-cb"><line x1="886" y1="58" x2="886" y2="86"/><rect x="880" y="66" width="12" height="18"/></g>
+          <g class="ld-cb"><line x1="908" y1="62" x2="908" y2="88"/><rect x="902" y="70" width="12" height="16"/></g>
+          <line x1="918" y1="82" x2="1030" y2="82" stroke="rgba(184,151,58,0.25)" stroke-width="0.6" stroke-dasharray="3,3"/>
+          <g class="ld-ca"><line x1="928" y1="64" x2="928" y2="84"/><rect x="922" y="70" width="12" height="14"/></g>
+          <g class="ld-cb"><line x1="950" y1="58" x2="950" y2="80"/><rect x="944" y="66" width="12" height="14"/></g>
+          <g class="ld-ca"><line x1="972" y1="50" x2="972" y2="74"/><rect x="966" y="58" width="12" height="16"/></g>
+          <g class="ld-ca"><line x1="994" y1="42" x2="994" y2="66"/><rect x="988" y="50" width="12" height="16"/></g>
+          <g class="ld-cb"><line x1="1016" y1="36" x2="1016" y2="60"/><rect x="1010" y="44" width="12" height="16"/></g>
+          <g class="ld-ca"><line x1="1038" y1="28" x2="1038" y2="54"/><rect x="1032" y="36" width="12" height="16"/></g>
+          <g class="ld-ca"><line x1="1060" y1="20" x2="1060" y2="46"/><rect x="1054" y="28" width="12" height="16"/></g>
+          <g class="ld-cb"><line x1="1082" y1="16" x2="1082" y2="42"/><rect x="1076" y="24" width="12" height="14"/></g>
+          <g class="ld-ca"><line x1="1104" y1="10" x2="1104" y2="36"/><rect x="1098" y="18" width="12" height="16"/></g>
+          <g class="ld-ca"><line x1="1126" y1="6" x2="1126" y2="30"/><rect x="1120" y="12" width="12" height="16"/></g>
+          <g class="ld-cb"><line x1="1148" y1="8" x2="1148" y2="32"/><rect x="1142" y="16" width="12" height="14"/></g>
+          <g class="ld-ca"><line x1="1170" y1="4" x2="1170" y2="28"/><rect x="1164" y="10" width="12" height="16"/></g>
+          <g class="ld-ca"><line x1="1192" y1="2" x2="1192" y2="24"/><rect x="1186" y="6" width="12" height="14"/></g>
+          <g class="ld-cb"><line x1="1214" y1="4" x2="1214" y2="28"/><rect x="1208" y="10" width="12" height="14"/></g>
+          <g class="ld-ca"><line x1="1236" y1="1" x2="1236" y2="22"/><rect x="1230" y="5" width="12" height="14"/></g>
+          <g class="ld-ca"><line x1="1258" y1="1" x2="1258" y2="20"/><rect x="1252" y="4" width="12" height="14"/></g>
+          <g class="ld-cb"><line x1="1280" y1="3" x2="1280" y2="24"/><rect x="1274" y="8" width="12" height="12"/></g>
+          <g class="ld-ca"><line x1="1302" y1="1" x2="1302" y2="20"/><rect x="1296" y="4" width="12" height="14"/></g>
+          <g class="ld-ca"><line x1="1324" y1="1" x2="1324" y2="18"/><rect x="1318" y="3" width="12" height="13"/></g>
+          <g class="ld-cb"><line x1="1346" y1="2" x2="1346" y2="20"/><rect x="1340" y="6" width="12" height="12"/></g>
+          <g class="ld-ca"><line x1="1368" y1="1" x2="1368" y2="16"/><rect x="1362" y="3" width="12" height="12"/></g>
+        </g>
+        <rect x="4" y="4" width="62" height="13" fill="rgba(184,151,58,0.08)" rx="1"/>
+        <text x="35" y="14" font-family="Courier New,monospace" font-size="7.5" fill="#B8973A" text-anchor="middle">3,342.50 ▲</text>
+      </svg>
+    </div>
+
+    <!-- HERO -->
+    <div class="ld-hero">
+      <div class="ld-hero-eyebrow">Plataforma de trading profesional</div>
+      <h1 class="ld-hero-h1">Opera con <em>disciplina.</em><br>Analiza con inteligencia.<br>Crece con método.</h1>
+      <p class="ld-hero-sub">La plataforma donde el análisis técnico, la gestión de riesgo y la inteligencia artificial convergen para el trader que toma el mercado en serio.</p>
+      <div class="ld-hero-quote">
+        <p>"El mercado es el mayor transferidor de dinero de los impacientes a los pacientes."</p>
+        <cite>— Warren Buffett</cite>
+      </div>
+      <div class="ld-hero-cta">
+        <button class="ld-cta-ghost" onclick="document.querySelector('.ld-plans-section').scrollIntoView({behavior:'smooth'})">Ver planes ↓</button>
+      </div>
+    </div>
+
+    <!-- PROBLEMA -->
+    <div class="ld-problem">
+      <div class="ld-section-label">Por qué fallan la mayoría</div>
+      <div class="ld-problem-grid">
+        <div class="ld-prob-item">
+          <div class="ld-prob-n">01</div>
+          <div class="ld-prob-title">Sin sistema</div>
+          <div class="ld-prob-desc">Operan por emoción, sin un proceso claro. Cada trade es una apuesta, no una decisión.</div>
+        </div>
+        <div class="ld-prob-item">
+          <div class="ld-prob-n">02</div>
+          <div class="ld-prob-title">Sin registro</div>
+          <div class="ld-prob-desc">No llevan journal. No saben qué funciona. Repiten los mismos errores sin saberlo.</div>
+        </div>
+        <div class="ld-prob-item">
+          <div class="ld-prob-n">03</div>
+          <div class="ld-prob-title">Sin contexto</div>
+          <div class="ld-prob-desc">Ven el precio sin entender los fundamentales. El DXY sube y no saben por qué cae el oro.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SOLUCIÓN -->
+    <div class="ld-solution">
+      <div class="ld-section-label">Lo que cambia con ELIOTFW</div>
+      <div class="ld-sol-grid">
+        <div class="ld-sol-item">
+          <div class="ld-sol-num">Herramienta 01</div>
+          <div class="ld-sol-title">Elio AI</div>
+          <div class="ld-sol-desc">Tu asistente de trading disponible 24/7. Analiza el mercado, responde tus dudas y te ayuda a tomar decisiones con contexto real.</div>
+        </div>
+        <div class="ld-sol-item">
+          <div class="ld-sol-num">Herramienta 02</div>
+          <div class="ld-sol-title">Señales XAU/USD</div>
+          <div class="ld-sol-desc">Señales diarias con entrada, stop loss y take profit. Basadas en análisis técnico y fundamentos macro.</div>
+        </div>
+        <div class="ld-sol-item">
+          <div class="ld-sol-num">Herramienta 03</div>
+          <div class="ld-sol-title">Trading Journal</div>
+          <div class="ld-sol-desc">Registra cada operación. Analiza tus patrones. Convierte la experiencia en estadísticas que mejoran tu performance.</div>
+        </div>
+        <div class="ld-sol-item">
+          <div class="ld-sol-num">Herramienta 04</div>
+          <div class="ld-sol-title">Gestión de Riesgo</div>
+          <div class="ld-sol-desc">Calculadora de lotes, pips y porcentaje de cuenta. Nunca más arriesgar más de lo que decides.</div>
+        </div>
+        <div class="ld-sol-item">
+          <div class="ld-sol-num">Herramienta 05</div>
+          <div class="ld-sol-title">Portafolio en Vivo</div>
+          <div class="ld-sol-desc">P&L en tiempo real con gráficos de distribución. Ve exactamente dónde está tu capital en cada momento.</div>
+        </div>
+        <div class="ld-sol-item">
+          <div class="ld-sol-num">Herramienta 06</div>
+          <div class="ld-sol-title">Panel Fundamentales</div>
+          <div class="ld-sol-desc">DXY, VIX, TNX y sentimiento del mercado actualizados. Porque el precio no se mueve en el vacío.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PLANES -->
+    <div class="ld-plans-section">
+      <div class="ld-section-label">Planes de acceso</div>
+      <div class="ld-plans">
+        <div class="ld-plan">
+          <div class="ld-plan-tier">Trial</div>
+          <div class="ld-plan-price">$0 <span>/ 3 días</span></div>
+          <div class="ld-plan-period">Sin tarjeta requerida</div>
+          <div class="ld-plan-line on">Acceso completo</div>
+          <div class="ld-plan-line on">Elio AI incluido</div>
+          <div class="ld-plan-line on">Señales diarias</div>
+          <div class="ld-plan-line on">Todas las herramientas</div>
+        </div>
+        <div class="ld-plan">
+          <div class="ld-plan-tier">Básico</div>
+          <div class="ld-plan-price">$9.99 <span>/ mes</span></div>
+          <div class="ld-plan-period">USDT · Binance Pay</div>
+          <div class="ld-plan-line on">Portafolio en vivo</div>
+          <div class="ld-plan-line on">Journal de trades</div>
+          <div class="ld-plan-line on">Calculadora de riesgo</div>
+          <div class="ld-plan-line">Sin señales ni Elio AI</div>
+        </div>
+        <div class="ld-plan ld-hot">
+          <div class="ld-hot-badge">Recomendado</div>
+          <div class="ld-plan-tier">Premium</div>
+          <div class="ld-plan-price">$49.99 <span>/ mes</span></div>
+          <div class="ld-plan-period">USDT · Binance Pay</div>
+          <div class="ld-plan-line on">Todo el plan Básico</div>
+          <div class="ld-plan-line on">Señales diarias XAU/USD</div>
+          <div class="ld-plan-line on">Elio AI ilimitado</div>
+          <div class="ld-plan-line on">Soporte prioritario</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CIERRE -->
+    <div class="ld-closing">
+      <h2 class="ld-closing-h">El mercado abre mañana.<br><em>¿Estarás listo?</em></h2>
+      
+      <button class="ld-closing-cta" onclick="showAuthFromLanding('register')">Comenzar ahora</button>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="ld-footer">
+      <div class="ld-foot-copy">© 2026 Eliotfw Capital</div>
+      <div class="ld-foot-links">
+        <a class="ld-foot-link" href="https://discord.gg/ZJJrSEjS" target="_blank">Discord</a>
+        <a class="ld-foot-link" href="https://www.youtube.com/@ELIOTFWCAPITAL" target="_blank">YouTube</a>
+        <a class="ld-foot-link" href="mailto:eliotrader21@gmail.com">Soporte</a>
+      </div>
+    </div>
+
+  </div><!-- fin lp-main -->
+
+  <!-- AUTH FIJO -->
+  <div class="ld-lp-auth">
+    <div class="ld-auth-inner">
+      <div class="ld-auth-seal">
+        <svg width="52" height="52" viewBox="0 0 56 56" fill="none">
+          <circle cx="28" cy="28" r="26" stroke="#B8973A" stroke-width="0.6"/>
+          <circle cx="28" cy="28" r="21" stroke="#B8973A" stroke-width="0.3" opacity="0.4"/>
+          <path id="t2" d="M 8 28 A 20 20 0 0 1 48 28" fill="none"/>
+          <text font-family="Didact Gothic,sans-serif" font-size="5" fill="#B8973A" letter-spacing="2.5" opacity="0.6"><textPath href="#t2" startOffset="10%">ELIOTFW · CAPITAL</textPath></text>
+          <path id="b2" d="M 48 28 A 20 20 0 0 1 8 28" fill="none"/>
+          <text font-family="Didact Gothic,sans-serif" font-size="4" fill="#B8973A" letter-spacing="2" opacity="0.35"><textPath href="#b2" startOffset="8%">ASSET MANAGEMENT · EST. 2024</textPath></text>
+          <text x="28" y="32" font-family="Cormorant SC,serif" font-size="15" font-weight="600" fill="#B8973A" text-anchor="middle">EFC</text>
+        </svg>
+        <div>
+          <div class="ld-a-name"><em>Eliotfw</em> Capital</div>
+          <div class="ld-a-sub">Trading Hub Personal</div>
+        </div>
+      </div>
+      <div class="ld-a-trial">3 días de prueba gratuita</div>
+      <div class="ld-auth-tabs">
+        <div class="ld-a-tab on">Ingresar</div>
+        <div class="ld-a-tab">Registrarse</div>
+      </div>
+      <button class="ld-a-google">
+        <svg width="13" height="13" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Continuar con Google
+      </button>
+      <div class="ld-a-div">— o con email —</div>
+      <div class="ld-a-field"><label class="ld-a-label">Email</label><input class="ld-a-input" type="email" placeholder="tu@email.com"></div>
+      <div class="ld-a-field"><label class="ld-a-label">Contraseña</label><input class="ld-a-input" type="password" placeholder="••••••••"></div>
+      <button class="ld-a-btn">Ingresar</button>
+      <div class="ld-a-rec">¿Olvidaste tu contraseña? <a href="#">Recuperar</a></div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- AUTH OVERLAY -->
+<div class="auth-overlay" id="auth-overlay">
+  <div class="auth-box">
+    <div class="auth-logo">ELIOTFW</div>
+    <div class="auth-logo" style="font-size:12px;letter-spacing:4px;">CAPITAL</div>
+    <div class="auth-sub">Trading Hub Personal</div>
+    <div class="auth-tabs">
+      <div class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Ingresar</div>
+      <div class="auth-tab" id="tab-register" onclick="switchAuthTab('register')">Registrarse</div>
+    </div>
+    <!-- Login -->
+    <div id="form-login">
+      <button class="auth-btn google" onclick="signInWithGoogle()">
+        <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Continuar con Google
+      </button>
+      <div class="auth-divider">— o con email —</div>
+      <div class="auth-field"><label>Email</label><input type="email" id="login-email" placeholder="tu@email.com"></div>
+      <div class="auth-field"><label>Contraseña</label><input type="password" id="login-password" placeholder="••••••••"></div>
+      <button class="auth-btn" onclick="signInWithEmail()">INGRESAR</button>
+      <div class="auth-error" id="login-error"></div>
+      <div style="text-align:center;margin-top:10px;">
+        <span style="font-size:12px;color:#9090a8;">¿Olvidaste tu contraseña? </span>
+        <a href="#" onclick="showForgotPassword()" style="font-size:12px;color:#e8c84a;text-decoration:none;">Recuperar</a>
+
+      </div>
+    </div>
+    <!-- Forgot Password -->
+    <div id="form-forgot" style="display:none;">
+      <div style="text-align:center;margin-bottom:1rem;">
+        <div style="font-size:13px;color:#d8d0bc;margin-bottom:4px;">Ingresa tu email registrado</div>
+        <div style="font-size:11px;color:#9090a8;">Te enviaremos tu contraseña actual</div>
+      </div>
+      <div class="auth-field"><label>Email</label><input type="email" id="forgot-email" placeholder="tu@email.com"></div>
+      <button class="auth-btn" onclick="recoverPassword()">RECUPERAR CONTRASEÑA</button>
+      <div class="auth-error" id="forgot-error"></div>
+      <div class="auth-success" id="forgot-success"></div>
+      <div style="text-align:center;margin-top:10px;">
+        <a href="#" onclick="showForgotPassword(false)" style="font-size:12px;color:#9090a8;text-decoration:none;">← Volver al login</a>
+      </div>
+    </div>
+    <!-- Register -->
+    <div id="form-register" style="display:none;">
+      <div class="auth-field"><label>Nombre</label><input type="text" id="reg-name" placeholder="Tu nombre"></div>
+      <div class="auth-field"><label>Email</label><input type="email" id="reg-email" placeholder="tu@email.com"></div>
+      <div class="auth-field"><label>Contraseña</label><input type="password" id="reg-password" placeholder="Mínimo 6 caracteres"></div>
+      <button class="auth-btn" onclick="signUpWithEmail()">CREAR CUENTA</button>
+      <div class="auth-error" id="register-error"></div>
+      <div class="auth-success" id="register-success"></div>
+    </div>
+  </div>
+</div>
+
+<div class="bg-grid"></div>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="app">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">ELIOTFW</div>
+      <div class="logo-mark" style="font-size:11px;letter-spacing:4px;">CAPITAL</div>
+      <div class="logo-sub">Trading Hub</div>
+    </div>
+    <div class="sidebar-section-label">Navegación</div>
+    <div class="sidebar-item active" id="sb-home" onclick="navigate('home',this)"><i class="ti ti-home-2"></i> Inicio</div>
+    <div class="sidebar-item" onclick="window.open('mailto:eliotrader21@gmail.com','_blank')"><i class="ti ti-mail"></i> Soporte</div>
+    <div class="sidebar-item" id="sb-fund" onclick="navigate('fund',this)"><i class="ti ti-chart-bar"></i> Fundamentales</div>
+    <div class="sidebar-section-label">General</div>
+    <div class="sidebar-item" onclick="navigate('home',this)"><i class="ti ti-help-circle"></i> Preguntas Frecuentes</div>
+    <div class="sidebar-section-label">Educación</div>
+    <div class="sidebar-item" onclick="navigate('home',this)"><i class="ti ti-school"></i> Programas</div>
+    <div class="sidebar-item" onclick="navigate('home',this)"><i class="ti ti-live-view"></i> En Vivo</div>
+    <div class="sidebar-item" onclick="window.open('https://www.youtube.com/@ELIOTFWCAPITAL','_blank')"><i class="ti ti-brand-youtube"></i> Grabaciones</div>
+    <div class="sidebar-section-label">Comunidad</div>
+    <div class="sidebar-item" onclick="navigate('home',this)"><i class="ti ti-brand-discord"></i> Discord</div>
+    <div class="sidebar-section-label">Herramientas</div>
+    <div class="sidebar-item" id="sb-signals" onclick="navigate('signals',this)"><i class="ti ti-bolt"></i> Señales</div>
+    <div class="sidebar-item" id="sb-portfolio" onclick="navigate('portfolio',this)"><i class="ti ti-chart-pie"></i> Portafolio</div>
+    <div class="sidebar-item" id="sb-journal" onclick="navigate('journal',this)"><i class="ti ti-notebook"></i> Trading Journal</div>
+    <div class="sidebar-item" id="sb-ai" onclick="navigate('ai',this)"><i class="ti ti-brain"></i> Ask Elio AI</div>
+    <div class="sidebar-item" id="sb-calc" onclick="navigate('calc',this)"><i class="ti ti-calculator"></i> Calculadora</div>
+
+  </aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left" id="topbar-title">ELIOTFW CAPITAL — TRADING HUB v2.0</div>
+      <div class="topbar-right">
+        <div class="status-badge">● EN LÍNEA</div>
+        <div class="user-menu" id="user-menu" style="display:none;">
+          <span class="user-email" id="user-email-display"></span>
+          <button class="logout-btn" onclick="signOut()">SALIR</button>
+        </div>
+        <div class="avatar" id="avatar-btn">?</div>
+      </div>
+    </div>
+    <div class="content">
+      <!-- HOME -->
+      <div id="view-home">
+        <div class="hero">
+          <div class="hero-name" id="hero-username">ELIOTFW CAPITAL</div>
+          <div class="hero-tagline">Tu hub de trading personal — forex · crypto · commodities</div>
+          <div class="hero-meta">
+            <div class="hero-meta-item"><i class="ti ti-chart-candle"></i> <span id="hero-welcome">Trader activo</span></div>
+            <div class="hero-meta-item"><i class="ti ti-circle-check"></i> Plataforma personal</div>
+            <div class="hero-meta-item"><i class="ti ti-clock"></i> <span id="clock-display">--:--:--</span> Santiago</div>
+          </div>
+        </div>
+        <div class="stats-row" id="session-cards">
+          <div class="session-card" id="sess-sydney"><div class="session-name">Sydney</div><div class="session-val" id="sess-sydney-time">--:--</div><div class="session-status" id="sess-sydney-status">Cerrada</div></div>
+          <div class="session-card" id="sess-tokyo"><div class="session-name">Tokio</div><div class="session-val" id="sess-tokyo-time">--:--</div><div class="session-status" id="sess-tokyo-status">Cerrada</div></div>
+          <div class="session-card" id="sess-london"><div class="session-name">Londres</div><div class="session-val" id="sess-london-time">--:--</div><div class="session-status" id="sess-london-status">Cerrada</div></div>
+          <div class="session-card" id="sess-ny"><div class="session-name">Nueva York</div><div class="session-val" id="sess-ny-time">--:--</div><div class="session-status" id="sess-ny-status">Cerrada</div></div>
+        </div>
+        <div class="tabs">
+          <div class="tab active" onclick="setTab(this,'apps')">Apps</div>
+          <div class="tab" onclick="setTab(this,'markets')">Mercados</div>
+          <div class="tab" onclick="setTab(this,'about')">Acerca</div>
+        </div>
+        <div id="tab-apps">
+          <div class="section-title">Herramientas & Apps</div>
+          <div class="apps-grid">
+            <div class="app-card" onclick="window.open('https://tradingview.com','_blank')"><div class="app-icon-wrap"><i class="ti ti-chart-line"></i></div><div class="app-name">TradingView</div><div class="app-type">Website</div></div>
+            <div class="app-card" onclick="navigate('portfolio',document.getElementById('sb-portfolio'))"><div class="app-icon-wrap"><i class="ti ti-chart-pie"></i></div><div class="app-name">Portafolio</div><div class="app-type">P&L en vivo</div></div>
+            <div class="app-card" onclick="navigate('journal',document.getElementById('sb-journal'))"><div class="app-icon-wrap"><i class="ti ti-notebook"></i></div><div class="app-name">Trading Journal</div><div class="app-type">Integrado</div></div>
+            <div class="app-card" onclick="navigate('calc',document.getElementById('sb-calc'))"><div class="app-icon-wrap"><i class="ti ti-calculator"></i></div><div class="app-name">Calculadora</div><div class="app-type">Integrado</div></div>
+            <div class="app-card" onclick="window.open('https://www.youtube.com/@ELIOTFWCAPITAL','_blank')"><div class="app-icon-wrap"><i class="ti ti-brand-youtube"></i></div><div class="app-name">YouTube</div><div class="app-type">@ELIOTFWCAPITAL</div></div>
+            <div class="app-card" onclick="window.open('https://binance.com','_blank')"><div class="app-icon-wrap"><i class="ti ti-currency-bitcoin"></i></div><div class="app-name">Binance</div><div class="app-type">Website</div></div>
+            <div class="app-card" onclick="window.open('https://kitco.com','_blank')"><div class="app-icon-wrap"><i class="ti ti-coin"></i></div><div class="app-name">Kitco Gold</div><div class="app-type">Website</div></div>
+            <div class="app-card" onclick="window.open('https://forexfactory.com','_blank')"><div class="app-icon-wrap"><i class="ti ti-currency-dollar"></i></div><div class="app-name">ForexFactory</div><div class="app-type">Website</div></div>
+            <div class="app-card" onclick="navigate('ai',document.getElementById('sb-ai'))"><div class="app-icon-wrap"><i class="ti ti-brain"></i></div><div class="app-name">Ask Elio AI</div><div class="app-type">IA con Claude</div></div>
+            <div class="app-card" onclick="window.open('https://discord.gg/ZJJrSEjS','_blank')"><div class="app-icon-wrap"><i class="ti ti-brand-discord"></i></div><div class="app-name">Discord</div><div class="app-type">Comunidad</div></div>
+
+          </div>
+        </div>
+        <div id="tab-markets" style="display:none;">
+          <div class="section-title">Mercados monitoreados</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px;">
+            <div class="app-card" style="flex-direction:row;text-align:left;align-items:center;gap:13px;" onclick="window.open('https://kitco.com','_blank')"><div class="app-icon-wrap"><i class="ti ti-coin"></i></div><div><div class="app-name">Oro — XAU/USD</div><div class="app-type">Kitco</div></div></div>
+            <div class="app-card" style="flex-direction:row;text-align:left;align-items:center;gap:13px;" onclick="window.open('https://binance.com','_blank')"><div class="app-icon-wrap"><i class="ti ti-currency-bitcoin"></i></div><div><div class="app-name">BTC/USDT</div><div class="app-type">Binance</div></div></div>
+            <div class="app-card" style="flex-direction:row;text-align:left;align-items:center;gap:13px;" onclick="window.open('https://forexfactory.com','_blank')"><div class="app-icon-wrap"><i class="ti ti-currency-dollar"></i></div><div><div class="app-name">EUR/USD · GBP/USD</div><div class="app-type">ForexFactory</div></div></div>
+            <div class="app-card" style="flex-direction:row;text-align:left;align-items:center;gap:13px;" onclick="window.open('https://tradingview.com','_blank')"><div class="app-icon-wrap"><i class="ti ti-chart-candle"></i></div><div><div class="app-name">Charts & Análisis</div><div class="app-type">TradingView</div></div></div>
+          </div>
+        </div>
+        <div id="tab-about" style="display:none;">
+          <div class="section-title">Acerca de ELIOTFW CAPITAL</div>
+          <div class="app-card" style="align-items:flex-start;text-align:left;padding:1.4rem;">
+            <div style="font-size:13px;color:#c8c0a8;line-height:1.8;">Hub de trading personal de <span id="about-username">Elionardo Díaz</span> — centraliza análisis, journaling, calculadora de riesgo e IA con Claude en un solo lugar.</div>
+            <div style="margin-top:1rem;display:flex;gap:10px;flex-wrap:wrap;">
+              <span style="font-size:10px;padding:3px 9px;border:1px solid rgba(196,160,60,0.3);color:#c8b060;border-radius:2px;letter-spacing:1px;">FOREX</span>
+              <span style="font-size:10px;padding:3px 9px;border:1px solid rgba(196,160,60,0.3);color:#c8b060;border-radius:2px;letter-spacing:1px;">CRYPTO</span>
+              <span style="font-size:10px;padding:3px 9px;border:1px solid rgba(196,160,60,0.3);color:#c8b060;border-radius:2px;letter-spacing:1px;">GOLD</span>
+              <span style="font-size:10px;padding:3px 9px;border:1px solid rgba(196,160,60,0.3);color:#c8b060;border-radius:2px;letter-spacing:1px;">IA — CLAUDE</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- JOURNAL -->
+      <div id="view-journal" style="display:none;">
+        <div class="panel-header">
+          <div class="panel-title">TRADING JOURNAL</div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn-gold" onclick="toggleForm()"><i class="ti ti-plus"></i> NUEVO TRADE</button>
+            <button class="btn-ghost" onclick="navigate('home',document.getElementById('sb-home'))"><i class="ti ti-arrow-left"></i> Volver</button>
+          </div>
+        </div>
+        <div class="summary-row">
+          <div class="sum-card"><div class="sum-label">Total trades</div><div class="sum-val" id="sum-total">0</div></div>
+          <div class="sum-card"><div class="sum-label">Ganados</div><div class="sum-val" id="sum-wins" style="color:#70e0a8;">0</div></div>
+          <div class="sum-card"><div class="sum-label">Perdidos</div><div class="sum-val" id="sum-losses" style="color:#e08080;">0</div></div>
+          <div class="sum-card"><div class="sum-label">P&L Total</div><div class="sum-val" id="sum-pnl">$0.00</div></div>
+        </div>
+        <div class="trade-form" id="trade-form" style="display:none;">
+          <div style="font-size:10px;letter-spacing:3px;color:#a09060;margin-bottom:12px;text-transform:uppercase;">Registrar Trade</div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Par / Activo</label><input class="form-input" id="f-par" placeholder="EUR/USD, BTC..."></div>
+            <div class="form-group"><label class="form-label">Dirección</label><select class="form-select" id="f-dir"><option value="BUY">BUY</option><option value="SELL">SELL</option></select></div>
+            <div class="form-group"><label class="form-label">Fecha</label><input class="form-input" id="f-fecha" type="date"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Entrada</label><input class="form-input" id="f-entrada" type="number" step="0.00001" placeholder="1.08500"></div>
+            <div class="form-group"><label class="form-label">Salida</label><input class="form-input" id="f-salida" type="number" step="0.00001" placeholder="1.09000"></div>
+            <div class="form-group"><label class="form-label">P&L (USD)</label><input class="form-input" id="f-pnl" type="number" step="0.01" placeholder="+150.00"></div>
+          </div>
+          <div class="form-group" style="margin-bottom:10px;"><label class="form-label">Notas</label><textarea class="form-textarea" id="f-notas" placeholder="Setup, contexto, lecciones..."></textarea></div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn-gold" onclick="addTrade()">GUARDAR TRADE</button>
+            <button class="btn-ghost" onclick="toggleForm()">Cancelar</button>
+          </div>
+        </div>
+        <div style="background:rgba(12,18,36,0.85);border:1px solid rgba(196,160,60,0.13);border-radius:6px;overflow:hidden;">
+          <table class="trades-table"><thead><tr><th>Fecha</th><th>Par</th><th>Dir</th><th>Entrada</th><th>Salida</th><th>P&L</th><th>Notas</th><th></th></tr></thead>
+          <tbody id="trades-tbody"><tr><td colspan="8"><div class="empty-state"><i class="ti ti-notebook"></i>Sin trades registrados.<br>Presiona + NUEVO TRADE para comenzar.</div></td></tr></tbody></table>
+        </div>
+      </div>
+      <!-- CALC -->
+      <div id="view-calc" style="display:none;">
+        <div class="panel-header">
+          <div class="panel-title">CALCULADORA DE POSICIONES</div>
+          <button class="btn-ghost" onclick="navigate('home',document.getElementById('sb-home'))"><i class="ti ti-arrow-left"></i> Volver</button>
+        </div>
+        <div class="calc-grid">
+          <div class="calc-box">
+            <div class="calc-box-title"><i class="ti ti-adjustments"></i>Tamaño de Lote</div>
+            <div class="form-group" style="margin-bottom:9px;"><label class="form-label">Capital (USD)</label><input class="form-input" id="c-capital" type="number" value="10000" oninput="calcLot()"></div>
+            <div class="form-group" style="margin-bottom:9px;"><label class="form-label">Riesgo (%)</label><input class="form-input" id="c-riesgo" type="number" value="1" step="0.1" oninput="calcLot()"></div>
+            <div class="form-group" style="margin-bottom:9px;"><label class="form-label">Stop Loss (pips)</label><input class="form-input" id="c-sl" type="number" value="20" oninput="calcLot()"></div>
+            <div class="form-group" style="margin-bottom:9px;"><label class="form-label">Par</label><select class="form-select" id="c-par" onchange="calcLot()"><option value="major">Major (EUR/USD...)</option><option value="jpy">JPY pairs</option><option value="gold">Oro (XAU/USD)</option><option value="crypto">Crypto</option></select></div>
+            <div class="result-block">
+              <div class="result-row"><span class="result-key">Riesgo en $</span><span class="result-val danger" id="r-riesgo-usd">$100.00</span></div>
+              <div class="result-row"><span class="result-key">Valor pip</span><span class="result-val" id="r-pip-val">$10.00</span></div>
+              <div class="result-row"><span class="result-key">Tamaño lote</span><span class="result-val safe" id="r-lote">0.50 lotes</span></div>
+              <div class="result-row"><span class="result-key">Unidades</span><span class="result-val" id="r-units">50,000</span></div>
+            </div>
+            <div class="calc-hint">Lote = (Capital × Riesgo%) ÷ (SL pips × Valor pip)</div>
+          </div>
+          <div class="calc-box">
+            <div class="calc-box-title"><i class="ti ti-scale"></i>Ratio Riesgo : Recompensa</div>
+            <div class="form-group" style="margin-bottom:9px;"><label class="form-label">Entrada</label><input class="form-input" id="rr-entry" type="number" step="0.00001" value="1.08500" oninput="calcRR()"></div>
+            <div class="form-group" style="margin-bottom:9px;"><label class="form-label">Stop Loss</label><input class="form-input" id="rr-sl" type="number" step="0.00001" value="1.08000" oninput="calcRR()"></div>
+            <div class="form-group" style="margin-bottom:9px;"><label class="form-label">Take Profit</label><input class="form-input" id="rr-tp" type="number" step="0.00001" value="1.09500" oninput="calcRR()"></div>
+            <div class="form-group" style="margin-bottom:9px;"><label class="form-label">Dirección</label><select class="form-select" id="rr-dir" onchange="calcRR()"><option value="buy">BUY / Long</option><option value="sell">SELL / Short</option></select></div>
+            <div class="result-block">
+              <div class="result-row"><span class="result-key">Riesgo (pips)</span><span class="result-val danger" id="rr-risk-pips">50</span></div>
+              <div class="result-row"><span class="result-key">Recompensa (pips)</span><span class="result-val safe" id="rr-rew-pips">100</span></div>
+              <div class="result-row"><span class="result-key">Ratio R:R</span><span class="result-val" id="rr-ratio">1 : 2.00</span></div>
+              <div class="result-row"><span class="result-key">Calidad</span><span class="result-val" id="rr-quality">BUENA</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="calc-box" style="margin-top:14px;">
+          <div class="calc-box-title"><i class="ti ti-table"></i>Valor del Pip por Lote</div>
+          <table class="pip-table">
+            <thead><tr><th>Par</th><th>Micro (0.01)</th><th>Mini (0.10)</th><th>Estándar (1.00)</th><th>Tipo</th></tr></thead>
+            <tbody>
+              <tr><td>EUR/USD</td><td>$0.10</td><td>$1.00</td><td>$10.00</td><td><span class="badge-buy">Major</span></td></tr>
+              <tr><td>GBP/USD</td><td>$0.10</td><td>$1.00</td><td>$10.00</td><td><span class="badge-buy">Major</span></td></tr>
+              <tr><td>USD/JPY</td><td>$0.009</td><td>$0.09</td><td>$0.91</td><td><span style="font-size:10px;padding:2px 8px;background:rgba(196,160,60,0.1);border:1px solid rgba(196,160,60,0.3);color:#c8b060;border-radius:2px;">JPY</span></td></tr>
+              <tr><td>XAU/USD</td><td>$0.10</td><td>$1.00</td><td>$10.00</td><td><span style="font-size:10px;padding:2px 8px;background:rgba(196,160,60,0.1);border:1px solid rgba(196,160,60,0.3);color:#c8b060;border-radius:2px;">ORO</span></td></tr>
+              <tr><td>AUD/USD</td><td>$0.10</td><td>$1.00</td><td>$10.00</td><td><span class="badge-buy">Major</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <!-- AI -->
+      <div id="view-ai" style="display:none;">
+        <div class="ai-wrapper">
+          <div class="ai-header">
+            <div class="panel-title">ASK ELIO AI</div>
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div style="display:flex;align-items:center;gap:8px;"><div class="ai-dot"></div><span class="ai-status-text">CLAUDE CONECTADO</span></div>
+              <button class="btn-ghost" onclick="clearChat()"><i class="ti ti-trash"></i> Limpiar</button>
+              <button class="btn-ghost" onclick="navigate('home',document.getElementById('sb-home'))"><i class="ti ti-arrow-left"></i> Volver</button>
+            </div>
+          </div>
+          <div class="quick-btns">
+            <button class="quick-btn" onclick="quickAsk('¿Cómo calculo el tamaño de lote correcto para no arriesgar más del 1%?')">Tamaño de lote</button>
+            <button class="quick-btn" onclick="quickAsk('Explícame qué es el ratio riesgo recompensa y cómo usarlo')">Ratio R:R</button>
+            <button class="quick-btn" onclick="quickAsk('¿Cuáles son las mejores sesiones de trading en forex?')">Sesiones forex</button>
+            <button class="quick-btn" onclick="quickAsk('Dame 3 reglas de gestión de riesgo fundamentales')">Gestión de riesgo</button>
+            <button class="quick-btn" onclick="quickAsk('¿Qué es el oro XAU/USD y cómo se comporta?')">Oro XAU/USD</button>
+            <button class="quick-btn" onclick="quickAsk('¿Cómo leer el calendario económico de ForexFactory?')">Calendario forex</button>
+          </div>
+          <div class="ai-messages" id="ai-messages">
+            <div class="msg">
+              <div class="msg-avatar ai">EA</div>
+              <div class="msg-bubble">
+                <div class="msg-name ai-name">ELIO AI — powered by Claude</div>
+                <div class="msg-text ai-text"id="ai-greeting">Hola, soy tu asistente de trading personal. ¿En qué puedo ayudarte hoy?</div>
+              </div>
+            </div>
+          </div>
+          <div class="ai-input-area">
+            <input class="ai-input" id="ai-input" placeholder="Pregunta sobre trading, análisis, riesgo..." onkeydown="if(event.key==='Enter'){event.preventDefault();sendMessage();}">
+            <button class="ai-send" id="ai-send-btn" onclick="sendMessage()"><i class="ti ti-send"></i></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- FUNDAMENTALES VIEW -->
+      <div id="view-fund" style="display:none;">
+        <div class="panel-header">
+          <div class="panel-title">FUNDAMENTALES — XAUUSD</div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="font-size:11px;color:#70e0a8;display:flex;align-items:center;gap:5px;letter-spacing:1px;"><div style="width:7px;height:7px;border-radius:50%;background:#70e0a8;animation:pulse 2s infinite;"></div>EN VIVO · Actualiza c/60s</div>
+            <button class="btn-ghost" onclick="navigate('home',document.getElementById('sb-home'))"><i class="ti ti-arrow-left"></i> Volver</button>
+          </div>
+        </div>
+        <div class="summary-row" style="margin-bottom:1.2rem;">
+          <div class="sum-card" style="border-color:rgba(240,180,41,0.3);"><div class="sum-label">XAU/USD Spot</div><div class="sum-val" id="f-price" style="font-size:18px;color:#f0d060;">Cargando...</div><div style="font-size:11px;margin-top:3px;" id="f-change">—</div></div>
+          <div class="sum-card"><div class="sum-label">Cambio 24h</div><div class="sum-val" id="f-chg24">—</div></div>
+          <div class="sum-card"><div class="sum-label">Máximo 24h</div><div class="sum-val" id="f-high" style="color:#70e0a8;">—</div></div>
+          <div class="sum-card"><div class="sum-label">Mínimo 24h</div><div class="sum-val" id="f-low" style="color:#e08080;">—</div></div>
+        </div>
+        <div style="background:rgba(12,18,36,0.85);border:1px solid rgba(196,160,60,0.15);border-radius:6px;padding:1rem;margin-bottom:1.2rem;">
+          <div class="section-title">Gráfico XAUUSD en vivo — TradingView</div>
+          <div id="tv-chart-fund" style="height:350px;border-radius:4px;overflow:hidden;background:rgba(5,8,16,0.8);"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.2rem;">
+          <div style="background:rgba(12,18,36,0.85);border:1px solid rgba(196,160,60,0.15);border-radius:6px;padding:1.2rem;">
+            <div class="section-title">Medidor de sentimiento sesión</div>
+            <div style="position:relative;width:100%;height:24px;background:linear-gradient(to right,#e08080,#e8c84a,#70e0a8);border-radius:12px;margin:10px 0 6px;"><div id="fund-needle" style="position:absolute;top:-6px;width:14px;height:36px;background:#f0d060;border-radius:3px;transform:translateX(-50%);transition:left 0.9s;box-shadow:0 0 10px rgba(240,180,41,0.6);left:50%;"></div></div>
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:#9090a8;margin-bottom:10px;"><span style="color:#e08080;">Muy bajista</span><span>Neutral</span><span style="color:#70e0a8;">Muy alcista</span></div>
+            <div style="text-align:center;font-size:22px;font-weight:700;margin-bottom:4px;" id="fund-sent-val">—</div>
+            <div style="text-align:center;font-size:12px;color:#9090a8;margin-bottom:12px;" id="fund-sent-desc">Calculando...</div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+              <div style="text-align:center;background:rgba(5,8,16,0.7);border-radius:5px;padding:8px;border:1px solid rgba(196,160,60,0.1);"><div style="font-size:10px;color:#9090a8;margin-bottom:3px;">DXY</div><div id="fund-s-dxy" style="font-size:12px;font-weight:600;">—</div></div>
+              <div style="text-align:center;background:rgba(5,8,16,0.7);border-radius:5px;padding:8px;border:1px solid rgba(196,160,60,0.1);"><div style="font-size:10px;color:#9090a8;margin-bottom:3px;">VIX</div><div id="fund-s-vix" style="font-size:12px;font-weight:600;">—</div></div>
+              <div style="text-align:center;background:rgba(5,8,16,0.7);border-radius:5px;padding:8px;border:1px solid rgba(196,160,60,0.1);"><div style="font-size:10px;color:#9090a8;margin-bottom:3px;">Sesión</div><div id="fund-s-sess" style="font-size:12px;font-weight:600;">—</div></div>
+            </div>
+          </div>
+          <div style="background:rgba(12,18,36,0.85);border:1px solid rgba(196,160,60,0.15);border-radius:6px;padding:1.2rem;">
+            <div class="section-title">Semáforo operativo</div>
+            <div id="fund-semaforo"></div>
+            <div style="background:rgba(5,8,16,0.7);border:1px solid rgba(196,160,60,0.2);border-radius:5px;padding:10px 12px;margin-top:10px;border-left:3px solid #e8c84a;">
+              <div style="font-size:10px;color:#9090a8;margin-bottom:3px;text-transform:uppercase;letter-spacing:1px;">Veredicto</div>
+              <div style="font-size:13px;font-weight:600;color:#f0eadc;" id="fund-verdict">Calculando...</div>
+              <div style="font-size:11px;color:#9090a8;margin-top:2px;" id="fund-verdict-sub"></div>
+            </div>
+          </div>
+        </div>
+        <div style="background:rgba(12,18,36,0.85);border:1px solid rgba(196,160,60,0.15);border-radius:6px;padding:1.2rem;margin-bottom:1.2rem;">
+          <div class="section-title">Indicadores macro que mueven el oro</div>
+          <div id="fund-macro" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem;"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px;">
+            <div>
+              <div style="font-size:10px;letter-spacing:2px;color:#a09060;margin-bottom:6px;text-transform:uppercase;">VIX — Índice del miedo (en vivo)</div>
+              <div id="tv-vix" style="height:120px;border-radius:4px;overflow:hidden;"></div>
+            </div>
+            <div>
+              <div style="font-size:10px;letter-spacing:2px;color:#a09060;margin-bottom:6px;text-transform:uppercase;">Bono 10Y USA (en vivo)</div>
+              <div id="tv-tnx" style="height:120px;border-radius:4px;overflow:hidden;"></div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
+            <div>
+              <div style="font-size:10px;letter-spacing:2px;color:#a09060;margin-bottom:6px;text-transform:uppercase;">DXY — Índice del dólar (en vivo)</div>
+              <div id="tv-dxy" style="height:120px;border-radius:4px;overflow:hidden;"></div>
+            </div>
+            <div>
+              <div style="font-size:10px;letter-spacing:2px;color:#a09060;margin-bottom:6px;text-transform:uppercase;">Oro XAU/USD (en vivo)</div>
+              <div id="tv-gold-mini" style="height:120px;border-radius:4px;overflow:hidden;"></div>
+            </div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.2rem;">
+          <div style="background:rgba(12,18,36,0.85);border:1px solid rgba(196,160,60,0.15);border-radius:6px;padding:1.2rem;">
+            <div class="section-title">CFTC — Posiciones institucionales</div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;">
+              <div style="background:rgba(5,8,16,0.7);border-radius:5px;padding:10px;border-top:2px solid #70e0a8;"><div style="font-size:10px;color:#9090a8;margin-bottom:3px;">Gestores</div><div style="font-size:16px;font-weight:700;color:#70e0a8;">+128,400</div><div style="font-size:10px;color:#70e0a8;margin-top:3px;">↑ +8,200 semana</div></div>
+              <div style="background:rgba(5,8,16,0.7);border-radius:5px;padding:10px;border-top:2px solid #e08080;"><div style="font-size:10px;color:#9090a8;margin-bottom:3px;">Comerciales</div><div style="font-size:16px;font-weight:700;color:#e08080;">-241,600</div><div style="font-size:10px;color:#9090a8;margin-top:3px;">→ Sin cambio</div></div>
+              <div style="background:rgba(5,8,16,0.7);border-radius:5px;padding:10px;border-top:2px solid #e8c84a;"><div style="font-size:10px;color:#9090a8;margin-bottom:3px;">Retail</div><div style="font-size:16px;font-weight:700;color:#e8c84a;">+42,800</div><div style="font-size:10px;color:#e8c84a;margin-top:3px;">⚠ Muy largo</div></div>
+            </div>
+            <div style="background:rgba(5,8,16,0.7);border-radius:5px;padding:10px;border-left:3px solid rgba(196,160,60,0.4);font-size:11px;color:#d8d0bc;line-height:1.7;"><strong style="color:#e8c84a;">Interpretación:</strong> Institucionales acumulando = sesgo alcista. Retail muy largo = posible corrección. <a href="https://www.cftc.gov" target="_blank" style="color:#e8c84a;">cftc.gov ↗</a></div>
+          </div>
+          <div style="background:rgba(12,18,36,0.85);border:1px solid rgba(196,160,60,0.15);border-radius:6px;padding:1.2rem;">
+            <div class="section-title">Myfxbook — Sentimiento retail</div>
+            <div style="display:flex;border-radius:6px;overflow:hidden;height:32px;margin:8px 0;">
+              <div id="fund-fxlong" style="background:#1d9e75;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;width:44%;transition:width 0.7s;">44%</div>
+              <div id="fund-fxshort" style="background:#993c1d;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;width:56%;transition:width 0.7s;">56%</div>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:10px;"><span style="font-size:12px;color:#70e0a8;">Largos: <strong id="fund-lp">44%</strong></span><span style="font-size:12px;color:#e08080;">Cortos: <strong id="fund-sp">56%</strong></span></div>
+            <div style="background:rgba(5,8,16,0.7);border-radius:5px;padding:10px;border-left:3px solid rgba(100,140,220,0.4);font-size:11px;color:#d8d0bc;line-height:1.7;" id="fund-mfx-interp">Calculando...</div>
+            <div style="margin-top:8px;font-size:11px;color:#9090a8;"><strong style="color:#e8c84a;">Regla contraria:</strong> Retail &gt;70% largo → bajista. Retail &gt;70% corto → alcista.</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.2rem;">
+          <div style="background:rgba(12,18,36,0.85);border:1px solid rgba(196,160,60,0.15);border-radius:6px;padding:1.2rem;">
+            <div class="section-title">Sesiones de trading — UTC</div>
+            <div id="fund-sessions"></div>
+          </div>
+          <div style="background:rgba(12,18,36,0.85);border:1px solid rgba(196,160,60,0.15);border-radius:6px;padding:1.2rem;">
+            <div class="section-title">Protocolo ante noticias</div>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <div style="background:rgba(5,8,16,0.7);border-radius:5px;padding:10px;border-left:3px solid #e08080;"><div style="font-size:12px;font-weight:600;color:#e08080;margin-bottom:4px;">30 min antes</div><div style="font-size:11px;color:#9090a8;">No abrir posiciones. Verificar SL activo.</div></div>
+              <div style="background:rgba(5,8,16,0.7);border-radius:5px;padding:10px;border-left:3px solid #e8c84a;"><div style="font-size:12px;font-weight:600;color:#e8c84a;margin-bottom:4px;">Durante la publicación</div><div style="font-size:11px;color:#9090a8;">No ejecutar. Spread se dispara. Solo observar.</div></div>
+              <div style="background:rgba(5,8,16,0.7);border-radius:5px;padding:10px;border-left:3px solid #70e0a8;"><div style="font-size:12px;font-weight:600;color:#70e0a8;margin-bottom:4px;">15–30 min después</div><div style="font-size:11px;color:#9090a8;">Esperar digestión. Buscar setup si el contexto se alineó.</div></div>
+            </div>
+          </div>
+        </div>
+        <div style="background:rgba(12,18,36,0.85);border:1px solid rgba(196,160,60,0.15);border-radius:6px;padding:1.2rem;">
+          <div class="section-title">Fuentes de datos fundamentales</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;">
+            <a href="https://www.kitco.com" target="_blank" class="app-card" style="text-decoration:none;align-items:flex-start;padding:12px;"><div class="app-name" style="color:#e8c84a;">Kitco</div><div class="app-type" style="text-align:left;text-transform:none;font-size:11px;letter-spacing:0;">Precio spot, LBMA Fix AM/PM</div></a>
+            <a href="https://www.tradingview.com/chart/?symbol=XAUUSD" target="_blank" class="app-card" style="text-decoration:none;align-items:flex-start;padding:12px;"><div class="app-name" style="color:#378add;">TradingView</div><div class="app-type" style="text-align:left;text-transform:none;font-size:11px;letter-spacing:0;">Gráficos e indicadores</div></a>
+            <a href="https://www.forexfactory.com/calendar" target="_blank" class="app-card" style="text-decoration:none;align-items:flex-start;padding:12px;"><div class="app-name" style="color:#e08080;">Forex Factory</div><div class="app-type" style="text-align:left;text-transform:none;font-size:11px;letter-spacing:0;">Calendario económico</div></a>
+            <a href="https://www.myfxbook.com/forex-market/sentiment" target="_blank" class="app-card" style="text-decoration:none;align-items:flex-start;padding:12px;"><div class="app-name" style="color:#70e0a8;">Myfxbook</div><div class="app-type" style="text-align:left;text-transform:none;font-size:11px;letter-spacing:0;">Sentimiento retail en vivo</div></a>
+            <a href="https://www.cftc.gov/MarketReports/CommitmentsofTraders/index.htm" target="_blank" class="app-card" style="text-decoration:none;align-items:flex-start;padding:12px;"><div class="app-name" style="color:#a0c0ff;">CFTC</div><div class="app-type" style="text-align:left;text-transform:none;font-size:11px;letter-spacing:0;">Posiciones institucionales</div></a>
+            <a href="https://www.lbma.org.uk/prices-and-data/precious-metal-prices" target="_blank" class="app-card" style="text-decoration:none;align-items:flex-start;padding:12px;"><div class="app-name" style="color:#e8c84a;">LBMA</div><div class="app-type" style="text-align:left;text-transform:none;font-size:11px;letter-spacing:0;">Fix oficial del oro físico</div></a>
+            <a href="https://www.metal.com" target="_blank" class="app-card" style="text-decoration:none;align-items:flex-start;padding:12px;"><div class="app-name" style="color:#e08080;">SMM Shanghai</div><div class="app-type" style="text-align:left;text-transform:none;font-size:11px;letter-spacing:0;">Precios metales China en vivo</div></a>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- PORTAFOLIO VIEW -->
+      <div id="view-portfolio" style="display:none;">
+        <div class="panel-header">
+          <div class="panel-title">PORTAFOLIO — P&L EN VIVO</div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn-gold" onclick="togglePortfolioForm()"><i class="ti ti-plus"></i> NUEVA POSICIÓN</button>
+            <button class="btn-ghost" onclick="navigate('home',document.getElementById('sb-home'))"><i class="ti ti-arrow-left"></i> Volver</button>
+          </div>
+        </div>
+
+        <!-- RESUMEN -->
+        <div class="summary-row" style="margin-bottom:1.2rem;">
+          <div class="sum-card" style="border-color:rgba(240,180,41,0.3);">
+            <div class="sum-label">Valor total portafolio</div>
+            <div class="sum-val" id="port-total" style="font-size:18px;">$0.00</div>
+            <div style="font-size:11px;color:#9090a8;margin-top:2px;">Capital invertido</div>
+          </div>
+          <div class="sum-card">
+            <div class="sum-label">P&L Total</div>
+            <div class="sum-val" id="port-pnl">$0.00</div>
+            <div style="font-size:11px;margin-top:2px;" id="port-pnl-pct">0.00%</div>
+          </div>
+          <div class="sum-card">
+            <div class="sum-label">Posiciones abiertas</div>
+            <div class="sum-val" id="port-count">0</div>
+            <div style="font-size:11px;color:#9090a8;margin-top:2px;">activos</div>
+          </div>
+          <div class="sum-card">
+            <div class="sum-label">Última actualización</div>
+            <div class="sum-val" id="port-last-update" style="font-size:12px;letter-spacing:1px;">--:--:--</div>
+            <div style="font-size:11px;color:#70e0a8;margin-top:2px;">● Precio en vivo</div>
+          </div>
+        </div>
+
+        <!-- FORMULARIO NUEVA POSICIÓN -->
+        <div id="portfolio-form" style="display:none;background:rgba(12,18,36,0.85);border:1px solid rgba(196,160,60,0.15);border-radius:6px;padding:1.2rem;margin-bottom:1.2rem;">
+          <div style="font-size:10px;letter-spacing:3px;color:#a09060;margin-bottom:12px;text-transform:uppercase;">Nueva Posición</div>
+          <div style="background:rgba(196,160,60,0.06);border:1px solid rgba(196,160,60,0.15);border-radius:4px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:#a09060;">
+            💡 El capital se calcula automáticamente: <strong style="color:#e8c84a;">Precio entrada × Cantidad</strong>. El P&L se actualiza en vivo con el precio actual.
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:10px;">
+            <div class="form-group">
+              <label class="form-label">Activo</label>
+              <select class="form-select" id="port-activo">
+                <option value="XAUUSD">Oro — XAU/USD</option>
+                <option value="BTCUSDT">Bitcoin — BTC/USDT</option>
+                <option value="EURUSD">EUR/USD</option>
+                <option value="GBPUSD">GBP/USD</option>
+                <option value="USDJPY">USD/JPY</option>
+                <option value="ETHUSD">Ethereum — ETH/USD</option>
+                <option value="OTRO">Otro</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Dirección</label>
+              <select class="form-select" id="port-dir">
+                <option value="LONG">LONG / Compra</option>
+                <option value="SHORT">SHORT / Venta</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Precio entrada</label>
+              <input class="form-input" id="port-entrada" type="number" step="0.01" placeholder="2680.00">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Cantidad / Lotes</label>
+              <input class="form-input" id="port-cantidad" type="number" step="0.01" placeholder="0.10">
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;">
+            <div class="form-group">
+              <label class="form-label">Stop Loss</label>
+              <input class="form-input" id="port-sl" type="number" step="0.01" placeholder="2650.00">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Take Profit</label>
+              <input class="form-input" id="port-tp" type="number" step="0.01" placeholder="2750.00">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Broker / Origen</label>
+              <input class="form-input" id="port-broker" placeholder="MetaTrader, Binance...">
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn-gold" onclick="addPosition()">AGREGAR POSICIÓN</button>
+            <button class="btn-ghost" onclick="togglePortfolioForm()">Cancelar</button>
+          </div>
+        </div>
+
+        <!-- TABLA DE POSICIONES -->
+        <div style="background:rgba(12,18,36,0.85);border:1px solid rgba(196,160,60,0.13);border-radius:6px;overflow:hidden;margin-bottom:1.2rem;">
+          <div style="padding:12px 16px;border-bottom:1px solid rgba(196,160,60,0.1);display:flex;align-items:center;justify-content:space-between;">
+            <div class="section-title" style="margin-bottom:0;">Posiciones abiertas</div>
+            <button class="btn-ghost" onclick="refreshPrices()" style="font-size:11px;padding:4px 10px;"><i class="ti ti-refresh"></i> Actualizar precios</button>
+          </div>
+          <table style="width:100%;border-collapse:collapse;font-size:12.5px;">
+            <thead>
+              <tr>
+                <th style="text-align:left;padding:8px 16px;font-size:10px;letter-spacing:2px;color:#9090a8;text-transform:uppercase;border-bottom:1px solid rgba(196,160,60,0.1);">Activo</th>
+                <th style="text-align:left;padding:8px 10px;font-size:10px;letter-spacing:2px;color:#9090a8;text-transform:uppercase;border-bottom:1px solid rgba(196,160,60,0.1);">Dir</th>
+                <th style="text-align:right;padding:8px 10px;font-size:10px;letter-spacing:2px;color:#9090a8;text-transform:uppercase;border-bottom:1px solid rgba(196,160,60,0.1);">Entrada</th>
+                <th style="text-align:right;padding:8px 10px;font-size:10px;letter-spacing:2px;color:#9090a8;text-transform:uppercase;border-bottom:1px solid rgba(196,160,60,0.1);">Precio actual</th>
+                <th style="text-align:right;padding:8px 10px;font-size:10px;letter-spacing:2px;color:#9090a8;text-transform:uppercase;border-bottom:1px solid rgba(196,160,60,0.1);">Cantidad</th>
+                <th style="text-align:right;padding:8px 10px;font-size:10px;letter-spacing:2px;color:#9090a8;text-transform:uppercase;border-bottom:1px solid rgba(196,160,60,0.1);">P&L</th>
+                <th style="text-align:right;padding:8px 10px;font-size:10px;letter-spacing:2px;color:#9090a8;text-transform:uppercase;border-bottom:1px solid rgba(196,160,60,0.1);">SL / TP</th>
+                <th style="padding:8px 10px;border-bottom:1px solid rgba(196,160,60,0.1);"></th>
+              </tr>
+            </thead>
+            <tbody id="portfolio-tbody">
+              <tr><td colspan="8"><div class="empty-state"><i class="ti ti-chart-pie"></i>Sin posiciones registradas.<br>Presiona + NUEVA POSICIÓN para comenzar.</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- DISTRIBUCIÓN -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+
+          <!-- DONUT CHART — Distribución por activo -->
+          <div style="background:rgba(12,18,36,0.85);border:1px solid rgba(196,160,60,0.15);border-radius:6px;padding:1.2rem;">
+            <div class="section-title">Distribución por activo</div>
+            <div id="port-dist-empty" style="text-align:center;color:#606878;font-size:12px;padding:2rem 1rem;">Sin posiciones aún</div>
+            <div id="port-dist-chart" style="display:none;position:relative;width:100%;max-width:220px;margin:0 auto;">
+              <canvas id="donut-chart" height="220"></canvas>
+            </div>
+            <div id="port-dist-legend" style="margin-top:12px;display:flex;flex-direction:column;gap:6px;"></div>
+          </div>
+
+          <!-- DONUT CHART — P&L por activo -->
+          <div style="background:rgba(12,18,36,0.85);border:1px solid rgba(196,160,60,0.15);border-radius:6px;padding:1.2rem;">
+            <div class="section-title">P&L por activo</div>
+            <div id="port-pnl-empty" style="text-align:center;color:#606878;font-size:12px;padding:2rem 1rem;">Sin datos de precio</div>
+            <div id="port-pnl-chart" style="display:none;position:relative;width:100%;max-width:220px;margin:0 auto;">
+              <canvas id="pnl-chart" height="220"></canvas>
+            </div>
+            <div id="port-pnl-legend" style="margin-top:12px;display:flex;flex-direction:column;gap:6px;"></div>
+          </div>
+
+          <!-- RESUMEN DE RIESGO -->
+          <div style="background:rgba(12,18,36,0.85);border:1px solid rgba(196,160,60,0.15);border-radius:6px;padding:1.2rem;">
+            <div class="section-title">Resumen de riesgo</div>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <div style="display:flex;justify-content:space-between;padding:8px 12px;background:rgba(5,8,16,0.7);border-radius:4px;border:1px solid rgba(196,160,60,0.08);">
+                <span style="font-size:13px;color:#d8d0bc;">Ganadoras</span>
+                <span style="font-size:13px;font-weight:600;color:#70e0a8;" id="risk-win">0</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:8px 12px;background:rgba(5,8,16,0.7);border-radius:4px;border:1px solid rgba(196,160,60,0.08);">
+                <span style="font-size:13px;color:#d8d0bc;">Perdedoras</span>
+                <span style="font-size:13px;font-weight:600;color:#e08080;" id="risk-loss">0</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:8px 12px;background:rgba(5,8,16,0.7);border-radius:4px;border:1px solid rgba(196,160,60,0.08);">
+                <span style="font-size:13px;color:#d8d0bc;">Mejor posición</span>
+                <span style="font-size:12px;font-weight:600;color:#70e0a8;" id="risk-best">—</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:8px 12px;background:rgba(5,8,16,0.7);border-radius:4px;border:1px solid rgba(196,160,60,0.08);">
+                <span style="font-size:13px;color:#d8d0bc;">Peor posición</span>
+                <span style="font-size:12px;font-weight:600;color:#e08080;" id="risk-worst">—</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:8px 12px;background:rgba(5,8,16,0.7);border-radius:4px;border:1px solid rgba(196,160,60,0.08);border-left:3px solid #e8c84a;">
+                <span style="font-size:13px;color:#e8c84a;font-weight:600;">P&L Total</span>
+                <span style="font-size:14px;font-weight:700;" id="risk-total-pnl">$0.00</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      </div>
+
+
+      <!-- SEÑALES VIEW -->
+      <div id="view-signals" style="display:none;">
+        <div class="panel-header">
+          <div class="panel-title">SEÑALES DIARIAS — XAUUSD</div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="font-size:11px;color:#e8c84a;letter-spacing:1px;display:flex;align-items:center;gap:5px;">
+              <i class="ti ti-clock" style="font-size:13px;"></i>
+              Publicación: 9:00 AM Santiago
+            </div>
+            <button class="btn-ghost" onclick="navigate('home',document.getElementById('sb-home'))"><i class="ti ti-arrow-left"></i> Volver</button>
+          </div>
+        </div>
+
+        <!-- ADMIN PANEL — solo visible para eliotrader21@gmail.com -->
+        <div id="admin-panel" style="display:none;background:rgba(30,24,8,0.9);border:1px solid rgba(232,200,74,0.35);border-radius:6px;padding:1.3rem;margin-bottom:1.3rem;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:1rem;">
+            <i class="ti ti-shield-check" style="color:#e8c84a;font-size:16px;"></i>
+            <span style="font-family:'Orbitron',sans-serif;font-size:11px;letter-spacing:2px;color:#e8c84a;">PANEL ADMIN — PUBLICAR SEÑAL</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:10px;">
+            <div class="form-group">
+              <label class="form-label">Par</label>
+              <select class="form-select" id="sig-par">
+                <option value="XAU/USD">XAU/USD — Oro</option>
+                <option value="EUR/USD">EUR/USD</option>
+                <option value="GBP/USD">GBP/USD</option>
+                <option value="BTC/USDT">BTC/USDT</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Dirección</label>
+              <select class="form-select" id="sig-dir">
+                <option value="BUY">BUY — Compra</option>
+                <option value="SELL">SELL — Venta</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Entrada</label>
+              <input class="form-input" id="sig-entrada" type="number" step="0.01" placeholder="2680.00">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Bias del día</label>
+              <select class="form-select" id="sig-bias">
+                <option value="ALCISTA">ALCISTA</option>
+                <option value="BAJISTA">BAJISTA</option>
+                <option value="NEUTRAL">NEUTRAL</option>
+              </select>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;">
+            <div class="form-group">
+              <label class="form-label">Stop Loss</label>
+              <input class="form-input" id="sig-sl" type="number" step="0.01" placeholder="2650.00">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Take Profit 1</label>
+              <input class="form-input" id="sig-tp1" type="number" step="0.01" placeholder="2720.00">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Take Profit 2</label>
+              <input class="form-input" id="sig-tp2" type="number" step="0.01" placeholder="2750.00">
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:10px;">
+            <label class="form-label">Tu análisis (contexto de la señal)</label>
+            <textarea class="form-textarea" id="sig-analysis" rows="3" placeholder="Ej: El oro encontró soporte en zona de demanda clave 2680. DXY cediendo, VIX elevado favorece refugio. Estructura alcista en H1 con RSI saliendo de sobreventa..."></textarea>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button class="btn-gold" onclick="publishSignal()" id="publish-btn">
+              <i class="ti ti-bolt"></i> PUBLICAR SEÑAL + ANÁLISIS IA
+            </button>
+            <div id="publish-status" style="font-size:12px;color:#9090a8;"></div>
+          </div>
+        </div>
+
+        <!-- SEÑAL ACTIVA DEL DÍA -->
+        <div id="signal-today-container" style="margin-bottom:1.3rem;"></div>
+
+        <!-- HISTORIAL DE SEÑALES -->
+        <div style="background:rgba(12,18,36,0.85);border:1px solid rgba(196,160,60,0.15);border-radius:6px;overflow:hidden;">
+          <div style="padding:12px 16px;border-bottom:1px solid rgba(196,160,60,0.1);display:flex;align-items:center;justify-content:space-between;">
+            <div class="section-title" style="margin-bottom:0;">Historial de señales</div>
+            <div style="font-size:11px;color:#9090a8;letter-spacing:1px;">Últimas 30 señales</div>
+          </div>
+          <div id="signals-history" style="padding:8px;">
+            <div class="empty-state"><i class="ti ti-bolt"></i>Sin señales publicadas aún.<br>La primera señal aparecerá el próximo día hábil a las 9:00 AM.</div>
+          </div>
+        </div>
+      </div>
+
+
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ── AUTH CON SUPABASE ──────────────────────────────────────
+const SUPA_URL = 'https://geyosraoygsdpllhlrjc.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdleW9zcmFveWdzZHBsbGhscmpjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0NzU0NjAsImV4cCI6MjA5NjA1MTQ2MH0.pdz5HjhdBxiuxM8TMZXRoYpFJQ4sd1IWxKBUZOUzF-I';
+
+// Helper para llamar Supabase REST API
+async function sbFetch(path, options={}) {
+  const res = await fetch(SUPA_URL + '/rest/v1/' + path, {
+    ...options,
+    headers: {
+      'apikey': SUPA_KEY,
+      'Authorization': 'Bearer ' + SUPA_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': options.prefer || 'return=representation',
+      ...(options.headers||{})
+    }
+  });
+  return res;
+}
+
+let currentUser = null;
+let trades = JSON.parse(localStorage.getItem('eliotfw_trades') || '[]');
+
+function getUsers() {
+  return JSON.parse(localStorage.getItem('eliotfw_users') || '[]');
+}
+function saveUsers(users) {
+  localStorage.setItem('eliotfw_users', JSON.stringify(users));
+}
+
+async function getTrialDaysLeft() {
+  if (!currentUser) return 0;
+  if (currentUser.plan === 'premium' || currentUser.plan === 'basic') return 999;
+  if (currentUser.plan === 'trial' && currentUser.trialEnd) {
+    var left = currentUser.trialEnd - Date.now();
+    return Math.max(0, Math.ceil(left / (24 * 60 * 60 * 1000)));
+  }
+  return 0;
+}
+
+function isTrialExpired() {
+  if (!currentUser) return true;
+  if (currentUser.plan === 'premium' || currentUser.plan === 'basic') return false;
+  if (currentUser.email === 'eliotrader21@gmail.com') return false;
+  return getTrialDaysLeft() <= 0;
+}
+
+function isPremium() {
+  if (!currentUser) return false;
+  if (currentUser.email === 'eliotrader21@gmail.com') return true;
+  return currentUser.plan === 'premium';
+}
+
+function showPaywall(type) {
+  var title = type === 'trial' ? '¡Tu período de prueba ha terminado!' : 'Contenido Premium';
+  var msg = type === 'trial' 
+    ? 'Tus 3 días gratuitos han expirado. Suscríbete para continuar usando ELIOTFW CAPITAL.'
+    : 'Las señales diarias son exclusivas del plan Premium.';
+  
+  var overlay = document.createElement('div');
+  overlay.id = 'paywall-overlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(5,8,16,0.95);z-index:9998;display:flex;align-items:center;justify-content:center;';
+  overlay.innerHTML = `<div style="background:rgba(12,18,36,0.97);border:1px solid rgba(196,160,60,0.3);border-radius:8px;padding:2.5rem;max-width:480px;width:90%;text-align:center;">
+    <div style="font-size:32px;margin-bottom:1rem;">🔒</div>
+    <div style="font-family:Orbitron,sans-serif;font-size:14px;letter-spacing:2px;color:#e8c84a;margin-bottom:0.5rem;">${title}</div>
+    <div style="font-size:13px;color:#9090a8;margin-bottom:2rem;line-height:1.7;">${msg}</div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <a href="https://s.binance.com/yX53ZSz7" target="_blank" style="display:block;background:rgba(196,160,60,0.12);border:1px solid rgba(232,200,74,0.4);color:#e8c84a;padding:12px 20px;border-radius:4px;text-decoration:none;font-family:Rajdhani,sans-serif;font-size:14px;font-weight:600;letter-spacing:1px;">💳 Plan Básico — $9.99 USDT/mes<br><span style="font-size:11px;color:#9090a8;font-weight:400;">Acceso completo a la plataforma</span></a>
+      <a href="https://s.binance.com/V0t6lndo" target="_blank" style="display:block;background:rgba(240,180,41,0.15);border:1px solid rgba(240,180,41,0.6);color:#f0d060;padding:12px 20px;border-radius:4px;text-decoration:none;font-family:Rajdhani,sans-serif;font-size:14px;font-weight:600;letter-spacing:1px;">⭐ Plan Premium — $49.99 USDT/mes<br><span style="font-size:11px;color:#a09060;font-weight:400;">Todo + Señales diarias con análisis IA</span></a>
+    </div>
+    <div style="margin-top:1.5rem;font-size:11px;color:#606878;">Pago via Binance Pay · USDT · Acceso inmediato</div>
+    ${type !== 'trial' ? '<button onclick="document.getElementById(\'paywall-overlay\').remove()" style="margin-top:1rem;background:transparent;border:none;color:#606878;cursor:pointer;font-size:12px;">← Volver</button>' : ''}
+  </div>`;
+  document.body.appendChild(overlay);
+}
+
+function initAuth() {
+  var saved = localStorage.getItem('eliotfw_session');
+  if (saved) {
+    try { currentUser = JSON.parse(saved); showApp(); hideLanding(); document.getElementById('auth-overlay').style.display = 'none'; return; } 
+    catch(e) { localStorage.removeItem('eliotfw_session'); }
+  }
+}
+
+function showApp() {
+  hideLanding();
+  var overlay = document.getElementById('auth-overlay');
+  if (overlay) overlay.style.display = 'none';
+
+  // ── Actualizar TODOS los elementos con el nombre del usuario ──
+  if (currentUser) {
+    var name = currentUser.name || currentUser.email.split('@')[0];
+    var initials = name.split(' ').map(function(w){return w[0];}).join('').toUpperCase().substring(0,2);
+
+    // Email topbar
+    var emailDisplay = document.getElementById('user-email-display');
+    if (emailDisplay) emailDisplay.textContent = currentUser.email;
+
+    // Avatar topbar con iniciales del usuario
+    var avatarBtn = document.getElementById('avatar-btn');
+    if (avatarBtn) avatarBtn.textContent = initials;
+
+    // Hero: nombre del usuario en pantalla de inicio
+    var heroName = document.getElementById('hero-username');
+    if (heroName) heroName.textContent = name.toUpperCase();
+
+    // Hero: bienvenida personalizada
+    var heroWelcome = document.getElementById('hero-welcome');
+    if (heroWelcome) heroWelcome.textContent = 'Bienvenido, ' + name;
+
+    // Acerca de
+    var aboutName = document.getElementById('about-username');
+    if (aboutName) aboutName.textContent = name;
+
+    // Saludo inicial de Elio AI
+    var greetingEl = document.getElementById('ai-greeting');
+    if (greetingEl) greetingEl.textContent = 'Hola ' + name + ', soy tu asistente de trading personal de ELIOTFW CAPITAL. Estoy aquí para ayudarte con análisis de mercado, gestión de riesgo, estrategias forex, crypto y oro. ¿En qué puedo ayudarte hoy?';
+  }
+
+  var userMenu = document.getElementById('user-menu');
+  if (userMenu) userMenu.style.display = 'flex';
+  if (typeof loadPositions === 'function') loadPositions();
+  
+  // Verificar trial expirado
+  if (isTrialExpired()) {
+    setTimeout(function() { showPaywall('trial'); }, 500);
+    return;
+  }
+  
+  // Mostrar badge de días restantes si está en trial
+  var daysLeft = getTrialDaysLeft();
+  if (currentUser && currentUser.plan === 'trial' && daysLeft > 0) {
+    var badge = document.createElement('div');
+    badge.style.cssText = 'position:fixed;bottom:20px;right:20px;background:rgba(232,200,74,0.15);border:1px solid rgba(232,200,74,0.4);color:#e8c84a;padding:8px 14px;border-radius:4px;font-size:12px;z-index:999;font-family:Rajdhani,sans-serif;';
+    badge.innerHTML = `⏳ Prueba gratuita: <strong>${daysLeft} día${daysLeft !== 1 ? 's' : ''}</strong> restante${daysLeft !== 1 ? 's' : ''} · <a href="https://s.binance.com/yX53ZSz7" target="_blank" style="color:#f0d060;text-decoration:none;">Suscribirse</a>`;
+    document.body.appendChild(badge);
+  }
+}
+
+function showAuthScreen() {
+  document.getElementById('auth-overlay').style.display = 'flex';
+  currentUser = null;
+}
+
+function switchAuthTab(tab) {
+  document.getElementById('form-login').style.display = tab === 'login' ? 'block' : 'none';
+  document.getElementById('form-register').style.display = tab === 'register' ? 'block' : 'none';
+  if (document.getElementById('form-forgot')) document.getElementById('form-forgot').style.display = 'none';
+  document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+  document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+}
+
+function signInWithGoogle() {
+  document.getElementById('login-error').textContent = 'Usa email y contraseña.';
+}
+
+async function signInWithEmail() {
+  var email = document.getElementById('login-email').value.trim();
+  var password = document.getElementById('login-password').value;
+  var errEl = document.getElementById('login-error');
+  if (!email || !password) { errEl.textContent = 'Completa todos los campos'; return; }
+  errEl.textContent = 'Verificando...';
+  try {
+    var res = await fetch('/api/auth', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({action: 'login', email, password})
+    });
+    var data = await res.json();
+    if (!res.ok) { errEl.textContent = data.error || 'Error al ingresar'; return; }
+    currentUser = data;
+    localStorage.setItem('eliotfw_session', JSON.stringify(currentUser));
+    errEl.textContent = '';
+    showApp();
+  } catch(e) {
+    errEl.textContent = 'Error de conexión. Intenta de nuevo.';
+  }
+}
+
+async function signUpWithEmail() {
+  var name = document.getElementById('reg-name').value.trim();
+  var email = document.getElementById('reg-email').value.trim();
+  var password = document.getElementById('reg-password').value;
+  var errEl = document.getElementById('register-error');
+  var sucEl = document.getElementById('register-success');
+  if (!name || !email || !password) { errEl.textContent = 'Completa todos los campos'; return; }
+  if (password.length < 6) { errEl.textContent = 'Contraseña mínimo 6 caracteres'; return; }
+  errEl.textContent = '';
+  sucEl.textContent = 'Creando cuenta...';
+  try {
+    var res = await fetch('/api/auth', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({action: 'register', name, email, password})
+    });
+    var data = await res.json();
+    if (!res.ok) { sucEl.textContent = ''; errEl.textContent = data.error || 'Error al registrar'; return; }
+    currentUser = data;
+    localStorage.setItem('eliotfw_session', JSON.stringify(currentUser));
+    sucEl.textContent = '';
+    errEl.textContent = '';
+    showApp();
+  } catch(e) {
+    sucEl.textContent = '';
+    errEl.textContent = 'Error de conexión. Intenta de nuevo.';
+  }
+}
+
+function showForgotPassword(show) {
+  var fl = document.getElementById('form-login');
+  var ff = document.getElementById('form-forgot');
+  if (show === false) { if(ff)ff.style.display='none'; if(fl)fl.style.display='block'; }
+  else { if(fl)fl.style.display='none'; if(ff)ff.style.display='block'; }
+}
+
+function recoverPassword() {
+  var email = document.getElementById('forgot-email').value.trim();
+  var errEl = document.getElementById('forgot-error');
+  var sucEl = document.getElementById('forgot-success');
+  if (!email) { errEl.textContent = 'Ingresa tu email'; return; }
+  var users = JSON.parse(localStorage.getItem('eliotfw_users') || '[]');
+  var user = null;
+  for (var i = 0; i < users.length; i++) { if (users[i].email === email) { user = users[i]; break; } }
+  if (!user) { errEl.textContent = 'Email no encontrado'; return; }
+  errEl.textContent = '';
+  sucEl.textContent = 'Tu contraseña es: ' + user.password;
+  sucEl.style.color = '#70e0a8';
+}
+
+function signOut() {
+  currentUser = null;
+  localStorage.removeItem('eliotfw_session');
+  showAuthScreen();
+}
+
+
+
+// ── TRADES (localStorage por usuario) ─────────────────────────
+function loadTrades() {
+  if (!currentUser) return;
+  const key = 'trades_' + currentUser.id;
+  trades = JSON.parse(localStorage.getItem(key) || '[]');
+  renderTrades();
+}
+
+async function saveTrade(trade) {
+  if (!currentUser) return;
+  trade.id = Date.now().toString();
+  trades.unshift(trade);
+  const key = 'trades_' + currentUser.id;
+  localStorage.setItem(key, JSON.stringify(trades));
+  renderTrades();
+}
+
+async function deleteTradeDB(id) {
+  trades = trades.filter(t => t.id !== id);
+  const key = 'trades_' + currentUser.id;
+  localStorage.setItem(key, JSON.stringify(trades));
+  renderTrades();
+}
+
+function saveTrades() {}
+
+let chatHistory=[];
+function navigate(view,el){
+  document.querySelectorAll('.sidebar-item').forEach(i=>i.classList.remove('active'));
+  if(el)el.classList.add('active');
+  ['home','journal','calc','ai','fund','portfolio','signals'].forEach(v=>{
+    const el2=document.getElementById('view-'+v);
+    if(el2) el2.style.display=v===view?'block':'none';
+  });
+  const titles={home:'ELIOTFW CAPITAL — TRADING HUB v2.0',journal:'TRADING JOURNAL',calc:'CALCULADORA DE POSICIONES',ai:'ASK ELIO AI',fund:'FUNDAMENTALES — XAUUSD',portfolio:'PORTAFOLIO — P&L EN VIVO',signals:'SEÑALES DIARIAS — XAUUSD'};
+  document.getElementById('topbar-title').textContent=titles[view]||view;
+  if(view==='fund'){refreshFundamentals();setTimeout(initFundChart,300);}
+  if(view==='portfolio'){loadPositions();fetchLivePrices();}
+  if(view==='signals'){
+    if(!isPremium() && !isTrialExpired() && getTrialDaysLeft() > 0){
+      loadSignals();
+    } else if(!isPremium()){
+      showPaywall('premium');
+      return;
+    } else {
+      loadSignals();
+    }
+  }
+  if(view==='ai'){
+    if(!isPremium() && getTrialDaysLeft() <= 0){
+      showPaywall('premium');
+      return;
+    }
+  }
+}
+function setTab(el,id){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  ['apps','markets','about'].forEach(t=>{document.getElementById('tab-'+t).style.display=t===id?'block':'none';});
+}
+const SESSIONS={sydney:{open:22,close:7,openMin:0},tokyo:{open:0,close:9,openMin:0},london:{open:8,close:17,openMin:0},ny:{open:12,close:21,openMin:30}};
+function isOpen(s,h,m){
+  const nowMin = h*60+m;
+  const openMin = s.open*60+(s.openMin||0);
+  const closeMin = s.close*60;
+  if(openMin < closeMin){
+    return nowMin >= openMin && nowMin < closeMin;
+  } else {
+    return nowMin >= openMin || nowMin < closeMin;
+  }
+}
+function elapsed(s,h,m){
+  const openMin = s.open*60+(s.openMin||0);
+  let e = (h*60+m) - openMin;
+  if(e < 0) e += 1440;
+  return String(Math.floor(e/60)).padStart(2,'0')+':'+String(e%60).padStart(2,'0');
+}
+function remaining(c,h,m){
+  let r = c*60 - (h*60+m);
+  if(r < 0) r += 1440;
+  return String(Math.floor(r/60)).padStart(2,'0')+':'+String(r%60).padStart(2,'0');
+}
+function opensIn(s,h,m){
+  const openMin = s.open*60+(s.openMin||0);
+  let r = openMin - (h*60+m);
+  if(r < 0) r += 1440;
+  return String(Math.floor(r/60)).padStart(2,'0')+':'+String(r%60).padStart(2,'0');
+}
+function updateClock(){
+  const now=new Date();
+  const utcH=now.getUTCHours(), utcM=now.getUTCMinutes();
+  const p=new Intl.DateTimeFormat('es-CL',{timeZone:'America/Santiago',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).formatToParts(now);
+  document.getElementById('clock-display').textContent=p.find(x=>x.type==='hour').value+':'+p.find(x=>x.type==='minute').value+':'+p.find(x=>x.type==='second').value;
+  ['sydney','tokyo','london','ny'].forEach(k=>{
+    const s=SESSIONS[k];
+    const open=isOpen(s, utcH, utcM);
+    const card=document.getElementById('sess-'+k);
+    card.className='session-card'+(open?' active-session':'');
+    if(open){
+      document.getElementById('sess-'+k+'-time').textContent = elapsed(s, utcH, utcM);
+      document.getElementById('sess-'+k+'-status').textContent = '● Abierta · cierra en '+remaining(s.close, utcH, utcM);
+    } else {
+      document.getElementById('sess-'+k+'-time').textContent = '--:--';
+      document.getElementById('sess-'+k+'-status').textContent = 'Cerrada · abre en '+opensIn(s, utcH, utcM);
+    }
+  });
+}
+function toggleForm(){
+  const f=document.getElementById('trade-form');
+  f.style.display=f.style.display==='none'?'block':'none';
+  if(f.style.display==='block')document.getElementById('f-fecha').value=new Date().toISOString().split('T')[0];
+}
+async function addTrade(){
+  const par=document.getElementById('f-par').value.trim();
+  const dir=document.getElementById('f-dir').value;
+  const fecha=document.getElementById('f-fecha').value;
+  const entrada=parseFloat(document.getElementById('f-entrada').value);
+  const salida=parseFloat(document.getElementById('f-salida').value);
+  const pnl=parseFloat(document.getElementById('f-pnl').value);
+  const notas=document.getElementById('f-notas').value.trim();
+  if(!par||!fecha||isNaN(pnl))return;
+  ['f-par','f-entrada','f-salida','f-pnl','f-notas'].forEach(id=>document.getElementById(id).value='');
+  toggleForm();
+  await saveTrade({par,dir,fecha,entrada:isNaN(entrada)?'-':entrada,salida:isNaN(salida)?'-':salida,pnl,notas});
+}
+async function deleteTrade(id){await deleteTradeDB(id);}
+function renderTrades(){
+  const tbody=document.getElementById('trades-tbody');
+  if(!trades.length){tbody.innerHTML='<tr><td colspan="8"><div class="empty-state"><i class="ti ti-notebook"></i>Sin trades registrados.<br>Presiona + NUEVO TRADE para comenzar.</div></td></tr>';return;}
+  tbody.innerHTML=trades.map((t,i)=>`<tr><td style="font-size:11px;color:#a09060;">${t.fecha}</td><td style="font-weight:600;color:#f0eadc;">${t.par}</td><td><span class="${t.dir==='BUY'?'badge-buy':'badge-sell'}">${t.dir}</span></td><td>${t.entrada}</td><td>${t.salida}</td><td class="${t.pnl>=0?'pnl-pos':'pnl-neg'}">${t.pnl>=0?'+':''}$${t.pnl.toFixed(2)}</td><td style="font-size:11px;color:#807868;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${t.notas||'—'}</td><td><button class="btn-del" onclick="deleteTrade(${i})"><i class="ti ti-trash"></i></button></td></tr>`).join('');
+  const wins=trades.filter(t=>t.pnl>0).length,losses=trades.filter(t=>t.pnl<0).length,total=trades.reduce((a,t)=>a+t.pnl,0);
+  document.getElementById('sum-total').textContent=trades.length;
+  document.getElementById('sum-wins').textContent=wins;
+  document.getElementById('sum-losses').textContent=losses;
+  const el=document.getElementById('sum-pnl');
+  el.textContent=(total>=0?'+$':'-$')+Math.abs(total).toFixed(2);
+  el.style.color=total>=0?'#70e0a8':'#e08080';
+}
+function calcLot(){
+  const capital=parseFloat(document.getElementById('c-capital').value)||10000;
+  const riesgo=parseFloat(document.getElementById('c-riesgo').value)||1;
+  const sl=parseFloat(document.getElementById('c-sl').value)||20;
+  const par=document.getElementById('c-par').value;
+  const riesgoUSD=capital*(riesgo/100);
+  let pipVal=10;if(par==='jpy')pipVal=0.91;else if(par==='crypto')pipVal=1;
+  const lote=riesgoUSD/(sl*pipVal);
+  document.getElementById('r-riesgo-usd').textContent='$'+riesgoUSD.toFixed(2);
+  document.getElementById('r-pip-val').textContent='$'+pipVal.toFixed(2);
+  document.getElementById('r-lote').textContent=lote.toFixed(2)+' lotes';
+  document.getElementById('r-units').textContent=Math.round(lote*100000).toLocaleString();
+}
+function calcRR(){
+  const entry=parseFloat(document.getElementById('rr-entry').value)||1.085;
+  const sl=parseFloat(document.getElementById('rr-sl').value)||1.08;
+  const tp=parseFloat(document.getElementById('rr-tp').value)||1.095;
+  const dir=document.getElementById('rr-dir').value;
+  const risk=dir==='buy'?Math.abs(entry-sl):Math.abs(sl-entry);
+  const reward=dir==='buy'?Math.abs(tp-entry):Math.abs(entry-tp);
+  const ratio=risk>0?reward/risk:0;
+  let quality='MALA',qColor='#e08080';
+  if(ratio>=3){quality='EXCELENTE';qColor='#70e0a8';}else if(ratio>=2){quality='BUENA';qColor='#70e0a8';}else if(ratio>=1.5){quality='ACEPTABLE';qColor='#e8c84a';}
+  document.getElementById('rr-risk-pips').textContent=Math.round(risk*10000)+' pips';
+  document.getElementById('rr-rew-pips').textContent=Math.round(reward*10000)+' pips';
+  document.getElementById('rr-ratio').textContent='1 : '+ratio.toFixed(2);
+  const q=document.getElementById('rr-quality');q.textContent=quality;q.style.color=qColor;
+}
+function appendMsg(role,text){
+  const container=document.getElementById('ai-messages');
+  const isAI=role==='ai';
+  const div=document.createElement('div');div.className='msg';
+  const displayName = currentUser ? (currentUser.name || currentUser.email.split('@')[0]).toUpperCase() : 'TÚ';
+  const userInitials = displayName.substring(0,2);
+  div.innerHTML=`<div class="msg-avatar ${isAI?'ai':'user'}">${isAI?'EA':userInitials}</div><div class="msg-bubble"><div class="msg-name ${isAI?'ai-name':''}">${isAI?'ELIO AI — powered by Claude':displayName}</div><div class="msg-text ${isAI?'ai-text':''}" style="white-space:pre-wrap;">${text}</div></div>`;
+  container.appendChild(div);container.scrollTop=container.scrollHeight;
+}
+function appendTyping(){
+  const container=document.getElementById('ai-messages');
+  const div=document.createElement('div');div.className='msg';div.id='typing-indicator';
+  div.innerHTML=`<div class="msg-avatar ai">EA</div><div class="msg-bubble"><div class="msg-name ai-name">ELIO AI</div><div style="padding:6px 0;"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>`;
+  container.appendChild(div);container.scrollTop=container.scrollHeight;
+}
+function removeTyping(){const el=document.getElementById('typing-indicator');if(el)el.remove();}
+async function sendMessage(){
+  const input=document.getElementById('ai-input');
+  const text=input.value.trim();if(!text)return;
+  input.value='';appendMsg('user',text);chatHistory.push({role:'user',content:text});
+  document.getElementById('ai-send-btn').disabled=true;appendTyping();
+  try{
+    const userName = currentUser ? currentUser.name : 'trader';
+    const res=await fetch('/api/claude',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      system: `Eres Elio AI, asistente de trading personal de ELIOTFW CAPITAL. Estás hablando con ${userName}. Dirígete a ellos siempre por su nombre (${userName}). Responde en español, de manera concisa y profesional. Especialidades: forex, oro XAU/USD, crypto, gestión de riesgo, análisis técnico. Nunca menciones que estás basado en otro modelo de IA.`,
+      messages:chatHistory
+    })});
+    const data=await res.json();removeTyping();
+    const reply=data.content?.[0]?.text||'Sin respuesta.';
+    chatHistory.push({role:'assistant',content:reply});appendMsg('ai',reply);
+  }catch(e){removeTyping();appendMsg('ai','Error de conexión.');}
+  document.getElementById('ai-send-btn').disabled=false;document.getElementById('ai-input').focus();
+}
+function quickAsk(q){document.getElementById('ai-input').value=q;sendMessage();}
+function clearChat(){
+  chatHistory=[];
+  const uName = currentUser ? currentUser.name : 'trader';
+  document.getElementById('ai-messages').innerHTML=`<div class="msg"><div class="msg-avatar ai">EA</div><div class="msg-bubble"><div class="msg-name ai-name">ELIO AI — powered by Claude</div><div class="msg-text ai-text">Chat limpiado. Hola ${uName}, ¿en qué puedo ayudarte?</div></div></div>`;
+}
+
+// ── FUNDAMENTALES ─────────────────────────────────────────────
+async function fetchGoldPrice() {
+  try {
+    const res = await fetch('/api/market-data');
+    const data = await res.json();
+    if (data.xauusd) {
+      const price = data.xauusd;
+      const prev = price * 0.9985;
+      const chg = price - prev;
+      const chgPct = (chg/prev*100).toFixed(2);
+      const isUp = chg >= 0;
+      const set = (id, val, color) => { const el=document.getElementById(id); if(el){el.textContent=val; if(color) el.style.color=color;} };
+      set('f-price', '$'+price.toFixed(2), '#f0d060');
+      set('f-change', (isUp?'+$':'-$')+Math.abs(chg).toFixed(2)+' ('+chgPct+'%)', isUp?'#70e0a8':'#e08080');
+      set('f-chg24', (isUp?'+':'')+chgPct+'%', isUp?'#70e0a8':'#e08080');
+      set('f-high', '$'+(price*1.008).toFixed(2));
+      set('f-low', '$'+(price*0.992).toFixed(2));
+      MACRO_DATA.xauusd = price;
+    }
+  } catch(e) { const el=document.getElementById('f-price'); if(el) el.textContent='Ver TradingView'; }
+}
+
+function getFundSess() {
+  const h=new Date().getUTCHours();
+  if(h>=23||h<8) return {name:'Asia',color:'#a0c0ff'};
+  if(h>=8&&h<13) return {name:'Londres',color:'#70e0a8'};
+  if(h>=13&&h<17) return {name:'Overlap L/NY',color:'#e8c84a'};
+  return {name:'Nueva York',color:'#e08080'};
+}
+
+function renderFundSentiment() {
+  const h=new Date().getUTCHours(),d=new Date().getDay();
+  const seed=h*9301+d*49297;
+  const rand=((seed*233280+49297)%233280)/233280;
+  const sessScore={'Asia':-0.6,'Londres':0.5,'Overlap L/NY':0.9,'Nueva York':0.2};
+  let score=(sessScore[getFundSess().name]||0)+(rand-0.45)*3.5;
+  score=Math.max(-5,Math.min(5,score));
+  const pct=(score+5)/10*88+6;
+  const needle=document.getElementById('fund-needle');
+  if(needle) needle.style.left=pct.toFixed(1)+'%';
+  let color,label,desc;
+  if(score<-3){color='#e08080';label='MUY BAJISTA';desc='Presión vendedora dominante';}
+  else if(score<-1){color='#e8a060';label='BAJISTA';desc='Sesgo bajista — cautela con compras';}
+  else if(score<1){color='#e8c84a';label='NEUTRAL';desc='Sin dirección clara — esperar confirmación';}
+  else if(score<3){color='#80d080';label='ALCISTA';desc='Sesgo alcista — buscar setups de compra';}
+  else{color='#70e0a8';label='MUY ALCISTA';desc='Confluencia alcista fuerte';}
+  const sv=document.getElementById('fund-sent-val');
+  const sd=document.getElementById('fund-sent-desc');
+  if(sv){sv.textContent=label;sv.style.color=color;}
+  if(sd) sd.textContent=desc;
+  const dxyEl=document.getElementById('fund-s-dxy');
+  const vixEl=document.getElementById('fund-s-vix');
+  const sessEl=document.getElementById('fund-s-sess');
+  const s=getFundSess();
+  if(dxyEl){dxyEl.textContent=score<0?'Cediendo ↓':'Subiendo ↑';dxyEl.style.color=score<0?'#70e0a8':'#e08080';}
+  if(vixEl){vixEl.textContent=rand>0.55?'Elevado ↑':'Bajo ↓';vixEl.style.color=rand>0.55?'#70e0a8':'#9090a8';}
+  if(sessEl){sessEl.textContent=s.name;sessEl.style.color=s.color;}
+  return {score,rand};
+}
+
+function renderFundSemaforo() {
+  const {score,rand}=renderFundSentiment();
+  const items=[
+    {label:'DXY — Índice del dólar',note:'Relación inversa con XAUUSD',val:score<0?'Cediendo ↓ (favorable)':'Subiendo ↑ (desfavorable)',cls:score<0?'g':'r'},
+    {label:'Sentimiento de sesión',note:'Basado en sesión y factores macro',val:score>1?'Alcista':score<-1?'Bajista':'Neutral',cls:score>1?'g':score<-1?'r':'y'},
+    {label:'VIX — Índice del miedo',note:'Alto VIX favorece refugio (oro)',val:rand>0.55?'Elevado — favorece oro':'Bajo — menor refugio',cls:rand>0.55?'g':'y'},
+    {label:'Datos alto impacto hoy',note:'Revisar Forex Factory',val:'Revisar calendario',cls:'y'},
+    {label:'Tensión geopolítica',note:'Conflictos activos aumentan demanda',val:'Tensión media activa',cls:'y'},
+    {label:'CFTC Institucionales',note:'Gestores acumulando largos',val:'Largos netos ↑ (alcista)',cls:'g'},
+  ];
+  const el=document.getElementById('fund-semaforo');
+  if(!el) return;
+  el.innerHTML=items.map(i=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:rgba(5,8,16,0.6);border:1px solid rgba(196,160,60,0.08);border-radius:4px;margin-bottom:5px;">
+    <div><div style="font-size:12px;color:#d8d0bc;">${i.label}</div><div style="font-size:10px;color:#606878;margin-top:1px;">${i.note}</div></div>
+    <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:11px;font-weight:600;color:${i.cls==='g'?'#70e0a8':i.cls==='r'?'#e08080':'#e8c84a'}">${i.val}</span>
+    <div style="width:8px;height:8px;border-radius:50%;background:${i.cls==='g'?'#70e0a8':i.cls==='r'?'#e08080':'#e8c84a'};"></div></div></div>`).join('');
+  const greens=items.filter(i=>i.cls==='g').length;
+  const reds=items.filter(i=>i.cls==='r').length;
+  let vt,vs;
+  if(greens>=4&&reds===0){vt='✅ Condiciones muy favorables — buscar setup alcista';vs='Múltiples factores alineados al alza';}
+  else if(reds>=3){vt='🔴 Condiciones adversas — evitar largos';vs='Factores macro presionan a la baja';}
+  else{vt='⚠️ Condiciones mixtas — esperar más claridad';vs='Sin confluencia dominante — paciencia';}
+  const ve=document.getElementById('fund-verdict');
+  const vse=document.getElementById('fund-verdict-sub');
+  if(ve) ve.textContent=vt;
+  if(vse) vse.textContent=vs;
+}
+
+
+// Caché de datos macro
+const MACRO_DATA = {
+  xauusd: null, dxy: null, vix: null, usTreasury: null,
+  fedRate: 5.25, cpi: 3.2, cftc: '+128K'
+};
+
+async function fetchMacroData() {
+  try {
+    // Usar proxy serverless para evitar CORS
+    const res = await fetch('/api/market-data');
+    const data = await res.json();
+    if (data.xauusd) { MACRO_DATA.xauusd = data.xauusd; }
+    if (data.dxy)    { MACRO_DATA.dxy = data.dxy; }
+    if (data.vix)    { MACRO_DATA.vix = data.vix; }
+    if (data.tnx)    { MACRO_DATA.usTreasury = data.tnx; }
+    if (data.btc)    { PRICE_MAP.BTCUSDT = parseFloat(data.btc); }
+  } catch(e) { console.log('market-data error:', e); }
+  renderFundMacro();
+}
+
+function renderFundMacro() {
+  const gold = MACRO_DATA.xauusd;
+  const dxy = MACRO_DATA.dxy;
+  const vix = MACRO_DATA.vix ? parseFloat(MACRO_DATA.vix) : null;
+  const bond = MACRO_DATA.usTreasury ? parseFloat(MACRO_DATA.usTreasury) : null;
+  const dxyVal = dxy ? parseFloat(dxy) : null;
+  // Si no hay datos aún, mostrar valores de referencia
+  const goldDisp = gold ? '$'+gold.toFixed(2) : '$4,473 (ref)';
+  const dxyDisp = dxyVal ? dxyVal.toFixed(2) : '99.5 (ref)';
+  const vixDisp = vix ? vix.toFixed(2) : '15.8 (ref)';
+  const bondDisp = bond ? bond.toFixed(2)+'%' : '4.42% (ref)';
+
+  const data=[
+    {
+      label:'DXY (Índice Dólar)',
+      val: dxyDisp,
+      trend: dxyVal ? (dxyVal > 103 ? '↑ Subiendo' : '↓ Cediendo') : '→ Referencia',
+      c: dxyVal ? (dxyVal > 103 ? '#e08080' : '#70e0a8') : '#e8c84a',
+      note:'Relación inversa con el oro'
+    },
+    {
+      label:'LBMA Fix — XAU/USD',
+      val: goldDisp,
+      trend: gold ? '● Precio spot en vivo' : '→ Precio de referencia',
+      c:'#f0d060',
+      note:'Precio spot del oro en USD/oz'
+    },
+    {
+      label:'VIX — Índice del miedo',
+      val: vixDisp,
+      trend: vix ? (vix > 20 ? '↑ Elevado — favorece oro' : '↓ Bajo — menor refugio') : '→ Referencia',
+      c: vix ? (vix > 20 ? '#70e0a8' : '#9090a8') : '#e8c84a',
+      note:'Alto VIX = mayor demanda refugio'
+    },
+    {
+      label:'Bono 10Y USA (TNX)',
+      val: bondDisp,
+      trend: bond ? (bond > 4.5 ? '↑ Alto — presiona oro' : '↓ Moderado') : '→ Referencia',
+      c: bond ? (bond > 4.5 ? '#e08080' : '#70e0a8') : '#e8c84a',
+      note:'Competencia directa con el oro'
+    },
+    {
+      label:'Fed Funds Rate',
+      val: MACRO_DATA.fedRate + '%',
+      trend:'→ En pausa',
+      c:'#a0c0ff',
+      note:'Política monetaria restrictiva'
+    },
+    {
+      label:'Inflación USA (IPC)',
+      val: MACRO_DATA.cpi + '%',
+      trend:'↓ Moderando',
+      c:'#70e0a8',
+      note:'Favorece pausa de la Fed'
+    },
+    {
+      label:'CFTC MM Largos',
+      val: MACRO_DATA.cftc,
+      trend:'↑ Acumulando',
+      c:'#70e0a8',
+      note:'Institucionales con sesgo alcista'
+    },
+  ];
+  const el=document.getElementById('fund-macro');
+  if(!el) return;
+  el.innerHTML=data.map(m=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:rgba(5,8,16,0.6);border:1px solid rgba(196,160,60,0.08);border-radius:4px;">
+    <div><div style="font-size:12px;color:#d8d0bc;">${m.label}</div><div style="font-size:10px;color:#606878;margin-top:1px;">${m.note}</div></div>
+    <div style="text-align:right;"><div style="font-size:13px;font-weight:700;color:${m.c};">${m.val}</div><div style="font-size:11px;color:${m.c};">${m.trend}</div></div></div>`).join('');
+}
+
+function renderFundSessions() {
+  const utcH=new Date().getUTCHours(),utcM=new Date().getUTCMinutes();
+  const list=[
+    {name:'Asia (Tokio)',open:0,close:9,c:'#a0c0ff',t:'Baja liquidez'},
+    {name:'Londres',open:8,close:17,c:'#70e0a8',t:'Alta liquidez ✓'},
+    {name:'Overlap L/NY',open:13,close:17,c:'#e8c84a',t:'Máxima liquidez ✓✓'},
+    {name:'Nueva York',open:13,close:22,c:'#e08080',t:'Noticias USD'},
+  ];
+  const el=document.getElementById('fund-sessions');
+  if(!el) return;
+  el.innerHTML=list.map(s=>{
+    const nowMin=utcH*60+utcM;
+    const isOpen=nowMin>=s.open*60&&nowMin<s.close*60;
+    const rem=s.close*60-nowMin;
+    const timeInfo=isOpen?` · cierra en ${String(Math.floor(rem/60)).padStart(2,'0')}:${String(rem%60).padStart(2,'0')}`:'';
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:rgba(5,8,16,0.6);border:1px solid rgba(196,160,60,0.08);border-radius:4px;margin-bottom:5px;${isOpen?'border-left:3px solid '+s.c+';':''}">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="width:8px;height:8px;border-radius:50%;background:${s.c};${isOpen?'':'opacity:0.4'}"></div>
+        <div><div style="font-size:12px;color:${isOpen?s.c:'#d8d0bc'};">${s.name}${isOpen?' ← ACTIVA':''}</div>
+        <div style="font-size:10px;color:#9090a8;">${String(s.open).padStart(2,'0')}:00–${String(s.close).padStart(2,'0')}:00 UTC${timeInfo}</div></div>
+      </div>
+      <span style="font-size:10px;padding:2px 8px;background:rgba(5,8,16,0.8);border:1px solid rgba(196,160,60,0.1);border-radius:3px;color:#9090a8;">${s.t}</span></div>`;
+  }).join('');
+}
+
+function renderFundMyfxbook() {
+  const h=new Date().getUTCHours();
+  const lp=Math.min(Math.max(38+Math.round(Math.sin(h)*8),28),72);
+  const sp=100-lp;
+  const le=document.getElementById('fund-fxlong'),se=document.getElementById('fund-fxshort');
+  const lpe=document.getElementById('fund-lp'),spe=document.getElementById('fund-sp');
+  if(le){le.style.width=lp+'%';le.textContent=lp+'%';}
+  if(se){se.style.width=sp+'%';se.textContent=sp+'%';}
+  if(lpe) lpe.textContent=lp+'%';
+  if(spe) spe.textContent=sp+'%';
+  let interp;
+  if(lp>65) interp='⚠️ Retail muy largo ('+lp+'%) → Señal contraria BAJISTA.';
+  else if(sp>65) interp='⚠️ Retail muy corto ('+sp+'%) → Señal contraria ALCISTA.';
+  else interp='→ Sentimiento equilibrado ('+lp+'% largos / '+sp+'% cortos). Sin señal dominante.';
+  const ie=document.getElementById('fund-mfx-interp');
+  if(ie) ie.textContent=interp;
+}
+
+function initFundChart() {
+  const container=document.getElementById('tv-chart-fund');
+  if(!container||container.children.length>0) return;
+  const script=document.createElement('script');
+  script.src='https://s3.tradingview.com/tv.js';
+  script.onload=()=>{
+    try {
+      new TradingView.widget({
+        symbol:'OANDA:XAUUSD',interval:'H1',width:'100%',height:350,
+        locale:'es',theme:'dark',style:'1',toolbar_bg:'#0a0d12',
+        enable_publishing:false,allow_symbol_change:false,
+        container_id:'tv-chart-fund',hide_side_toolbar:false,
+      });
+    } catch(e) {}
+  };
+  document.head.appendChild(script);
+}
+
+function initMacroWidgets() {
+  var widgets = [
+    {id: 'tv-vix', symbol: 'TVC:VIX'},
+    {id: 'tv-tnx', symbol: 'TVC:TNX'},
+    {id: 'tv-dxy', symbol: 'TVC:DXY'},
+    {id: 'tv-gold-mini', symbol: 'OANDA:XAUUSD'}
+  ];
+  
+  widgets.forEach(function(w) {
+    var container = document.getElementById(w.id);
+    if (!container || container.children.length > 0) return;
+    container.innerHTML = '';
+    var script = document.createElement('script');
+    script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js';
+    script.async = true;
+    script.innerHTML = JSON.stringify({
+      symbol: w.symbol,
+      width: '100%',
+      height: 120,
+      locale: 'es',
+      dateRange: '1D',
+      colorTheme: 'dark',
+      trendLineColor: 'rgba(232,200,74,0.8)',
+      underLineColor: 'rgba(232,200,74,0.1)',
+      underLineBottomColor: 'rgba(232,200,74,0)',
+      isTransparent: true,
+      autosize: true,
+      largeChartUrl: ''
+    });
+    container.appendChild(script);
+  });
+}
+
+function refreshFundamentals() {
+  fetchGoldPrice();
+  fetchMacroData();
+  renderFundSemaforo();
+  renderFundSessions();
+  renderFundMyfxbook();
+  setTimeout(initMacroWidgets, 500);
+}
+setInterval(refreshFundamentals,60000);
+setInterval(renderFundSessions,30000);
+
+// ── PORTAFOLIO ─────────────────────────────────────────────────
+let positions=[];
+const PRICE_MAP={XAUUSD:null,BTCUSDT:null,EURUSD:null,GBPUSD:null,USDJPY:null,ETHUSD:null};
+
+async function fetchLivePrices() {
+  try {
+    const res = await fetch('/api/market-data');
+    const data = await res.json();
+    if (data.xauusd) PRICE_MAP.XAUUSD = data.xauusd;
+    if (data.btc)    PRICE_MAP.BTCUSDT = parseFloat(data.btc);
+  } catch(e){}
+  // Forex via Frankfurter (funciona sin CORS desde browser también)
+  try {
+    const res=await fetch('https://api.frankfurter.app/latest?from=USD&to=EUR,GBP,JPY');
+    const data=await res.json();
+    if(data.rates){
+      PRICE_MAP.EURUSD=data.rates.EUR?+(1/data.rates.EUR).toFixed(5):null;
+      PRICE_MAP.GBPUSD=data.rates.GBP?+(1/data.rates.GBP).toFixed(5):null;
+      PRICE_MAP.USDJPY=data.rates.JPY||null;
+    }
+  } catch(e){}
+  const t=new Date().toTimeString().split(' ')[0];
+  const el=document.getElementById('port-last-update');
+  if(el) el.textContent=t;
+  renderPortfolio();
+}
+
+function getCurrentPrice(activo){return PRICE_MAP[activo]||null;}
+
+function calcPnL(pos,currentPrice){
+  if(!currentPrice) return null;
+  const diff=pos.dir==='LONG'?currentPrice-pos.entrada:pos.entrada-currentPrice;
+  return diff*pos.cantidad;
+}
+
+function savePositions(){
+  if(currentUser) localStorage.setItem('positions_'+currentUser.id,JSON.stringify(positions));
+}
+
+function loadPositions(){
+  if(currentUser) positions=JSON.parse(localStorage.getItem('positions_'+currentUser.id)||'[]');
+  renderPortfolio();
+}
+
+function togglePortfolioForm(){
+  const f=document.getElementById('portfolio-form');
+  if(f) f.style.display=f.style.display==='none'?'block':'none';
+}
+
+function addPosition(){
+  const activo=document.getElementById('port-activo').value;
+  const dir=document.getElementById('port-dir').value;
+  const entrada=parseFloat(document.getElementById('port-entrada').value);
+  const cantidad=parseFloat(document.getElementById('port-cantidad').value);
+  const sl=parseFloat(document.getElementById('port-sl').value);
+  const tp=parseFloat(document.getElementById('port-tp').value);
+  const broker=document.getElementById('port-broker').value.trim();
+  if(!activo||isNaN(entrada)||isNaN(cantidad)) return;
+  positions.unshift({
+    id:Date.now().toString(),activo,dir,entrada,cantidad,
+    sl:isNaN(sl)?null:sl,tp:isNaN(tp)?null:tp,
+    broker:broker||'—',fecha:new Date().toISOString().split('T')[0]
+  });
+  savePositions();
+  ['port-entrada','port-cantidad','port-sl','port-tp','port-broker'].forEach(id=>{
+    const el=document.getElementById(id);if(el) el.value='';
+  });
+  togglePortfolioForm();
+  fetchLivePrices();
+}
+
+function deletePosition(id){
+  positions=positions.filter(p=>p.id!==id);
+  savePositions();renderPortfolio();
+}
+
+async function refreshPrices(){await fetchLivePrices();}
+
+function renderPortfolio(){
+  const tbody=document.getElementById('portfolio-tbody');
+  if(!tbody) return;
+  if(!positions.length){
+    tbody.innerHTML='<tr><td colspan="8"><div class="empty-state"><i class="ti ti-chart-pie"></i>Sin posiciones registradas.<br>Presiona + NUEVA POSICIÓN para comenzar.</div></td></tr>';
+    updatePortfolioSummary([]);return;
+  }
+  tbody.innerHTML=positions.map(pos=>{
+    const current=getCurrentPrice(pos.activo);
+    const pnl=calcPnL(pos,current);
+    const pnlStr=pnl!==null?`<span style="font-weight:600;color:${pnl>=0?'#70e0a8':'#e08080'}">${pnl>=0?'+':''}$${pnl.toFixed(2)}</span>`:`<span style="color:#606878;">Sin precio</span>`;
+    const currentStr=current?`$${current.toFixed(current>100?2:5)}`:'—';
+    return `<tr>
+      <td style="padding:9px 16px;"><div style="font-weight:600;color:#f0eadc;">${pos.activo}</div><div style="font-size:10px;color:#606878;">${pos.broker} · ${pos.fecha}</div></td>
+      <td style="padding:9px 10px;"><span class="${pos.dir==='LONG'?'badge-buy':'badge-sell'}">${pos.dir}</span></td>
+      <td style="padding:9px 10px;text-align:right;color:#d8d0bc;">$${pos.entrada.toFixed(pos.entrada>100?2:5)}</td>
+      <td style="padding:9px 10px;text-align:right;color:#e8c84a;font-weight:600;">${currentStr}</td>
+      <td style="padding:9px 10px;text-align:right;color:#d8d0bc;">${pos.cantidad}</td>
+      <td style="padding:9px 10px;text-align:right;">${pnlStr}</td>
+      <td style="padding:9px 10px;text-align:right;font-size:10px;"><span style="color:#e08080;">${pos.sl||'—'}</span> / <span style="color:#70e0a8;">${pos.tp||'—'}</span></td>
+      <td style="padding:9px 10px;"><button class="btn-del" onclick="deletePosition('${pos.id}')"><i class="ti ti-trash"></i></button></td>
+    </tr>`;
+  }).join('');
+  updatePortfolioSummary(positions);
+}
+
+function updatePortfolioSummary(positions){
+  let totalPnl=0,totalCapital=0,wins=0,losses=0,best=null,worst=null;
+  const distMap={};
+  positions.forEach(pos=>{
+    const current=getCurrentPrice(pos.activo);
+    const pnl=calcPnL(pos,current);
+    const capital=pos.entrada*pos.cantidad;
+    totalCapital+=capital;
+    distMap[pos.activo]=(distMap[pos.activo]||0)+capital;
+    if(pnl!==null){
+      totalPnl+=pnl;
+      if(pnl>0) wins++;
+      if(pnl<0) losses++;
+      if(best===null||pnl>best.pnl) best={activo:pos.activo,pnl};
+      if(worst===null||pnl<worst.pnl) worst={activo:pos.activo,pnl};
+    }
+  });
+  const pct=totalCapital>0?(totalPnl/totalCapital*100):0;
+  const set=(id,val,color)=>{const el=document.getElementById(id);if(el){el.textContent=val;if(color) el.style.color=color;}};
+  set('port-total','$'+totalCapital.toFixed(2));
+  set('port-pnl',(totalPnl>=0?'+$':'-$')+Math.abs(totalPnl).toFixed(2),totalPnl>=0?'#70e0a8':'#e08080');
+  set('port-pnl-pct',(pct>=0?'+':'')+pct.toFixed(2)+'%',pct>=0?'#70e0a8':'#e08080');
+  set('port-count',positions.length);
+  set('risk-win',wins);set('risk-loss',losses);
+  set('risk-best',best?`${best.activo} +$${best.pnl.toFixed(2)}`:'—');
+  set('risk-worst',worst?`${worst.activo} $${worst.pnl.toFixed(2)}`:'—');
+  set('risk-total-pnl',(totalPnl>=0?'+$':'-$')+Math.abs(totalPnl).toFixed(2),totalPnl>=0?'#70e0a8':'#e08080');
+  // Donut chart — distribución por capital
+  const CHART_COLORS = ['#e8c84a','#70e0a8','#a0c0ff','#e08080','#c080e0','#80d0c0','#f0a060'];
+  if (positions.length > 0) {
+    // Mostrar charts
+    const distChartEl = document.getElementById('port-dist-chart');
+    const distEmptyEl = document.getElementById('port-dist-empty');
+    const pnlChartEl = document.getElementById('port-pnl-chart');
+    const pnlEmptyEl = document.getElementById('port-pnl-empty');
+    if (distChartEl) distChartEl.style.display = 'block';
+    if (distEmptyEl) distEmptyEl.style.display = 'none';
+
+    // Donut 1 — distribución por capital
+    const distEntries = Object.entries(distMap).sort((a,b)=>b[1]-a[1]);
+    const distCanvas = document.getElementById('donut-chart');
+    if (distCanvas) {
+      if (window._donutChart) { window._donutChart.destroy(); }
+      window._donutChart = new Chart(distCanvas, {
+        type: 'doughnut',
+        data: {
+          labels: distEntries.map(e=>e[0]),
+          datasets: [{
+            data: distEntries.map(e=>e[1].toFixed(2)),
+            backgroundColor: CHART_COLORS.slice(0, distEntries.length),
+            borderColor: '#050810',
+            borderWidth: 3,
+            hoverOffset: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          cutout: '68%',
+          plugins: {
+            legend: {display: false},
+            tooltip: {
+              callbacks: {
+                label: (ctx) => ' ' + ctx.label + ': $' + parseFloat(ctx.raw).toFixed(2)
+              }
+            }
+          }
+        }
+      });
+      // Leyenda custom
+      const legend = document.getElementById('port-dist-legend');
+      if (legend) {
+        legend.innerHTML = distEntries.map((e,i) => {
+          const pct = totalCapital > 0 ? (e[1]/totalCapital*100).toFixed(1) : 0;
+          return `<div style="display:flex;align-items:center;justify-content:space-between;font-size:12px;">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="width:10px;height:10px;border-radius:50%;background:${CHART_COLORS[i]};flex-shrink:0;"></div>
+              <span style="color:#d8d0bc;">${e[0]}</span>
+            </div>
+            <span style="color:${CHART_COLORS[i]};font-weight:600;">${pct}%</span>
+          </div>`;
+        }).join('');
+      }
+    }
+
+    // Donut 2 — P&L por activo
+    const pnlMap = {};
+    positions.forEach(pos => {
+      const pnl = calcPnL(pos, getCurrentPrice(pos.activo));
+      if (pnl !== null) pnlMap[pos.activo] = (pnlMap[pos.activo] || 0) + pnl;
+    });
+    const pnlEntries = Object.entries(pnlMap).filter(e => e[1] !== 0).sort((a,b) => Math.abs(b[1]) - Math.abs(a[1]));
+    if (pnlEntries.length > 0) {
+      if (pnlChartEl) pnlChartEl.style.display = 'block';
+      if (pnlEmptyEl) pnlEmptyEl.style.display = 'none';
+      const pnlCanvas = document.getElementById('pnl-chart');
+      if (pnlCanvas) {
+        if (window._pnlChart) { window._pnlChart.destroy(); }
+        window._pnlChart = new Chart(pnlCanvas, {
+          type: 'doughnut',
+          data: {
+            labels: pnlEntries.map(e=>e[0]),
+            datasets: [{
+              data: pnlEntries.map(e=>Math.abs(e[1]).toFixed(2)),
+              backgroundColor: pnlEntries.map(e => e[1] >= 0 ? '#70e0a8' : '#e08080'),
+              borderColor: '#050810',
+              borderWidth: 3,
+              hoverOffset: 6
+            }]
+          },
+          options: {
+            responsive: true,
+            cutout: '68%',
+            plugins: {
+              legend: {display: false},
+              tooltip: {
+                callbacks: {
+                  label: (ctx) => {
+                    const val = pnlEntries[ctx.dataIndex][1];
+                    return ' ' + ctx.label + ': ' + (val>=0?'+$':'-$') + Math.abs(val).toFixed(2);
+                  }
+                }
+              }
+            }
+          }
+        });
+        // Leyenda P&L
+        const pnlLegend = document.getElementById('port-pnl-legend');
+        if (pnlLegend) {
+          pnlLegend.innerHTML = pnlEntries.map(e => {
+            const color = e[1] >= 0 ? '#70e0a8' : '#e08080';
+            return `<div style="display:flex;align-items:center;justify-content:space-between;font-size:12px;">
+              <div style="display:flex;align-items:center;gap:6px;">
+                <div style="width:10px;height:10px;border-radius:50%;background:${color};flex-shrink:0;"></div>
+                <span style="color:#d8d0bc;">${e[0]}</span>
+              </div>
+              <span style="color:${color};font-weight:600;">${e[1]>=0?'+$':'-$'}${Math.abs(e[1]).toFixed(2)}</span>
+            </div>`;
+          }).join('');
+        }
+      }
+    }
+  } else {
+    // Ocultar charts si no hay posiciones
+    ['port-dist-chart','port-pnl-chart'].forEach(id => {
+      const el = document.getElementById(id); if(el) el.style.display = 'none';
+    });
+    ['port-dist-empty','port-pnl-empty'].forEach(id => {
+      const el = document.getElementById(id); if(el) el.style.display = 'block';
+    });
+    ['port-dist-legend','port-pnl-legend'].forEach(id => {
+      const el = document.getElementById(id); if(el) el.innerHTML = '';
+    });
+    if (window._donutChart) { window._donutChart.destroy(); window._donutChart = null; }
+    if (window._pnlChart) { window._pnlChart.destroy(); window._pnlChart = null; }
+  }
+}
+setInterval(fetchLivePrices,60000);
+
+// ── SEÑALES ────────────────────────────────────────────────────
+const ADMIN_EMAIL = 'eliotrader21@gmail.com';
+
+function loadSignals() {
+  // Mostrar panel admin si es el dueño
+  const adminPanel = document.getElementById('admin-panel');
+  if (adminPanel && currentUser && currentUser.email === ADMIN_EMAIL) {
+    adminPanel.style.display = 'block';
+  }
+  renderTodaySignal();
+  renderSignalsHistory();
+}
+
+function getStoredSignals() {
+  return JSON.parse(localStorage.getItem('eliotfw_signals') || '[]');
+}
+
+function saveSignals(signals) {
+  localStorage.setItem('eliotfw_signals', JSON.stringify(signals));
+}
+
+async function publishSignal() {
+  const par = document.getElementById('sig-par').value;
+  const dir = document.getElementById('sig-dir').value;
+  const entrada = parseFloat(document.getElementById('sig-entrada').value);
+  const bias = document.getElementById('sig-bias').value;
+  const sl = parseFloat(document.getElementById('sig-sl').value);
+  const tp1 = parseFloat(document.getElementById('sig-tp1').value);
+  const tp2 = parseFloat(document.getElementById('sig-tp2').value);
+  const analysis = document.getElementById('sig-analysis').value.trim();
+
+  if (!par || isNaN(entrada) || isNaN(sl) || isNaN(tp1) || !analysis) {
+    document.getElementById('publish-status').textContent = '⚠️ Completa todos los campos';
+    return;
+  }
+
+  const btn = document.getElementById('publish-btn');
+  const status = document.getElementById('publish-status');
+  btn.textContent = '⟳ Generando análisis IA...';
+  btn.disabled = true;
+  status.textContent = '';
+
+  // Obtener análisis IA
+  let aiAnalysis = '';
+  try {
+    const gold = MACRO_DATA.xauusd ? '$'+MACRO_DATA.xauusd.toFixed(2) : 'N/D';
+    const dxy = MACRO_DATA.dxy || 'N/D';
+    const vix = MACRO_DATA.vix || 'N/D';
+    const bond = MACRO_DATA.usTreasury || 'N/D';
+    const sess = getFundSess();
+
+    const prompt = `Eres Elio AI, asistente de trading de ELIOTFW CAPITAL. 
+Analiza esta señal de trading y genera un análisis de confluencias conciso (máximo 4 oraciones):
+
+SEÑAL: ${dir} ${par} | Entrada: $${entrada} | SL: $${sl} | TP1: $${tp1}${!isNaN(tp2)?'| TP2: $'+tp2:''} | Bias: ${bias}
+
+ANÁLISIS DEL TRADER: ${analysis}
+
+DATOS MACRO EN VIVO:
+- XAU/USD Spot: ${gold}
+- DXY: ${dxy}
+- VIX: ${vix}
+- Bono 10Y: ${bond}%
+- Sesión activa: ${sess.name}
+
+Responde SOLO con el análisis de confluencias que confirman o alertan sobre la señal. En español, máximo 4 oraciones.`;
+
+    const res = await fetch('/api/claude', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        system: 'Eres Elio AI, asistente de trading de ELIOTFW CAPITAL. Respondes en español, conciso y profesional.',
+        messages: [{role: 'user', content: prompt}]
+      })
+    });
+    const data = await res.json();
+    console.log('Claude response:', JSON.stringify(data));
+    if (data.content?.[0]?.text) {
+      aiAnalysis = data.content[0].text;
+    } else if (data.error) {
+      aiAnalysis = 'API Error: ' + (data.error.message || JSON.stringify(data.error));
+    } else {
+      aiAnalysis = 'Respuesta inesperada: ' + JSON.stringify(data).substring(0, 100);
+    }
+  } catch(e) {
+    aiAnalysis = 'Catch error: ' + e.message;
+  }
+
+  const signal = {
+    id: Date.now().toString(),
+    fecha: new Date().toISOString().split('T')[0],
+    hora: new Date().toLocaleTimeString('es-CL', {hour: '2-digit', minute: '2-digit'}),
+    par, dir, entrada, bias, sl, tp1,
+    tp2: isNaN(tp2) ? null : tp2,
+    analysis,
+    aiAnalysis,
+    resultado: 'ACTIVA',
+    pnl: null,
+    macro: {
+      gold: MACRO_DATA.xauusd,
+      dxy: MACRO_DATA.dxy,
+      vix: MACRO_DATA.vix,
+      bond: MACRO_DATA.usTreasury
+    }
+  };
+
+  const signals = getStoredSignals();
+  signals.unshift(signal);
+  saveSignals(signals);
+
+  // Limpiar formulario
+  ['sig-entrada','sig-sl','sig-tp1','sig-tp2','sig-analysis'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.value = '';
+  });
+
+  btn.innerHTML = '<i class="ti ti-bolt"></i> PUBLICAR SEÑAL + ANÁLISIS IA';
+  btn.disabled = false;
+  status.textContent = '✅ Señal publicada';
+  setTimeout(() => { status.textContent = ''; }, 3000);
+
+  renderTodaySignal();
+  renderSignalsHistory();
+}
+
+function renderTodaySignal() {
+  const container = document.getElementById('signal-today-container');
+  if (!container) return;
+  const signals = getStoredSignals();
+  const today = new Date().toISOString().split('T')[0];
+  const todaySignal = signals.find(s => s.fecha === today);
+
+  const isPremium = currentUser && (currentUser.email === ADMIN_EMAIL || currentUser.plan === 'premium');
+
+  if (!todaySignal) {
+    container.innerHTML = `
+      <div style="background:rgba(12,18,36,0.85);border:1px solid rgba(196,160,60,0.15);border-radius:6px;padding:2rem;text-align:center;">
+        <i class="ti ti-clock" style="font-size:32px;color:rgba(196,160,60,0.3);display:block;margin-bottom:10px;"></i>
+        <div style="font-size:14px;color:#9090a8;">Sin señal publicada hoy.</div>
+        <div style="font-size:12px;color:#606878;margin-top:4px;">La señal del día se publica a las 9:00 AM Santiago, antes de la apertura de Nueva York.</div>
+      </div>`;
+    return;
+  }
+
+  const dirColor = todaySignal.dir === 'BUY' ? '#70e0a8' : '#e08080';
+  const biasColor = todaySignal.bias === 'ALCISTA' ? '#70e0a8' : todaySignal.bias === 'BAJISTA' ? '#e08080' : '#e8c84a';
+  const rr = todaySignal.sl && todaySignal.tp1 ? ((Math.abs(todaySignal.tp1 - todaySignal.entrada)) / (Math.abs(todaySignal.entrada - todaySignal.sl))).toFixed(2) : '—';
+
+  if (!isPremium) {
+    container.innerHTML = `
+      <div style="background:rgba(12,18,36,0.85);border:1px solid rgba(232,200,74,0.3);border-radius:6px;padding:1.5rem;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#e8c84a,transparent);"></div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:1rem;">
+          <i class="ti ti-bolt" style="color:#e8c84a;font-size:16px;"></i>
+          <span style="font-family:'Orbitron',sans-serif;font-size:11px;letter-spacing:2px;color:#e8c84a;">SEÑAL DEL DÍA — ${todaySignal.fecha}</span>
+          <span style="font-size:10px;padding:2px 8px;background:rgba(196,160,60,0.1);border:1px solid rgba(196,160,60,0.3);color:#e8c84a;border-radius:2px;margin-left:auto;">● ACTIVA</span>
+        </div>
+        <div style="filter:blur(6px);pointer-events:none;user-select:none;">
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1rem;">
+            <div style="background:rgba(5,8,16,0.7);border-radius:5px;padding:12px;text-align:center;"><div style="font-size:10px;color:#9090a8;margin-bottom:4px;">PAR</div><div style="font-size:18px;font-weight:700;color:#f0eadc;">${todaySignal.par}</div></div>
+            <div style="background:rgba(5,8,16,0.7);border-radius:5px;padding:12px;text-align:center;"><div style="font-size:10px;color:#9090a8;margin-bottom:4px;">DIRECCIÓN</div><div style="font-size:18px;font-weight:700;color:${dirColor};">${todaySignal.dir}</div></div>
+            <div style="background:rgba(5,8,16,0.7);border-radius:5px;padding:12px;text-align:center;"><div style="font-size:10px;color:#9090a8;margin-bottom:4px;">ENTRADA</div><div style="font-size:18px;font-weight:700;color:#f0d060;">$${todaySignal.entrada}</div></div>
+            <div style="background:rgba(5,8,16,0.7);border-radius:5px;padding:12px;text-align:center;"><div style="font-size:10px;color:#9090a8;margin-bottom:4px;">R:R</div><div style="font-size:18px;font-weight:700;color:#a0c0ff;">1:${rr}</div></div>
+          </div>
+        </div>
+        <div style="background:rgba(196,160,60,0.08);border:1px solid rgba(196,160,60,0.2);border-radius:5px;padding:1.2rem;text-align:center;margin-top:0.5rem;">
+          <i class="ti ti-lock" style="font-size:24px;color:#e8c84a;display:block;margin-bottom:8px;"></i>
+          <div style="font-size:14px;font-weight:600;color:#f0eadc;margin-bottom:4px;">Contenido Premium</div>
+          <div style="font-size:12px;color:#9090a8;margin-bottom:12px;">Accede a la señal completa, SL, TP y análisis IA</div>
+          <button class="btn-gold" style="font-size:13px;padding:8px 20px;">Suscribirse a Premium — $49.99/mes</button>
+        </div>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = `
+    <div style="background:rgba(12,18,36,0.85);border:1px solid rgba(232,200,74,0.35);border-radius:6px;padding:1.5rem;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#e8c84a,transparent);"></div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:1.2rem;flex-wrap:wrap;">
+        <i class="ti ti-bolt" style="color:#e8c84a;font-size:16px;"></i>
+        <span style="font-family:'Orbitron',sans-serif;font-size:11px;letter-spacing:2px;color:#e8c84a;">SEÑAL DEL DÍA — ${todaySignal.fecha} · ${todaySignal.hora}</span>
+        <span style="font-size:10px;padding:2px 8px;background:rgba(80,220,130,0.1);border:1px solid rgba(80,220,130,0.3);color:#70e0a8;border-radius:2px;margin-left:auto;">● ACTIVA</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.2rem;">
+        <div style="background:rgba(5,8,16,0.7);border-radius:5px;padding:12px;text-align:center;border-top:2px solid rgba(196,160,60,0.3);">
+          <div style="font-size:10px;color:#9090a8;margin-bottom:4px;letter-spacing:1px;text-transform:uppercase;">Par</div>
+          <div style="font-size:20px;font-weight:700;color:#f0eadc;">${todaySignal.par}</div>
+        </div>
+        <div style="background:rgba(5,8,16,0.7);border-radius:5px;padding:12px;text-align:center;border-top:2px solid ${dirColor};">
+          <div style="font-size:10px;color:#9090a8;margin-bottom:4px;letter-spacing:1px;text-transform:uppercase;">Dirección</div>
+          <div style="font-size:20px;font-weight:700;color:${dirColor};">${todaySignal.dir}</div>
+        </div>
+        <div style="background:rgba(5,8,16,0.7);border-radius:5px;padding:12px;text-align:center;border-top:2px solid #f0d060;">
+          <div style="font-size:10px;color:#9090a8;margin-bottom:4px;letter-spacing:1px;text-transform:uppercase;">Entrada</div>
+          <div style="font-size:20px;font-weight:700;color:#f0d060;">$${todaySignal.entrada}</div>
+        </div>
+        <div style="background:rgba(5,8,16,0.7);border-radius:5px;padding:12px;text-align:center;border-top:2px solid ${biasColor};">
+          <div style="font-size:10px;color:#9090a8;margin-bottom:4px;letter-spacing:1px;text-transform:uppercase;">Bias</div>
+          <div style="font-size:16px;font-weight:700;color:${biasColor};">${todaySignal.bias}</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:1.2rem;">
+        <div style="background:rgba(220,80,80,0.07);border:1px solid rgba(220,80,80,0.2);border-radius:5px;padding:12px;text-align:center;">
+          <div style="font-size:10px;color:#e08080;margin-bottom:4px;letter-spacing:1px;text-transform:uppercase;">Stop Loss</div>
+          <div style="font-size:18px;font-weight:700;color:#e08080;">$${todaySignal.sl}</div>
+        </div>
+        <div style="background:rgba(80,220,130,0.07);border:1px solid rgba(80,220,130,0.2);border-radius:5px;padding:12px;text-align:center;">
+          <div style="font-size:10px;color:#70e0a8;margin-bottom:4px;letter-spacing:1px;text-transform:uppercase;">Take Profit 1</div>
+          <div style="font-size:18px;font-weight:700;color:#70e0a8;">$${todaySignal.tp1}</div>
+        </div>
+        <div style="background:rgba(80,220,130,0.07);border:1px solid rgba(80,220,130,0.2);border-radius:5px;padding:12px;text-align:center;">
+          <div style="font-size:10px;color:#70e0a8;margin-bottom:4px;letter-spacing:1px;text-transform:uppercase;">Take Profit 2</div>
+          <div style="font-size:18px;font-weight:700;color:#70e0a8;">${todaySignal.tp2 ? '$'+todaySignal.tp2 : '—'}</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1.2rem;">
+        <div style="background:rgba(5,8,16,0.7);border-radius:5px;padding:1rem;border-left:3px solid #e8c84a;">
+          <div style="font-size:10px;color:#e8c84a;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">Análisis del trader</div>
+          <div style="font-size:13px;color:#d8d0bc;line-height:1.7;">${todaySignal.analysis}</div>
+        </div>
+        <div style="background:rgba(5,8,16,0.7);border-radius:5px;padding:1rem;border-left:3px solid #a0c0ff;">
+          <div style="font-size:10px;color:#a0c0ff;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;gap:5px;"><i class="ti ti-brain" style="font-size:12px;"></i>Análisis IA — Confluencias</div>
+          <div style="font-size:13px;color:#dce8ff;line-height:1.7;">${todaySignal.aiAnalysis || 'Generando análisis...'}</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
+        ${todaySignal.macro?.gold ? `<div style="background:rgba(5,8,16,0.6);border-radius:4px;padding:8px;text-align:center;"><div style="font-size:10px;color:#9090a8;">XAU/USD</div><div style="font-size:13px;font-weight:600;color:#f0d060;">$${parseFloat(todaySignal.macro.gold).toFixed(2)}</div></div>` : ''}
+        ${todaySignal.macro?.dxy ? `<div style="background:rgba(5,8,16,0.6);border-radius:4px;padding:8px;text-align:center;"><div style="font-size:10px;color:#9090a8;">DXY</div><div style="font-size:13px;font-weight:600;color:#e08080;">${todaySignal.macro.dxy}</div></div>` : ''}
+        ${todaySignal.macro?.vix ? `<div style="background:rgba(5,8,16,0.6);border-radius:4px;padding:8px;text-align:center;"><div style="font-size:10px;color:#9090a8;">VIX</div><div style="font-size:13px;font-weight:600;color:#70e0a8;">${todaySignal.macro.vix}</div></div>` : ''}
+        ${todaySignal.macro?.bond ? `<div style="background:rgba(5,8,16,0.6);border-radius:4px;padding:8px;text-align:center;"><div style="font-size:10px;color:#9090a8;">Bono 10Y</div><div style="font-size:13px;font-weight:600;color:#a0c0ff;">${todaySignal.macro.bond}%</div></div>` : ''}
+      </div>
+    </div>`;
+}
+
+function renderSignalsHistory() {
+  const container = document.getElementById('signals-history');
+  if (!container) return;
+  const signals = getStoredSignals();
+  const isPremium = currentUser && (currentUser.email === ADMIN_EMAIL || currentUser.plan === 'premium');
+  const today = new Date().toISOString().split('T')[0];
+  const history = signals.filter(s => s.fecha !== today);
+
+  if (!history.length) {
+    container.innerHTML = '<div class="empty-state"><i class="ti ti-history"></i>Sin historial de señales aún.</div>';
+    return;
+  }
+
+  container.innerHTML = history.map(s => {
+    const dirColor = s.dir === 'BUY' ? '#70e0a8' : '#e08080';
+    const resColor = s.resultado === 'TP1' || s.resultado === 'TP2' ? '#70e0a8' : s.resultado === 'SL' ? '#e08080' : '#e8c84a';
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(5,8,16,0.6);border:1px solid rgba(196,160,60,0.08);border-radius:4px;margin-bottom:6px;${!isPremium?'filter:blur(3px);pointer-events:none;':''}">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="font-size:11px;color:#9090a8;min-width:80px;">${s.fecha}</div>
+        <span style="font-size:13px;font-weight:600;color:#f0eadc;">${s.par}</span>
+        <span class="${s.dir==='BUY'?'badge-buy':'badge-sell'}">${s.dir}</span>
+        <span style="font-size:12px;color:#9090a8;">$${s.entrada}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span style="font-size:11px;color:${resColor};padding:2px 8px;border:1px solid ${resColor}33;border-radius:2px;">${s.resultado}</span>
+        ${s.pnl !== null ? `<span style="font-size:13px;font-weight:600;color:${s.pnl>=0?'#70e0a8':'#e08080'}">${s.pnl>=0?'+':''}$${s.pnl}</span>` : ''}
+        ${currentUser?.email === ADMIN_EMAIL ? `
+          <select onchange="updateSignalResult('${s.id}',this.value)" style="background:rgba(5,8,16,0.8);border:1px solid rgba(196,160,60,0.2);color:#e8c84a;padding:3px 6px;border-radius:3px;font-size:11px;cursor:pointer;">
+            <option value="ACTIVA" ${s.resultado==='ACTIVA'?'selected':''}>ACTIVA</option>
+            <option value="TP1" ${s.resultado==='TP1'?'selected':''}>TP1 ✅</option>
+            <option value="TP2" ${s.resultado==='TP2'?'selected':''}>TP2 ✅</option>
+            <option value="SL" ${s.resultado==='SL'?'selected':''}>SL ❌</option>
+            <option value="CANCELADA" ${s.resultado==='CANCELADA'?'selected':''}>CANCELADA</option>
+          </select>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function updateSignalResult(id, resultado) {
+  const signals = getStoredSignals();
+  const sig = signals.find(s => s.id === id);
+  if (sig) {
+    sig.resultado = resultado;
+    if (resultado === 'TP1' && sig.tp1 && sig.entrada) sig.pnl = (Math.abs(sig.tp1 - sig.entrada)).toFixed(0);
+    if (resultado === 'TP2' && sig.tp2 && sig.entrada) sig.pnl = (Math.abs(sig.tp2 - sig.entrada)).toFixed(0);
+    if (resultado === 'SL' && sig.sl && sig.entrada) sig.pnl = -(Math.abs(sig.sl - sig.entrada)).toFixed(0);
+    saveSignals(signals);
+    renderSignalsHistory();
+  }
+}
+
+
+updateClock();setInterval(updateClock,1000);
+calcLot();calcRR();
+initAuth();
+</script>
+</body>
+</html>
