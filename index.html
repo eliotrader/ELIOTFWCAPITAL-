@@ -83,7 +83,7 @@ async function loadLandingTicker() {
   } catch(e) {}
 }
 
-initLanding();
+document.addEventListener("DOMContentLoaded", function() { initLanding(); });
 
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
@@ -537,7 +537,7 @@ body{background:#0a0a0a;color:#e8e0d0;font-family:'Cormorant Garamond',serif;ove
 </div>
 
 <!-- LANDING PAGE -->
-<div id="ld-landing-page" style="display:none;">
+<div id="ld-landing-page" style="display:flex;">
 <div class="ld-lp">
   <div class="ld-lp-main">
 
@@ -830,7 +830,7 @@ body{background:#0a0a0a;color:#e8e0d0;font-family:'Cormorant Garamond',serif;ove
 </div>
 
 <!-- AUTH OVERLAY -->
-<div class="auth-overlay" id="auth-overlay">
+<div class="auth-overlay" id="auth-overlay" style="display:none;">
   <div class="auth-box">
     <div class="auth-logo">ELIOTFW</div>
     <div class="auth-logo" style="font-size:12px;letter-spacing:4px;">CAPITAL</div>
@@ -1574,6 +1574,7 @@ function initAuth() {
 
 function showApp() {
   hideLanding();
+  document.getElementById("auth-overlay").style.display = "none";
   var overlay = document.getElementById('auth-overlay');
   if (overlay) overlay.style.display = 'none';
 
