@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ELIOTFW CAPITAL — Trading Hub</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
 // ── LANDING PAGE ────────────────────────────────────────
 function showAuthFromLanding(tab) {
   hideLanding();
@@ -20,6 +21,26 @@ function hideLanding() {
 
 // Mover el auth-box dentro del panel derecho de la landing
 function showLanding() { var l=document.getElementById("ld-landing-page"); if(l) l.style.display="flex"; }
+
+
+function ldSignIn() {
+  var email = document.getElementById('ld-login-email').value.trim();
+  var password = document.getElementById('ld-login-password').value;
+  var errEl = document.getElementById('login-error');
+  if (!email || !password) { if(errEl) errEl.textContent = 'Completa todos los campos'; return; }
+  if(errEl) errEl.textContent = 'Verificando...';
+  fetch('/api/auth', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({action: 'login', email: email, password: password})
+  }).then(function(r){ return r.json(); }).then(function(data){
+    if(data.error) { if(errEl) errEl.textContent = data.error; return; }
+    currentUser = data;
+    localStorage.setItem('eliotfw_session', JSON.stringify(data));
+    if(errEl) errEl.textContent = '';
+    showApp();
+  }).catch(function(){ if(errEl) errEl.textContent = 'Error de conexión. Intenta de nuevo.'; });
+}
 
 function initLanding() {
   var session = localStorage.getItem('eliotfw_session');
@@ -751,26 +772,7 @@ body{background:#050810;color:#f0eadc;font-family:'Rajdhani',sans-serif;overflow
 
 </div>
 
-<script>
-function ldSignIn() {
-  var email = document.getElementById('ld-login-email').value.trim();
-  var password = document.getElementById('ld-login-password').value;
-  var errEl = document.getElementById('login-error');
-  if (!email || !password) { if(errEl) errEl.textContent = 'Completa todos los campos'; return; }
-  if(errEl) errEl.textContent = 'Verificando...';
-  fetch('/api/auth', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({action: 'login', email: email, password: password})
-  }).then(function(r){ return r.json(); }).then(function(data){
-    if(data.error) { if(errEl) errEl.textContent = data.error; return; }
-    currentUser = data;
-    localStorage.setItem('eliotfw_session', JSON.stringify(data));
-    if(errEl) errEl.textContent = '';
-    showApp();
-  }).catch(function(){ if(errEl) errEl.textContent = 'Error de conexión. Intenta de nuevo.'; });
-}
-</script>
+
 </div>
 
 <!-- AUTH OVERLAY -->
