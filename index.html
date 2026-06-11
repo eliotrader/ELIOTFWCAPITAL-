@@ -1649,6 +1649,8 @@ function showApp() {
   var userMenu = document.getElementById('user-menu');
   if (userMenu) userMenu.style.display = 'flex';
   if (typeof loadPositions === 'function') loadPositions();
+  // Navegar al home al entrar
+  setTimeout(function(){ if (typeof navigate === 'function') navigate('home', document.getElementById('sb-home')); }, 100);
   
   // Verificar trial expirado
   if (isTrialExpired()) {
