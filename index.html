@@ -113,7 +113,7 @@ function initLanding() {
       var quickBtn = document.getElementById('ld-quick-access');
       if (quickBtn) {
         quickBtn.style.display = 'block';
-        quickBtn.innerHTML = '<div style="font-size:8px;letter-spacing:2px;color:#9090a8;margin-bottom:6px;text-transform:uppercase;">Sesión activa</div><button class="a-btn" style="background:rgba(112,224,160,0.12);border:1px solid rgba(112,224,160,0.4);color:#70e0a8;" onclick="ldQuickAccess()">CONTINUAR COMO ' + name.toUpperCase() + ' →</button><div style="text-align:center;margin-top:8px;"><a href="#" onclick="ldClearSession()" style="font-size:9px;color:#606878;letter-spacing:1px;">No eres tú? Cambiar cuenta</a></div>';
+        quickBtn.innerHTML = '<div style="font-size:8px;letter-spacing:2px;color:#9090a8;margin-bottom:6px;text-transform:uppercase;">Sesión activa</div><button class="a-btn" style="background:rgba(112,224,160,0.12);border:1px solid rgba(112,224,160,0.4);color:#70e0a8;" onclick="ldQuickAccess()">CONTINUAR COMO ' + name.toUpperCase() + ' →</button><div style="text-align:center;margin-top:8px;"><a href="#" onclick="ldClearSession()" style="font-size:9px;color:#8890a8;letter-spacing:1px;">No eres tú? Cambiar cuenta</a></div>';
       }
     } catch(e) { localStorage.removeItem('eliotfw_session'); }
   }
@@ -226,7 +226,7 @@ body{font-family:'Rajdhani',sans-serif;background:#050810;color:#f0eadc;min-heig
 .session-card.active-session::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#e8c84a,transparent);}
 .session-card.active-session .session-name{color:#e8c84a;}
 .session-card.active-session .session-val{color:#f0d060;}
-.session-status{color:#606878;}
+.session-status{color:#8890a8;}
 .session-card.active-session .session-status{color:#78e0a0;}
 .tabs{display:flex;border-bottom:1px solid rgba(196,160,60,0.18);margin-bottom:1.3rem;}
 .tab{padding:0.55rem 1.1rem;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#808090;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;font-family:'Rajdhani',sans-serif;font-weight:600;}
@@ -284,7 +284,7 @@ body{font-family:'Rajdhani',sans-serif;background:#050810;color:#f0eadc;min-heig
 .result-val{font-family:'Orbitron',sans-serif;font-size:13px;font-weight:600;color:#f0d060;}
 .result-val.danger{color:#e08080;}
 .result-val.safe{color:#70e0a8;}
-.calc-hint{font-size:11px;color:#606878;margin-top:8px;letter-spacing:0.5px;line-height:1.6;}
+.calc-hint{font-size:11px;color:#8890a8;margin-top:8px;letter-spacing:0.5px;line-height:1.6;}
 .pip-table{width:100%;border-collapse:collapse;margin-top:0.8rem;}
 .pip-table th{text-align:left;font-size:10px;letter-spacing:1.5px;color:#9090a8;padding:5px 8px;border-bottom:1px solid rgba(196,160,60,0.1);}
 .pip-table td{padding:6px 8px;font-size:12px;color:#d0c8b4;border-bottom:1px solid rgba(196,160,60,0.06);}
@@ -410,7 +410,7 @@ body{font-family:'Rajdhani',sans-serif;background:#050810;color:#f0eadc;min-heig
 .landing-footer{display:flex;align-items:center;justify-content:space-between;padding-top:1.5rem;border-top:1px solid rgba(196,160,60,0.1);margin-top:auto;}
 .footer-copy{font-size:11px;color:#404858;letter-spacing:1px;}
 .footer-links{display:flex;gap:1.5rem;}
-.footer-links a{font-size:11px;color:#606878;text-decoration:none;letter-spacing:1px;}
+.footer-links a{font-size:11px;color:#8890a8;text-decoration:none;letter-spacing:1px;}
 .footer-links a:hover{color:#e8c84a;}
 
 @media(max-width:900px){
@@ -444,17 +444,17 @@ body{background:#050810;color:#f0eadc;font-family:'Rajdhani',sans-serif;overflow
 
 /* ── LAYOUT ── */
 .lp{display:flex;min-height:100vh;}
-.lp-main{flex:1;display:flex;flex-direction:column;}
-.lp-auth{position:fixed;top:1rem;right:1rem;z-index:9999;background:rgba(4,6,15,0.97);border:1px solid rgba(232,200,74,0.2);border-radius:8px;padding:1.25rem 1.5rem;width:270px;}
+.lp-main{flex:1;display:flex;flex-direction:column;margin-right:300px;}
+.lp-auth{position:fixed;top:0;right:0;bottom:0;z-index:9999;background:rgba(4,6,15,0.97);border-left:1px solid rgba(232,200,74,0.15);padding:2rem 1.5rem;width:300px;display:flex;align-items:center;justify-content:center;overflow-y:auto;}
 
 /* ── NAV ── */
 .nav{display:flex;align-items:center;justify-content:space-between;padding:1.25rem 2.5rem;border-bottom:1px solid rgba(232,200,74,0.07);}
 .nav-logo{display:flex;align-items:center;gap:14px;}
 .nav-n1{font-family:'Orbitron',sans-serif;font-size:12px;font-weight:500;letter-spacing:4px;color:#f0eadc;}
 .nav-n1 em{font-style:normal;color:#e8c84a;}
-.nav-n2{font-family:'Didact Gothic',sans-serif;font-size:6px;letter-spacing:3px;color:#505868;text-transform:uppercase;margin-top:2px;}
+.nav-n2{font-family:'Didact Gothic',sans-serif;font-size:6px;letter-spacing:3px;color:#8890a8;text-transform:uppercase;margin-top:2px;}
 .nav-links{display:flex;gap:2rem;align-items:center;}
-.nav-link{font-family:'Didact Gothic',sans-serif;font-size:11px;letter-spacing:2px;color:#505868;cursor:pointer;text-transform:uppercase;text-decoration:none;transition:color 0.2s;}
+.nav-link{font-family:'Didact Gothic',sans-serif;font-size:11px;letter-spacing:2px;color:#8890a8;cursor:pointer;text-transform:uppercase;text-decoration:none;transition:color 0.2s;}
 .nav-link:hover{color:#e8c84a;text-shadow:0 0 8px rgba(232,200,74,0.4);}
 .nav-cta{font-family:'Didact Gothic',sans-serif;font-size:9px;letter-spacing:3px;color:#e8c84a;border:0.5px solid rgba(232,200,74,0.3);padding:7px 14px;cursor:pointer;background:transparent;text-transform:uppercase;transition:all 0.2s;}
 .nav-cta:hover{background:rgba(232,200,74,0.08);}
@@ -467,7 +467,7 @@ body{background:#050810;color:#f0eadc;font-family:'Rajdhani',sans-serif;overflow
 .ticker-track{display:flex;white-space:nowrap;animation:tickmove 32s linear infinite;}
 @keyframes tickmove{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 .ti{display:inline-flex;align-items:center;gap:0.75rem;padding:0 2rem;border-right:0.5px solid rgba(232,200,74,0.06);}
-.ti-sym{font-family:'Didact Gothic',sans-serif;font-size:10px;letter-spacing:3px;color:#505868;}
+.ti-sym{font-family:'Didact Gothic',sans-serif;font-size:10px;letter-spacing:3px;color:#8890a8;}
 .ti-val{font-family:'Courier New',monospace;font-size:14px;color:#b0a890;}
 .ti-chg{font-family:'Didact Gothic',sans-serif;font-size:9px;font-weight:700;}
 .up{color:#3d6b4a;}.dn{color:#6b3d3d;}
@@ -486,14 +486,14 @@ body{background:#050810;color:#f0eadc;font-family:'Rajdhani',sans-serif;overflow
 
 /* ── HERO ── */
 .hero{padding:4rem 2.5rem 3.5rem;border-bottom:1px solid rgba(232,200,74,0.06);position:relative;}
-.hero-eyebrow{font-family:'Didact Gothic',sans-serif;font-size:11px;letter-spacing:5px;color:#505868;text-transform:uppercase;margin-bottom:2rem;display:flex;align-items:center;gap:12px;}
+.hero-eyebrow{font-family:'Didact Gothic',sans-serif;font-size:11px;letter-spacing:5px;color:#8890a8;text-transform:uppercase;margin-bottom:2rem;display:flex;align-items:center;gap:12px;}
 .hero-eyebrow::before{content:'';width:24px;height:0.5px;background:linear-gradient(135deg,rgba(196,160,60,0.2),rgba(232,200,74,0.1));border:1px solid rgba(232,200,74,0.5);opacity:0.5;}
 .hero-h1{font-family:"Rajdhani",sans-serif;font-size:clamp(36px,5vw,58px);font-weight:700;line-height:1.1;color:#f0eadc;margin-bottom:0.5rem;letter-spacing:2px;text-transform:uppercase;}
 .hero-h1 em{font-style:italic;color:#e8c84a;}
-.hero-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(16px,2vw,22px);color:#4a4a40;margin-bottom:2.5rem;font-weight:300;}
+.hero-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(16px,2vw,22px);color:#9090a8;margin-bottom:2.5rem;font-weight:300;}
 .hero-quote{border-left:1px solid rgba(232,200,74,0.25);padding:0.75rem 1.5rem;margin-bottom:2.5rem;max-width:520px;}
 .hero-quote p{font-style:italic;font-size:18px;color:rgba(232,200,74,0.65);line-height:1.7;}
-.hero-quote cite{font-family:'Didact Gothic',sans-serif;font-size:8px;letter-spacing:3px;color:#505868;display:block;margin-top:0.6rem;text-transform:uppercase;}
+.hero-quote cite{font-family:'Didact Gothic',sans-serif;font-size:8px;letter-spacing:3px;color:#8890a8;display:block;margin-top:0.6rem;text-transform:uppercase;}
 .hero-cta{display:flex;gap:1rem;align-items:center;flex-wrap:wrap;}
 .cta-main{font-family:'Didact Gothic',sans-serif;font-size:9px;letter-spacing:3px;color:#f0d060;background:linear-gradient(135deg,rgba(196,160,60,0.2),rgba(232,200,74,0.1));border:1px solid rgba(232,200,74,0.5);padding:13px 28px;cursor:pointer;border:none;font-weight:700;text-transform:uppercase;transition:opacity 0.2s;}
 .cta-main:hover{opacity:0.85;}
@@ -507,14 +507,14 @@ body{background:#050810;color:#f0eadc;font-family:'Rajdhani',sans-serif;overflow
 .prob-item{background:#080c1c;padding:1.5rem;}
 .prob-n{font-family:'Orbitron',sans-serif;font-size:28px;color:rgba(232,200,74,0.35);margin-bottom:0.5rem;line-height:1;}
 .prob-title{font-family:'Didact Gothic',sans-serif;font-size:11px;letter-spacing:2px;color:#b0c0d0;text-transform:uppercase;margin-bottom:0.5rem;}
-.prob-desc{font-family:'Cormorant Garamond',serif;font-size:15px;color:#505868;line-height:1.7;font-style:italic;}
+.prob-desc{font-family:'Cormorant Garamond',serif;font-size:15px;color:#8890a8;line-height:1.7;font-style:italic;}
 
 /* ── SOLUCIÓN ── */
 .solution{padding:3rem 2.5rem;border-bottom:1px solid rgba(232,200,74,0.06);}
 .sol-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:rgba(232,200,74,0.05);}
 .sol-item{background:#050810;padding:1.75rem;border-top:1px solid rgba(232,200,74,0.06);}
 .sol-item:first-child{border-top:none;}
-.sol-num{font-family:'Didact Gothic',sans-serif;font-size:11px;letter-spacing:3px;color:#383e50;margin-bottom:1rem;}
+.sol-num{font-family:'Didact Gothic',sans-serif;font-size:11px;letter-spacing:3px;color:#6870a0;margin-bottom:1rem;}
 .sol-title{font-family:'Orbitron',sans-serif;font-size:14px;color:#e8c84a;margin-bottom:0.5rem;letter-spacing:1px;}
 .sol-desc{font-family:'Didact Gothic',sans-serif;font-size:13px;color:#6870a0;line-height:1.9;letter-spacing:0.3px;}
 
@@ -523,12 +523,12 @@ body{background:#050810;color:#f0eadc;font-family:'Rajdhani',sans-serif;overflow
 .plans{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(232,200,74,0.05);}
 .plan{background:#080c1c;padding:2rem 1.5rem;}
 .plan.hot{background:#0c0b08;}
-.plan-tier{font-family:'Didact Gothic',sans-serif;font-size:7px;letter-spacing:4px;color:#505868;text-transform:uppercase;margin-bottom:0.75rem;}
+.plan-tier{font-family:'Didact Gothic',sans-serif;font-size:7px;letter-spacing:4px;color:#8890a8;text-transform:uppercase;margin-bottom:0.75rem;}
 .plan-price{font-family:"Orbitron",sans-serif;font-size:24px;font-weight:700;color:#e8c84a;margin-bottom:0.2rem;font-family:'Cormorant Garamond',serif;}
-.plan-price span{font-family:'Didact Gothic',sans-serif;font-size:10px;color:#505868;}
-.plan-period{font-family:'Didact Gothic',sans-serif;font-size:7px;letter-spacing:2px;color:#505868;text-transform:uppercase;margin-bottom:1.25rem;padding-bottom:1.25rem;border-bottom:0.5px solid rgba(232,200,74,0.06);}
-.plan-line{font-family:'Didact Gothic',sans-serif;font-size:12px;color:#505868;padding:0.4rem 0;display:flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:1px;}
-.plan-line::before{content:'—';color:#383e50;}
+.plan-price span{font-family:'Didact Gothic',sans-serif;font-size:10px;color:#8890a8;}
+.plan-period{font-family:'Didact Gothic',sans-serif;font-size:7px;letter-spacing:2px;color:#8890a8;text-transform:uppercase;margin-bottom:1.25rem;padding-bottom:1.25rem;border-bottom:0.5px solid rgba(232,200,74,0.06);}
+.plan-line{font-family:'Didact Gothic',sans-serif;font-size:12px;color:#8890a8;padding:0.4rem 0;display:flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:1px;}
+.plan-line::before{content:'—';color:#6870a0;}
 .plan-line.on::before{content:'—';color:#e8c84a;}
 .plan-line.on{color:#9090a8;}
 .hot-badge{font-family:'Didact Gothic',sans-serif;font-size:7px;letter-spacing:3px;color:#e8c84a;border:0.5px solid rgba(232,200,74,0.2);padding:3px 8px;display:inline-block;margin-bottom:0.75rem;text-transform:uppercase;}
@@ -537,14 +537,14 @@ body{background:#050810;color:#f0eadc;font-family:'Rajdhani',sans-serif;overflow
 .closing{padding:3rem 2.5rem;text-align:center;border-bottom:1px solid rgba(232,200,74,0.06);}
 .closing-h{font-size:clamp(22px,3vw,36px);font-weight:400;color:#f0eadc;margin-bottom:0.75rem;letter-spacing:-0.5px;}
 .closing-h em{font-style:italic;color:#e8c84a;}
-.closing-p{font-family:'Didact Gothic',sans-serif;font-size:13px;color:#505868;letter-spacing:1px;margin-bottom:2rem;line-height:2;}
+.closing-p{font-family:'Didact Gothic',sans-serif;font-size:13px;color:#8890a8;letter-spacing:1px;margin-bottom:2rem;line-height:2;}
 .closing-cta{font-family:'Didact Gothic',sans-serif;font-size:9px;letter-spacing:3px;color:#f0d060;background:linear-gradient(135deg,rgba(196,160,60,0.2),rgba(232,200,74,0.1));border:1px solid rgba(232,200,74,0.5);padding:13px 32px;cursor:pointer;border:none;font-weight:700;text-transform:uppercase;}
 
 /* ── FOOTER ── */
 .footer{padding:1.25rem 2.5rem;display:flex;align-items:center;justify-content:space-between;}
-.foot-copy{font-family:'Didact Gothic',sans-serif;font-size:10px;letter-spacing:2px;color:#383e50;text-transform:uppercase;}
+.foot-copy{font-family:'Didact Gothic',sans-serif;font-size:10px;letter-spacing:2px;color:#6870a0;text-transform:uppercase;}
 .foot-links{display:flex;gap:1.5rem;}
-.foot-link{font-family:'Didact Gothic',sans-serif;font-size:10px;letter-spacing:2px;color:#383e50;cursor:pointer;text-transform:uppercase;text-decoration:none;}
+.foot-link{font-family:'Didact Gothic',sans-serif;font-size:10px;letter-spacing:2px;color:#6870a0;cursor:pointer;text-transform:uppercase;text-decoration:none;}
 .foot-link:hover{color:#e8c84a;}
 
 /* ── AUTH PANEL ── */
@@ -552,22 +552,22 @@ body{background:#050810;color:#f0eadc;font-family:'Rajdhani',sans-serif;overflow
 .auth-seal{display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;padding-bottom:1rem;border-bottom:0.5px solid rgba(232,200,74,0.08);}
 .a-name{font-family:'Orbitron',sans-serif;font-size:11px;font-weight:500;letter-spacing:4px;color:#f0eadc;}
 .a-name em{font-style:normal;color:#e8c84a;}
-.a-sub{font-family:'Didact Gothic',sans-serif;font-size:6px;letter-spacing:3px;color:#383e50;text-transform:uppercase;}
+.a-sub{font-family:'Didact Gothic',sans-serif;font-size:6px;letter-spacing:3px;color:#6870a0;text-transform:uppercase;}
 .a-trial{font-family:'Didact Gothic',sans-serif;font-size:8px;letter-spacing:2px;color:#e8c84a;text-align:center;margin-bottom:1rem;padding:0.4rem;border:0.5px solid rgba(232,200,74,0.12);text-transform:uppercase;}
 .auth-tabs{display:flex;margin-bottom:1.5rem;border-bottom:0.5px solid rgba(232,200,74,0.08);}
-.a-tab{flex:1;padding:0.75rem;font-family:'Didact Gothic',sans-serif;font-size:8px;letter-spacing:3px;color:#383e50;cursor:pointer;border-bottom:0.5px solid transparent;text-align:center;text-transform:uppercase;}
+.a-tab{flex:1;padding:0.75rem;font-family:'Didact Gothic',sans-serif;font-size:8px;letter-spacing:3px;color:#6870a0;cursor:pointer;border-bottom:0.5px solid transparent;text-align:center;text-transform:uppercase;}
 .a-tab.on{color:#e8c84a;border-bottom-color:#e8c84a;}
 .a-google{width:100%;background:transparent;border:0.5px solid #383e50;color:#6870a0;padding:10px;font-family:'Didact Gothic',sans-serif;font-size:8px;letter-spacing:2px;cursor:pointer;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:center;gap:8px;text-transform:uppercase;transition:border-color 0.2s;}
-.a-google:hover{border-color:#505868;}
-.a-div{text-align:center;font-family:'Didact Gothic',sans-serif;font-size:7px;letter-spacing:3px;color:#383e50;margin-bottom:1.25rem;}
+.a-google:hover{border-color:#8890a8;}
+.a-div{text-align:center;font-family:'Didact Gothic',sans-serif;font-size:7px;letter-spacing:3px;color:#6870a0;margin-bottom:1.25rem;}
 .a-field{margin-bottom:0.6rem;}
-.a-label{font-family:'Didact Gothic',sans-serif;font-size:7px;letter-spacing:3px;color:#505868;display:block;margin-bottom:0.5rem;text-transform:uppercase;}
+.a-label{font-family:'Didact Gothic',sans-serif;font-size:7px;letter-spacing:3px;color:#8890a8;display:block;margin-bottom:0.5rem;text-transform:uppercase;}
 .a-input{width:100%;background:transparent;border:none;border-bottom:0.5px solid #383e50;color:#f0eadc;padding:8px 0;font-size:14px;outline:none;font-family:'Cormorant Garamond',serif;transition:border-color 0.2s;}
 .a-input:focus{border-bottom-color:#e8c84a;}
-.a-btn{width:100%;background:linear-gradient(135deg,rgba(196,160,60,0.2),rgba(232,200,74,0.1));border:1px solid rgba(232,200,74,0.5);border:none;color:#0a0a0a;padding:12px;font-family:'Didact Gothic',sans-serif;font-size:9px;letter-spacing:4px;font-weight:700;cursor:pointer;margin-top:1rem;text-transform:uppercase;transition:opacity 0.2s;}
-.a-btn:hover{opacity:0.88;}
-.a-rec{text-align:center;font-family:'Didact Gothic',sans-serif;font-size:8px;color:#383e50;margin-top:1rem;letter-spacing:1px;}
-.a-rec a{color:#505868;text-decoration:none;}
+.a-btn{width:100%;background:linear-gradient(135deg,rgba(196,160,60,0.2),rgba(232,200,74,0.1));border:1px solid rgba(232,200,74,0.5);color:#e8c84a;padding:12px;font-family:'Didact Gothic',sans-serif;font-size:9px;letter-spacing:4px;font-weight:700;cursor:pointer;margin-top:1rem;text-transform:uppercase;transition:all 0.2s;}
+.a-btn:hover{background:linear-gradient(135deg,rgba(232,200,74,0.5),rgba(240,180,41,0.4));border-color:#f0d060;color:#ffffff;box-shadow:0 0 18px rgba(232,200,74,0.4);}
+.a-rec{text-align:center;font-family:'Didact Gothic',sans-serif;font-size:8px;color:#6870a0;margin-top:1rem;letter-spacing:1px;}
+.a-rec a{color:#8890a8;text-decoration:none;}
 .a-rec a:hover{color:#e8c84a;}
 .bg-orbs{position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:0;}
 .orb1{position:fixed;width:500px;height:500px;top:-200px;left:-150px;background:radial-gradient(circle,rgba(196,160,60,0.07) 0%,transparent 70%);border-radius:50%;}
@@ -834,8 +834,8 @@ body{background:#050810;color:#f0eadc;font-family:'Rajdhani',sans-serif;overflow
       <div id="ld-quick-access" style="display:none;margin-bottom:1rem;"></div>
       <div class="a-trial">3 días de prueba gratuita</div>
       <div class="auth-tabs">
-        <div class="a-tab on">Ingresar</div>
-        <div class="a-tab">Registrarse</div>
+        <div class="a-tab on" id="ld-tab-login" onclick="ldSwitchTabPanel('login')">Ingresar</div>
+        <div class="a-tab" id="ld-tab-reg" onclick="ldSwitchTabPanel('register')">Registrarse</div>
       </div>
       <button class="a-google">
         <svg width="13" height="13" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
@@ -845,14 +845,69 @@ body{background:#050810;color:#f0eadc;font-family:'Rajdhani',sans-serif;overflow
       <div class="a-field"><label class="a-label">Email</label><input class="a-input" type="email" placeholder="tu@email.com" id="ld-login-email"></div>
       <div class="a-field"><label class="a-label">Contraseña</label><input class="a-input" type="password" placeholder="••••••••" id="ld-login-password"></div>
       <div id="login-error" style="color:#f87171;font-size:10px;letter-spacing:1px;margin-top:0.5rem;text-align:center;"></div>
-      <button class="a-btn" onclick="ldSignIn()">INGRESAR</button>
+      <button class="a-btn" id="ld-btn-login" onclick="ldSignIn()">INGRESAR</button>
       <div class="a-rec">¿Olvidaste tu contraseña? <a href="#">Recuperar</a></div>
+
+      <!-- Formulario Registro -->
+      <div id="ld-form-register-panel" style="display:none;">
+        <div class="a-field"><label class="a-label">Nombre</label><input class="a-input" type="text" id="ld-reg-name-new" placeholder="Tu nombre"></div>
+        <div class="a-field"><label class="a-label">Email</label><input class="a-input" type="email" id="ld-reg-email-new" placeholder="tu@email.com"></div>
+        <div class="a-field"><label class="a-label">Contraseña</label><input class="a-input" type="password" id="ld-reg-pass-new" placeholder="Mínimo 6 caracteres"></div>
+        <div id="ld-reg-error-new" style="color:#f87171;font-size:10px;letter-spacing:1px;margin-top:0.5rem;text-align:center;"></div>
+        <button class="a-btn" onclick="ldDoRegisterNew()">CREAR CUENTA</button>
+      </div>
     </div>
   </div>
 
 </div>
 
 <script>
+function ldSwitchTabPanel(tab) {
+  var loginFields = ['ld-login-email','ld-login-password','login-error','ld-btn-login'];
+  var loginEls = [document.querySelector('.a-google'), document.querySelector('.a-div')];
+  var regPanel = document.getElementById('ld-form-register-panel');
+  var tabLogin = document.getElementById('ld-tab-login');
+  var tabReg = document.getElementById('ld-tab-reg');
+  var recEl = document.querySelector('.a-rec');
+
+  if (tab === 'login') {
+    loginFields.forEach(function(id){ var el=document.getElementById(id); if(el) el.style.display=''; });
+    loginEls.forEach(function(el){ if(el) el.style.display=''; });
+    if(regPanel) regPanel.style.display='none';
+    if(recEl) recEl.style.display='';
+    if(tabLogin){ tabLogin.className='a-tab on'; }
+    if(tabReg){ tabReg.className='a-tab'; }
+  } else {
+    loginFields.forEach(function(id){ var el=document.getElementById(id); if(el) el.style.display='none'; });
+    loginEls.forEach(function(el){ if(el) el.style.display='none'; });
+    if(regPanel) regPanel.style.display='block';
+    if(recEl) recEl.style.display='none';
+    if(tabLogin){ tabLogin.className='a-tab'; }
+    if(tabReg){ tabReg.className='a-tab on'; }
+  }
+}
+
+function ldDoRegisterNew() {
+  var name = document.getElementById('ld-reg-name-new').value.trim();
+  var email = document.getElementById('ld-reg-email-new').value.trim();
+  var pass = document.getElementById('ld-reg-pass-new').value;
+  var err = document.getElementById('ld-reg-error-new');
+  if(!name || !email || !pass) { err.textContent = 'Completa todos los campos'; return; }
+  if(pass.length < 6) { err.textContent = 'Contraseña mínimo 6 caracteres'; return; }
+  err.textContent = 'Creando cuenta...';
+  fetch('/api/auth', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({action:'register', name:name, email:email, password:pass})
+  }).then(function(r){ return r.json(); }).then(function(data){
+    if(data.error) { err.textContent = data.error; return; }
+    currentUser = data;
+    localStorage.setItem('eliotfw_session', JSON.stringify(data));
+    err.textContent = '';
+    document.getElementById('ld-landing-page').style.display = 'none';
+    showApp();
+  }).catch(function(){ err.textContent = 'Error de conexión. Intenta de nuevo.'; });
+}
+
 function ldSignIn() {
   var email = document.getElementById('ld-login-email').value.trim();
   var password = document.getElementById('ld-login-password').value;
@@ -1395,7 +1450,7 @@ function ldSignIn() {
           <!-- DONUT CHART — Distribución por activo -->
           <div style="background:rgba(12,18,36,0.85);border:1px solid rgba(196,160,60,0.15);border-radius:6px;padding:1.2rem;">
             <div class="section-title">Distribución por activo</div>
-            <div id="port-dist-empty" style="text-align:center;color:#606878;font-size:12px;padding:2rem 1rem;">Sin posiciones aún</div>
+            <div id="port-dist-empty" style="text-align:center;color:#8890a8;font-size:12px;padding:2rem 1rem;">Sin posiciones aún</div>
             <div id="port-dist-chart" style="display:none;position:relative;width:100%;max-width:220px;margin:0 auto;">
               <canvas id="donut-chart" height="220"></canvas>
             </div>
@@ -1405,7 +1460,7 @@ function ldSignIn() {
           <!-- DONUT CHART — P&L por activo -->
           <div style="background:rgba(12,18,36,0.85);border:1px solid rgba(196,160,60,0.15);border-radius:6px;padding:1.2rem;">
             <div class="section-title">P&L por activo</div>
-            <div id="port-pnl-empty" style="text-align:center;color:#606878;font-size:12px;padding:2rem 1rem;">Sin datos de precio</div>
+            <div id="port-pnl-empty" style="text-align:center;color:#8890a8;font-size:12px;padding:2rem 1rem;">Sin datos de precio</div>
             <div id="port-pnl-chart" style="display:none;position:relative;width:100%;max-width:220px;margin:0 auto;">
               <canvas id="pnl-chart" height="220"></canvas>
             </div>
@@ -1610,8 +1665,8 @@ function showPaywall(type) {
       <a href="https://s.binance.com/yX53ZSz7" target="_blank" style="display:block;background:rgba(196,160,60,0.12);border:1px solid rgba(232,200,74,0.4);color:#e8c84a;padding:12px 20px;border-radius:4px;text-decoration:none;font-family:Rajdhani,sans-serif;font-size:14px;font-weight:600;letter-spacing:1px;">💳 Plan Básico — $9.99 USDT/mes<br><span style="font-size:11px;color:#9090a8;font-weight:400;">Acceso completo a la plataforma</span></a>
       <a href="https://s.binance.com/V0t6lndo" target="_blank" style="display:block;background:rgba(240,180,41,0.15);border:1px solid rgba(240,180,41,0.6);color:#f0d060;padding:12px 20px;border-radius:4px;text-decoration:none;font-family:Rajdhani,sans-serif;font-size:14px;font-weight:600;letter-spacing:1px;">⭐ Plan Premium — $49.99 USDT/mes<br><span style="font-size:11px;color:#a09060;font-weight:400;">Todo + Señales diarias con análisis IA</span></a>
     </div>
-    <div style="margin-top:1.5rem;font-size:11px;color:#606878;">Pago via Binance Pay · USDT · Acceso inmediato</div>
-    ${type !== 'trial' ? '<button onclick="document.getElementById(\'paywall-overlay\').remove()" style="margin-top:1rem;background:transparent;border:none;color:#606878;cursor:pointer;font-size:12px;">← Volver</button>' : ''}
+    <div style="margin-top:1.5rem;font-size:11px;color:#8890a8;">Pago via Binance Pay · USDT · Acceso inmediato</div>
+    ${type !== 'trial' ? '<button onclick="document.getElementById(\'paywall-overlay\').remove()" style="margin-top:1rem;background:transparent;border:none;color:#8890a8;cursor:pointer;font-size:12px;">← Volver</button>' : ''}
   </div>`;
   document.body.appendChild(overlay);
 }
@@ -2100,7 +2155,7 @@ function renderFundSemaforo() {
   const el=document.getElementById('fund-semaforo');
   if(!el) return;
   el.innerHTML=items.map(i=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:rgba(5,8,16,0.6);border:1px solid rgba(196,160,60,0.08);border-radius:4px;margin-bottom:5px;">
-    <div><div style="font-size:12px;color:#d8d0bc;">${i.label}</div><div style="font-size:10px;color:#606878;margin-top:1px;">${i.note}</div></div>
+    <div><div style="font-size:12px;color:#d8d0bc;">${i.label}</div><div style="font-size:10px;color:#8890a8;margin-top:1px;">${i.note}</div></div>
     <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:11px;font-weight:600;color:${i.cls==='g'?'#70e0a8':i.cls==='r'?'#e08080':'#e8c84a'}">${i.val}</span>
     <div style="width:8px;height:8px;border-radius:50%;background:${i.cls==='g'?'#70e0a8':i.cls==='r'?'#e08080':'#e8c84a'};"></div></div></div>`).join('');
   const greens=items.filter(i=>i.cls==='g').length;
@@ -2202,7 +2257,7 @@ function renderFundMacro() {
   const el=document.getElementById('fund-macro');
   if(!el) return;
   el.innerHTML=data.map(m=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:rgba(5,8,16,0.6);border:1px solid rgba(196,160,60,0.08);border-radius:4px;">
-    <div><div style="font-size:12px;color:#d8d0bc;">${m.label}</div><div style="font-size:10px;color:#606878;margin-top:1px;">${m.note}</div></div>
+    <div><div style="font-size:12px;color:#d8d0bc;">${m.label}</div><div style="font-size:10px;color:#8890a8;margin-top:1px;">${m.note}</div></div>
     <div style="text-align:right;"><div style="font-size:13px;font-weight:700;color:${m.c};">${m.val}</div><div style="font-size:11px;color:${m.c};">${m.trend}</div></div></div>`).join('');
 }
 
@@ -2399,10 +2454,10 @@ function renderPortfolio(){
   tbody.innerHTML=positions.map(pos=>{
     const current=getCurrentPrice(pos.activo);
     const pnl=calcPnL(pos,current);
-    const pnlStr=pnl!==null?`<span style="font-weight:600;color:${pnl>=0?'#70e0a8':'#e08080'}">${pnl>=0?'+':''}$${pnl.toFixed(2)}</span>`:`<span style="color:#606878;">Sin precio</span>`;
+    const pnlStr=pnl!==null?`<span style="font-weight:600;color:${pnl>=0?'#70e0a8':'#e08080'}">${pnl>=0?'+':''}$${pnl.toFixed(2)}</span>`:`<span style="color:#8890a8;">Sin precio</span>`;
     const currentStr=current?`$${current.toFixed(current>100?2:5)}`:'—';
     return `<tr>
-      <td style="padding:9px 16px;"><div style="font-weight:600;color:#f0eadc;">${pos.activo}</div><div style="font-size:10px;color:#606878;">${pos.broker} · ${pos.fecha}</div></td>
+      <td style="padding:9px 16px;"><div style="font-weight:600;color:#f0eadc;">${pos.activo}</div><div style="font-size:10px;color:#8890a8;">${pos.broker} · ${pos.fecha}</div></td>
       <td style="padding:9px 10px;"><span class="${pos.dir==='LONG'?'badge-buy':'badge-sell'}">${pos.dir}</span></td>
       <td style="padding:9px 10px;text-align:right;color:#d8d0bc;">$${pos.entrada.toFixed(pos.entrada>100?2:5)}</td>
       <td style="padding:9px 10px;text-align:right;color:#e8c84a;font-weight:600;">${currentStr}</td>
@@ -2711,7 +2766,7 @@ function renderTodaySignal() {
       <div style="background:rgba(12,18,36,0.85);border:1px solid rgba(196,160,60,0.15);border-radius:6px;padding:2rem;text-align:center;">
         <i class="ti ti-clock" style="font-size:32px;color:rgba(196,160,60,0.3);display:block;margin-bottom:10px;"></i>
         <div style="font-size:14px;color:#9090a8;">Sin señal publicada hoy.</div>
-        <div style="font-size:12px;color:#606878;margin-top:4px;">La señal del día se publica a las 9:00 AM Santiago, antes de la apertura de Nueva York.</div>
+        <div style="font-size:12px;color:#8890a8;margin-top:4px;">La señal del día se publica a las 9:00 AM Santiago, antes de la apertura de Nueva York.</div>
       </div>`;
     return;
   }
