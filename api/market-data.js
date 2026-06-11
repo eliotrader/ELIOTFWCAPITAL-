@@ -1777,7 +1777,15 @@ function recoverPassword() {
 function signOut() {
   currentUser = null;
   localStorage.removeItem('eliotfw_session');
-  showAuthScreen();
+  // Ocultar hub
+  var app = document.getElementById('app');
+  if (app) app.style.display = 'none';
+  document.getElementById('auth-overlay').style.display = 'none';
+  // Limpiar botón de acceso rápido
+  var quickBtn = document.getElementById('ld-quick-access');
+  if (quickBtn) quickBtn.style.display = 'none';
+  // Mostrar landing
+  showLanding();
 }
 
 
