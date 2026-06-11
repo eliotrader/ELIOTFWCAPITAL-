@@ -321,6 +321,18 @@ body{font-family:'Rajdhani',sans-serif;background:#050810;color:#f0eadc;min-heig
 .logout-btn:hover{border-color:rgba(220,80,80,0.4);color:rgba(220,80,80,0.7);}
 
 .quick-btns{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px;flex-shrink:0;}
+.clock-widget{display:flex;align-items:center;gap:2rem;background:rgba(12,18,36,0.85);border:1px solid rgba(196,160,60,0.15);border-radius:6px;padding:1rem 1.5rem;margin-bottom:1.3rem;}
+.clock-outer{position:relative;width:160px;height:160px;flex-shrink:0;}
+.clock-ring{width:160px;height:160px;}
+.clock-face{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;}
+.clock-hm{font-family:'Orbitron',sans-serif;font-size:22px;font-weight:700;color:#f0d060;letter-spacing:2px;}
+.clock-ss{font-family:'Orbitron',sans-serif;font-size:13px;color:rgba(232,200,74,0.6);letter-spacing:2px;}
+.clock-dt{font-size:10px;color:#9090a8;letter-spacing:1px;margin-top:2px;text-transform:uppercase;}
+.clock-sessions{display:flex;flex-direction:column;gap:8px;}
+.csess{display:flex;align-items:center;gap:8px;}
+.csess-dot{width:8px;height:8px;border-radius:50%;background:#606878;flex-shrink:0;}
+.csess-dot.active{background:#70e0a8;box-shadow:0 0 6px rgba(112,224,160,0.5);}
+.csess-name{font-size:12px;letter-spacing:2px;color:#9090a8;text-transform:uppercase;}
 .quick-btn{font-size:12px;padding:5px 11px;background:rgba(196,160,60,0.07);border:1px solid rgba(196,160,60,0.22);color:#c8b060;border-radius:3px;cursor:pointer;letter-spacing:0.5px;transition:all 0.2s;font-family:'Rajdhani',sans-serif;}
 .quick-btn:hover{background:rgba(196,160,60,0.14);color:#e8c84a;}
 
