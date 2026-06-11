@@ -444,11 +444,11 @@ body{background:#050810;color:#f0eadc;font-family:'Rajdhani',sans-serif;overflow
 
 /* ── LAYOUT ── */
 .lp{display:flex;min-height:100vh;}
-.lp-main{flex:1;display:flex;flex-direction:column;margin-right:250px;}
-.lp-auth{position:fixed;top:0;right:0;bottom:0;z-index:9999;background:rgba(4,6,15,0.97);border-left:1px solid rgba(232,200,74,0.15);padding:3rem 1.2rem 2rem;width:230px;display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;}
+.lp-main{flex:1;display:flex;flex-direction:column;}
+.lp-auth{position:fixed;top:1rem;right:1rem;z-index:9999;background:rgba(4,6,15,0.97);border:1px solid rgba(232,200,74,0.2);border-radius:8px;padding:1.5rem 1.2rem;width:240px;display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;max-height:95vh;}
 
 /* ── NAV ── */
-.nav{display:flex;align-items:center;justify-content:space-between;padding:1.25rem 2.5rem;border-bottom:1px solid rgba(232,200,74,0.07);}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1rem;border-bottom:1px solid rgba(232,200,74,0.07);}
 .nav-logo{display:flex;align-items:center;gap:14px;}
 .nav-n1{font-family:'Orbitron',sans-serif;font-size:12px;font-weight:500;letter-spacing:4px;color:#f0eadc;}
 .nav-n1 em{font-style:normal;color:#e8c84a;}
@@ -485,7 +485,7 @@ body{background:#050810;color:#f0eadc;font-family:'Rajdhani',sans-serif;overflow
 .ca line{stroke:#d0c8b8;stroke-width:0.7;}
 
 /* ── HERO ── */
-.hero{padding:4rem 2.5rem 3.5rem;border-bottom:1px solid rgba(232,200,74,0.06);position:relative;}
+.hero{padding:4rem 260px 3.5rem 2rem;border-bottom:1px solid rgba(232,200,74,0.06);position:relative;}
 .hero-eyebrow{font-family:'Didact Gothic',sans-serif;font-size:11px;letter-spacing:5px;color:#8890a8;text-transform:uppercase;margin-bottom:2rem;display:flex;align-items:center;gap:12px;}
 .hero-eyebrow::before{content:'';width:24px;height:0.5px;background:linear-gradient(135deg,rgba(196,160,60,0.2),rgba(232,200,74,0.1));border:1px solid rgba(232,200,74,0.5);opacity:0.5;}
 .hero-h1{font-family:"Rajdhani",sans-serif;font-size:clamp(36px,5vw,58px);font-weight:700;line-height:1.1;color:#f0eadc;margin-bottom:0.5rem;letter-spacing:2px;text-transform:uppercase;}
@@ -500,18 +500,18 @@ body{background:#050810;color:#f0eadc;font-family:'Rajdhani',sans-serif;overflow
 .cta-ghost{font-family:'Didact Gothic',sans-serif;font-size:9px;letter-spacing:3px;color:#6870a0;background:transparent;border:none;cursor:pointer;text-transform:uppercase;}
 
 /* ── PROBLEMA ── */
-.problem{padding:3rem 2.5rem;border-bottom:1px solid rgba(232,200,74,0.06);background:#080c1c;}
+.problem{padding:2rem 260px 2rem 1rem;border-bottom:1px solid rgba(232,200,74,0.06);background:#080c1c;}
 .section-label{font-family:'Didact Gothic',sans-serif;font-size:14px;letter-spacing:5px;color:#222;text-transform:uppercase;margin-bottom:2rem;display:flex;align-items:center;gap:12px;}
 .section-label::after{content:'';flex:1;height:0.5px;background:rgba(232,200,74,0.07);}
-.problem-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:rgba(232,200,74,0.05);}
-.prob-item{background:#080c1c;padding:1.5rem;}
+.problem-grid{display:grid;grid-template-columns:1fr;gap:1px;background:rgba(232,200,74,0.05);}
+.prob-item{background:#080c1c;padding:1.2rem 1.5rem;display:flex;align-items:flex-start;gap:1.5rem;}
 .prob-n{font-family:'Orbitron',sans-serif;font-size:28px;color:rgba(232,200,74,0.5);margin-bottom:0.5rem;line-height:1;}
 .prob-title{font-family:'Didact Gothic',sans-serif;font-size:13px;letter-spacing:2px;color:#d0e0f0;text-transform:uppercase;margin-bottom:0.5rem;font-weight:700;}
 .prob-desc{font-family:'Cormorant Garamond',serif;font-size:15px;color:#a0b0c8;line-height:1.7;font-style:italic;}
 
 /* ── SOLUCIÓN ── */
-.solution{padding:3rem 2.5rem;border-bottom:1px solid rgba(232,200,74,0.06);}
-.sol-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:rgba(232,200,74,0.05);}
+.solution{padding:2rem 260px 2rem 1rem;border-bottom:1px solid rgba(232,200,74,0.06);}
+.sol-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:rgba(232,200,74,0.05);}
 .sol-item{background:#050810;padding:1.75rem;border-top:1px solid rgba(232,200,74,0.06);}
 .sol-item:first-child{border-top:none;}
 .sol-num{font-family:'Didact Gothic',sans-serif;font-size:11px;letter-spacing:3px;color:#6870a0;margin-bottom:1rem;}
@@ -519,8 +519,8 @@ body{background:#050810;color:#f0eadc;font-family:'Rajdhani',sans-serif;overflow
 .sol-desc{font-family:'Didact Gothic',sans-serif;font-size:13px;color:#6870a0;line-height:1.9;letter-spacing:0.3px;}
 
 /* ── PLANES ── */
-.plans-section{padding:3rem 2.5rem;border-bottom:1px solid rgba(232,200,74,0.06);background:#080c1c;}
-.plans{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:rgba(232,200,74,0.05);}
+.plans-section{padding:2rem 260px 2rem 1rem;border-bottom:1px solid rgba(232,200,74,0.06);background:#080c1c;}
+.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(232,200,74,0.05);}
 .plan{background:#080c1c;padding:2rem 1.5rem;}
 .plan.hot{background:#0c0b08;}
 .plan-tier{font-family:'Didact Gothic',sans-serif;font-size:7px;letter-spacing:4px;color:#8890a8;text-transform:uppercase;margin-bottom:0.75rem;}
@@ -534,7 +534,7 @@ body{background:#050810;color:#f0eadc;font-family:'Rajdhani',sans-serif;overflow
 .hot-badge{font-family:'Didact Gothic',sans-serif;font-size:7px;letter-spacing:3px;color:#e8c84a;border:0.5px solid rgba(232,200,74,0.2);padding:3px 8px;display:inline-block;margin-bottom:0.75rem;text-transform:uppercase;}
 
 /* ── CIERRE ── */
-.closing{padding:3rem 2.5rem;text-align:center;border-bottom:1px solid rgba(232,200,74,0.06);}
+.closing{padding:2rem 1rem;text-align:center;border-bottom:1px solid rgba(232,200,74,0.06);}
 .closing-h{font-size:clamp(22px,3vw,36px);font-weight:400;color:#f0eadc;margin-bottom:0.75rem;letter-spacing:-0.5px;}
 .closing-h em{font-style:italic;color:#e8c84a;}
 .closing-p{font-family:'Didact Gothic',sans-serif;font-size:13px;color:#8890a8;letter-spacing:1px;margin-bottom:2rem;line-height:2;}
