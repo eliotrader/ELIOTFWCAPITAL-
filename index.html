@@ -1861,13 +1861,17 @@ function updateClock(){
     const s=SESSIONS[k];
     const open=isOpen(s, utcH, utcM);
     const card=document.getElementById('sess-'+k);
-    card.className='session-card'+(open?' active-session':'');
-    if(open){
-      document.getElementById('sess-'+k+'-time').textContent = elapsed(s, utcH, utcM);
-      document.getElementById('sess-'+k+'-status').textContent = '● Abierta · cierra en '+remaining(s.close, utcH, utcM);
-    } else {
-      document.getElementById('sess-'+k+'-time').textContent = '--:--';
-      document.getElementById('sess-'+k+'-status').textContent = 'Cerrada · abre en '+opensIn(s, utcH, utcM);
+    if(card) {
+      card.className='session-card'+(open?' active-session':'');
+      const timeEl=document.getElementById('sess-'+k+'-time');
+      const statusEl=document.getElementById('sess-'+k+'-status');
+      if(open){
+        if(timeEl) timeEl.textContent = elapsed(s, utcH, utcM);
+        if(statusEl) statusEl.textContent = '● Abierta · cierra en '+remaining(s.close, utcH, utcM);
+      } else {
+        if(timeEl) timeEl.textContent = '--:--';
+        if(statusEl) statusEl.textContent = 'Cerrada · abre en '+opensIn(s, utcH, utcM);
+      }
     }
   });
 }
