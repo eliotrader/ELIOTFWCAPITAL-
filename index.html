@@ -101,19 +101,38 @@ function ldDoRecover() {
 }
 
 function initLanding() {
+  // Siempre mostrar la landing al entrar, sin importar si hay sesión
+  showLanding();
+  document.getElementById('auth-overlay').style.display = 'none';
+  // Si hay sesión guardada, mostrar botón de acceso rápido
   var session = localStorage.getItem('eliotfw_session');
   if (session) {
     try {
-      currentUser = JSON.parse(session);
-      hideLanding();
-      document.getElementById('auth-overlay').style.display = 'none';
-      showApp();
-      return;
+      var savedUser = JSON.parse(session);
+      var name = savedUser.name || savedUser.email.split('@')[0];
+      var quickBtn = document.getElementById('ld-quick-access');
+      if (quickBtn) {
+        quickBtn.style.display = 'block';
+        quickBtn.innerHTML = '<div style="font-size:8px;letter-spacing:2px;color:#9090a8;margin-bottom:6px;text-transform:uppercase;">Sesión activa</div><button class="a-btn" style="background:rgba(112,224,160,0.12);border:1px solid rgba(112,224,160,0.4);color:#70e0a8;" onclick="ldQuickAccess()">CONTINUAR COMO ' + name.toUpperCase() + ' →</button><div style="text-align:center;margin-top:8px;"><a href="#" onclick="ldClearSession()" style="font-size:9px;color:#606878;letter-spacing:1px;">No eres tú? Cambiar cuenta</a></div>';
+      }
     } catch(e) { localStorage.removeItem('eliotfw_session'); }
   }
-  // Sin sesión — mostrar landing y ocultar el overlay de auth
-  showLanding();
-  document.getElementById('auth-overlay').style.display = 'none';
+}
+
+function ldQuickAccess() {
+  var session = localStorage.getItem('eliotfw_session');
+  if (!session) return;
+  try {
+    currentUser = JSON.parse(session);
+    document.getElementById('ld-landing-page').style.display = 'none';
+    showApp();
+  } catch(e) { localStorage.removeItem('eliotfw_session'); }
+}
+
+function ldClearSession() {
+  localStorage.removeItem('eliotfw_session');
+  var quickBtn = document.getElementById('ld-quick-access');
+  if (quickBtn) quickBtn.style.display = 'none';
 }
 
 // Ticker de precios en landing
@@ -812,6 +831,7 @@ body{background:#050810;color:#f0eadc;font-family:'Rajdhani',sans-serif;overflow
           <div class="a-sub">Trading Hub Personal</div>
         </div>
       </div>
+      <div id="ld-quick-access" style="display:none;margin-bottom:1rem;"></div>
       <div class="a-trial">3 días de prueba gratuita</div>
       <div class="auth-tabs">
         <div class="a-tab on">Ingresar</div>
@@ -1597,11 +1617,7 @@ function showPaywall(type) {
 }
 
 function initAuth() {
-  var saved = localStorage.getItem('eliotfw_session');
-  if (saved) {
-    try { currentUser = JSON.parse(saved); showApp(); hideLanding(); document.getElementById('auth-overlay').style.display = 'none'; return; } 
-    catch(e) { localStorage.removeItem('eliotfw_session'); }
-  }
+  // initLanding maneja la sesión — esta función ya no se usa para auto-login
 }
 
 function showApp() {
@@ -1757,7 +1773,20 @@ function recoverPassword() {
 function signOut() {
   currentUser = null;
   localStorage.removeItem('eliotfw_session');
-  showAuthScreen();
+  // Ocultar hub y overlays
+  var app = document.getElementById('app');
+  if (app) app.style.display = 'none';
+  var overlay = document.getElementById('auth-overlay');
+  if (overlay) overlay.style.display = 'none';
+  // Limpiar botón de acceso rápido
+  var quickBtn = document.getElementById('ld-quick-access');
+  if (quickBtn) quickBtn.style.display = 'none';
+  // Remover paywall si existe
+  var pw = document.getElementById('paywall-overlay');
+  if (pw) pw.remove();
+  // Mostrar landing
+  var landing = document.getElementById('ld-landing-page');
+  if (landing) landing.style.display = 'flex';
 }
 
 
