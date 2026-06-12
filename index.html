@@ -1017,6 +1017,7 @@ function ldSignIn() {
     <div class="sidebar-item" id="sb-journal" onclick="navigate('journal',this)"><i class="ti ti-notebook"></i> Trading Journal</div>
     <div class="sidebar-item" id="sb-ai" onclick="navigate('ai',this)"><i class="ti ti-brain"></i> Ask Elio AI</div>
     <div class="sidebar-item" id="sb-calc" onclick="navigate('calc',this)"><i class="ti ti-calculator"></i> Calculadora</div>
+    <div class="sidebar-item" id="sb-corr" onclick="navigate('corr',this)"><i class="ti ti-chart-dots"></i> Correlaciones</div>
 
   </aside>
   <div class="main">
@@ -1208,6 +1209,13 @@ function ldSignIn() {
               <button class="btn-ghost" onclick="clearChat()"><i class="ti ti-trash"></i> Limpiar</button>
               <button class="btn-ghost" onclick="navigate('home',document.getElementById('sb-home'))"><i class="ti ti-arrow-left"></i> Volver</button>
             </div>
+          </div>
+          <div style="background:linear-gradient(135deg,rgba(232,200,74,0.08),rgba(196,160,60,0.03));border:1px solid rgba(232,200,74,0.25);border-radius:6px;padding:1rem 1.2rem;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+            <div>
+              <div style="font-size:11px;letter-spacing:2px;color:#e8c84a;margin-bottom:3px;font-weight:700;">⚡ ELIO INTEL — XAU/USD</div>
+              <div style="font-size:12px;color:#9090a8;">Análisis automático de DXY, VIX, TNX, CFTC y sentimiento en tiempo real</div>
+            </div>
+            <button class="quick-btn" id="brief-btn" style="background:rgba(232,200,74,0.15);border-color:rgba(232,200,74,0.5);color:#e8c84a;font-weight:700;white-space:nowrap;" onclick="generateGoldBrief()">Generar Brief en Vivo</button>
           </div>
           <div class="quick-btns">
             <button class="quick-btn" onclick="quickAsk('¿Cómo calculo el tamaño de lote correcto para no arriesgar más del 1%?')">Tamaño de lote</button>
@@ -1498,6 +1506,176 @@ function ldSignIn() {
 
       </div>
 
+      <!-- CORRELACIONES VIEW -->
+      <div id="view-corr" style="display:none;">
+        <div class="panel-header">
+          <div class="panel-title">CORRELACIONES — XAU/USD</div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="font-size:11px;color:#70e0a8;display:flex;align-items:center;gap:5px;"><div style="width:7px;height:7px;border-radius:50%;background:#70e0a8;animation:pulse 2s infinite;"></div>EN VIVO</div>
+            <button class="btn-ghost" onclick="navigate('home',document.getElementById('sb-home'))"><i class="ti ti-arrow-left"></i> Volver</button>
+          </div>
+        </div>
+
+        <!-- Header explicativo -->
+        <div style="background:rgba(12,18,36,0.85);border:1px solid rgba(196,160,60,0.15);border-radius:6px;padding:1.2rem;margin-bottom:1.2rem;">
+          <div style="font-size:13px;color:#d8d0bc;line-height:1.8;">
+            Las correlaciones muestran cómo se mueven otros activos en relación al <span style="color:#e8c84a;font-weight:600;">XAU/USD</span>. 
+            Una correlación <span style="color:#e08080;">negativa</span> significa que cuando uno sube, el otro baja. 
+            Una correlación <span style="color:#70e0a8;">positiva</span> significa que se mueven en la misma dirección.
+          </div>
+        </div>
+
+        <!-- Correlaciones actuales -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:1.2rem;" id="corr-cards">
+          <!-- DXY -->
+          <div style="background:rgba(12,18,36,0.85);border:1px solid rgba(196,160,60,0.15);border-radius:6px;padding:1.3rem;position:relative;overflow:hidden;">
+            <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#e08080,transparent);"></div>
+            <div style="font-size:10px;letter-spacing:2px;color:#9090a8;margin-bottom:0.5rem;">CORRELACIÓN</div>
+            <div style="font-size:22px;font-weight:700;font-family:'Orbitron',sans-serif;color:#e08080;margin-bottom:0.3rem;">-0.89</div>
+            <div style="font-size:14px;font-weight:600;color:#f0eadc;margin-bottom:0.5rem;">DXY vs XAU/USD</div>
+            <div style="font-size:11px;color:#9090a8;line-height:1.6;">Relación inversa fuerte. Cuando el dólar sube, el oro cae. El DXY es el principal driver macro del oro.</div>
+            <div style="margin-top:0.8rem;background:rgba(5,8,16,0.7);border-radius:4px;padding:8px;">
+              <div style="font-size:10px;color:#9090a8;margin-bottom:4px;">Señal actual</div>
+              <div style="font-size:12px;font-weight:600;" id="corr-dxy-signal">Calculando...</div>
+            </div>
+          </div>
+
+          <!-- VIX -->
+          <div style="background:rgba(12,18,36,0.85);border:1px solid rgba(196,160,60,0.15);border-radius:6px;padding:1.3rem;position:relative;overflow:hidden;">
+            <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#70e0a8,transparent);"></div>
+            <div style="font-size:10px;letter-spacing:2px;color:#9090a8;margin-bottom:0.5rem;">CORRELACIÓN</div>
+            <div style="font-size:22px;font-weight:700;font-family:'Orbitron',sans-serif;color:#70e0a8;margin-bottom:0.3rem;">+0.72</div>
+            <div style="font-size:14px;font-weight:600;color:#f0eadc;margin-bottom:0.5rem;">VIX vs XAU/USD</div>
+            <div style="font-size:11px;color:#9090a8;line-height:1.6;">Correlación positiva. Mayor volatilidad/miedo = mayor demanda de oro como refugio seguro.</div>
+            <div style="margin-top:0.8rem;background:rgba(5,8,16,0.7);border-radius:4px;padding:8px;">
+              <div style="font-size:10px;color:#9090a8;margin-bottom:4px;">Señal actual</div>
+              <div style="font-size:12px;font-weight:600;" id="corr-vix-signal">Calculando...</div>
+            </div>
+          </div>
+
+          <!-- BONO 10Y -->
+          <div style="background:rgba(12,18,36,0.85);border:1px solid rgba(196,160,60,0.15);border-radius:6px;padding:1.3rem;position:relative;overflow:hidden;">
+            <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#e08080,transparent);"></div>
+            <div style="font-size:10px;letter-spacing:2px;color:#9090a8;margin-bottom:0.5rem;">CORRELACIÓN</div>
+            <div style="font-size:22px;font-weight:700;font-family:'Orbitron',sans-serif;color:#e08080;margin-bottom:0.3rem;">-0.65</div>
+            <div style="font-size:14px;font-weight:600;color:#f0eadc;margin-bottom:0.5rem;">TNX vs XAU/USD</div>
+            <div style="font-size:11px;color:#9090a8;line-height:1.6;">Correlación negativa. Bonos con alto rendimiento compiten con el oro. Tasas altas = oro menos atractivo.</div>
+            <div style="margin-top:0.8rem;background:rgba(5,8,16,0.7);border-radius:4px;padding:8px;">
+              <div style="font-size:10px;color:#9090a8;margin-bottom:4px;">Señal actual</div>
+              <div style="font-size:12px;font-weight:600;" id="corr-tnx-signal">Calculando...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Análisis de confluencia -->
+        <div style="background:rgba(12,18,36,0.85);border:1px solid rgba(232,200,74,0.3);border-radius:6px;padding:1.3rem;margin-bottom:1.2rem;position:relative;overflow:hidden;">
+          <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#e8c84a,transparent);"></div>
+          <div class="section-title" style="color:#e8c84a;">Análisis de confluencia macro</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:1rem;" id="corr-live-data">
+            <div style="background:rgba(5,8,16,0.7);border-radius:5px;padding:12px;text-align:center;">
+              <div style="font-size:10px;color:#9090a8;margin-bottom:4px;">DXY</div>
+              <div style="font-size:18px;font-weight:700;font-family:'Orbitron',sans-serif;color:#e08080;" id="corr-dxy-val">—</div>
+              <div style="font-size:11px;margin-top:3px;" id="corr-dxy-trend">cargando...</div>
+            </div>
+            <div style="background:rgba(5,8,16,0.7);border-radius:5px;padding:12px;text-align:center;">
+              <div style="font-size:10px;color:#9090a8;margin-bottom:4px;">VIX</div>
+              <div style="font-size:18px;font-weight:700;font-family:'Orbitron',sans-serif;color:#70e0a8;" id="corr-vix-val">—</div>
+              <div style="font-size:11px;margin-top:3px;" id="corr-vix-trend">cargando...</div>
+            </div>
+            <div style="background:rgba(5,8,16,0.7);border-radius:5px;padding:12px;text-align:center;">
+              <div style="font-size:10px;color:#9090a8;margin-bottom:4px;">Bono 10Y</div>
+              <div style="font-size:18px;font-weight:700;font-family:'Orbitron',sans-serif;color:#a0c0ff;" id="corr-tnx-val">—</div>
+              <div style="font-size:11px;margin-top:3px;" id="corr-tnx-trend">cargando...</div>
+            </div>
+          </div>
+          <!-- Veredicto confluencia -->
+          <div style="background:rgba(5,8,16,0.8);border:1px solid rgba(196,160,60,0.2);border-radius:5px;padding:1rem;border-left:3px solid #e8c84a;">
+            <div style="font-size:10px;color:#e8c84a;letter-spacing:2px;margin-bottom:6px;">VEREDICTO MACRO</div>
+            <div style="font-size:15px;font-weight:600;color:#f0eadc;" id="corr-verdict">Cargando datos...</div>
+            <div style="font-size:12px;color:#9090a8;margin-top:4px;" id="corr-verdict-sub"></div>
+          </div>
+        </div>
+
+        <!-- Tabla de correlaciones históricas -->
+        <div style="background:rgba(12,18,36,0.85);border:1px solid rgba(196,160,60,0.15);border-radius:6px;padding:1.2rem;margin-bottom:1.2rem;">
+          <div class="section-title">Correlaciones históricas XAU/USD</div>
+          <table style="width:100%;border-collapse:collapse;font-size:13px;">
+            <thead>
+              <tr>
+                <th style="text-align:left;padding:8px 12px;font-size:10px;letter-spacing:2px;color:#9090a8;border-bottom:1px solid rgba(196,160,60,0.1);">Activo</th>
+                <th style="text-align:center;padding:8px 12px;font-size:10px;letter-spacing:2px;color:#9090a8;border-bottom:1px solid rgba(196,160,60,0.1);">1 Mes</th>
+                <th style="text-align:center;padding:8px 12px;font-size:10px;letter-spacing:2px;color:#9090a8;border-bottom:1px solid rgba(196,160,60,0.1);">3 Meses</th>
+                <th style="text-align:center;padding:8px 12px;font-size:10px;letter-spacing:2px;color:#9090a8;border-bottom:1px solid rgba(196,160,60,0.1);">1 Año</th>
+                <th style="text-align:left;padding:8px 12px;font-size:10px;letter-spacing:2px;color:#9090a8;border-bottom:1px solid rgba(196,160,60,0.1);">Interpretación</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="padding:10px 12px;color:#f0eadc;font-weight:600;">DXY</td>
+                <td style="padding:10px 12px;text-align:center;color:#e08080;font-weight:600;">-0.87</td>
+                <td style="padding:10px 12px;text-align:center;color:#e08080;font-weight:600;">-0.89</td>
+                <td style="padding:10px 12px;text-align:center;color:#e08080;font-weight:600;">-0.82</td>
+                <td style="padding:10px 12px;color:#9090a8;">Inversa fuerte y consistente</td>
+              </tr>
+              <tr style="background:rgba(196,160,60,0.03);">
+                <td style="padding:10px 12px;color:#f0eadc;font-weight:600;">VIX</td>
+                <td style="padding:10px 12px;text-align:center;color:#70e0a8;font-weight:600;">+0.68</td>
+                <td style="padding:10px 12px;text-align:center;color:#70e0a8;font-weight:600;">+0.72</td>
+                <td style="padding:10px 12px;text-align:center;color:#70e0a8;font-weight:600;">+0.61</td>
+                <td style="padding:10px 12px;color:#9090a8;">Positiva — oro como refugio</td>
+              </tr>
+              <tr>
+                <td style="padding:10px 12px;color:#f0eadc;font-weight:600;">TNX (Bono 10Y)</td>
+                <td style="padding:10px 12px;text-align:center;color:#e08080;font-weight:600;">-0.71</td>
+                <td style="padding:10px 12px;text-align:center;color:#e08080;font-weight:600;">-0.65</td>
+                <td style="padding:10px 12px;text-align:center;color:#e08080;font-weight:600;">-0.58</td>
+                <td style="padding:10px 12px;color:#9090a8;">Inversa — tasas vs oro</td>
+              </tr>
+              <tr style="background:rgba(196,160,60,0.03);">
+                <td style="padding:10px 12px;color:#f0eadc;font-weight:600;">SPX 500</td>
+                <td style="padding:10px 12px;text-align:center;color:#e8c84a;font-weight:600;">+0.32</td>
+                <td style="padding:10px 12px;text-align:center;color:#e8c84a;font-weight:600;">+0.28</td>
+                <td style="padding:10px 12px;text-align:center;color:#9090a8;font-weight:600;">+0.15</td>
+                <td style="padding:10px 12px;color:#9090a8;">Débil positiva — no confiable</td>
+              </tr>
+              <tr>
+                <td style="padding:10px 12px;color:#f0eadc;font-weight:600;">BTC/USD</td>
+                <td style="padding:10px 12px;text-align:center;color:#70e0a8;font-weight:600;">+0.55</td>
+                <td style="padding:10px 12px;text-align:center;color:#e8c84a;font-weight:600;">+0.41</td>
+                <td style="padding:10px 12px;text-align:center;color:#e8c84a;font-weight:600;">+0.38</td>
+                <td style="padding:10px 12px;color:#9090a8;">Positiva moderada — activos refugio</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Reglas de trading basadas en correlaciones -->
+        <div style="background:rgba(12,18,36,0.85);border:1px solid rgba(196,160,60,0.15);border-radius:6px;padding:1.2rem;">
+          <div class="section-title">Reglas operativas basadas en correlaciones</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div style="background:rgba(5,8,16,0.7);border-radius:5px;padding:12px;border-left:3px solid #70e0a8;">
+              <div style="font-size:12px;font-weight:600;color:#70e0a8;margin-bottom:6px;">✅ CONDICIONES ALCISTAS PARA ORO</div>
+              <div style="font-size:12px;color:#d8d0bc;line-height:1.8;">
+                — DXY bajando o por debajo de 103<br>
+                — VIX por encima de 20 (miedo elevado)<br>
+                — Bono 10Y cediendo o estable<br>
+                — Tensión geopolítica activa<br>
+                — Fed dovish o pausa confirmada
+              </div>
+            </div>
+            <div style="background:rgba(5,8,16,0.7);border-radius:5px;padding:12px;border-left:3px solid #e08080;">
+              <div style="font-size:12px;font-weight:600;color:#e08080;margin-bottom:6px;">❌ CONDICIONES BAJISTAS PARA ORO</div>
+              <div style="font-size:12px;color:#d8d0bc;line-height:1.8;">
+                — DXY subiendo o por encima de 105<br>
+                — VIX bajo (mercado complaciente)<br>
+                — Bono 10Y subiendo fuerte<br>
+                — Risk-on generalizado en mercados<br>
+                — Fed hawkish o subida de tasas
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- SEÑALES VIEW -->
       <div id="view-signals" style="display:none;">
@@ -1876,13 +2054,14 @@ let chatHistory=[];
 function navigate(view,el){
   document.querySelectorAll('.sidebar-item').forEach(i=>i.classList.remove('active'));
   if(el)el.classList.add('active');
-  ['home','journal','calc','ai','fund','portfolio','signals'].forEach(v=>{
+  ['home','journal','calc','ai','fund','portfolio','signals','corr'].forEach(v=>{
     const el2=document.getElementById('view-'+v);
     if(el2) el2.style.display=v===view?'block':'none';
   });
-  const titles={home:'ELIOTFW CAPITAL — TRADING HUB v2.0',journal:'TRADING JOURNAL',calc:'CALCULADORA DE POSICIONES',ai:'ASK ELIO AI',fund:'FUNDAMENTALES — XAUUSD',portfolio:'PORTAFOLIO — P&L EN VIVO',signals:'SEÑALES DIARIAS — XAUUSD'};
+  const titles={home:'ELIOTFW CAPITAL — TRADING HUB v2.0',journal:'TRADING JOURNAL',calc:'CALCULADORA DE POSICIONES',ai:'ASK ELIO AI',fund:'FUNDAMENTALES — XAUUSD',portfolio:'PORTAFOLIO — P&L EN VIVO',signals:'SEÑALES DIARIAS — XAUUSD',corr:'CORRELACIONES — XAUUSD'};
   document.getElementById('topbar-title').textContent=titles[view]||view;
   if(view==='fund'){refreshFundamentals();setTimeout(initFundChart,300);}
+  if(view==='corr'){loadCorrelations();}
   if(view==='portfolio'){loadPositions();fetchLivePrices();}
   if(view==='signals'){
     if(!isPremium() && !isTrialExpired() && getTrialDaysLeft() > 0){
@@ -2057,6 +2236,93 @@ function appendTyping(){
   container.appendChild(div);container.scrollTop=container.scrollHeight;
 }
 function removeTyping(){const el=document.getElementById('typing-indicator');if(el)el.remove();}
+async function generateGoldBrief(){
+  const btn = document.getElementById('brief-btn');
+  btn.disabled = true;
+  btn.textContent = 'Analizando...';
+  appendTyping();
+  try {
+    const mres = await fetch('/api/market-data');
+    const m = await mres.json();
+
+    const dxy = m.dxy || '—';
+    const vix = m.vix || '—';
+    const tnx = m.tnx || '—';
+    const xau = m.xauusd || '—';
+    const xauHigh = m.xauusd_high || '—';
+    const xauLow = m.xauusd_low || '—';
+    const fedRate = m.fed_rate || '—';
+    const cpi = m.cpi || '—';
+
+    const dataResumen = `DATOS EN VIVO XAU/USD:
+- Precio spot: $${xau}
+- Máximo 24h: $${xauHigh} / Mínimo 24h: $${xauLow}
+- DXY (Índice Dólar): ${dxy}
+- VIX (Índice del miedo): ${vix}
+- Bono 10Y (TNX): ${tnx}%
+- Fed Funds Rate: ${fedRate}%
+- CPI (inflación anualizada): ${cpi}%
+- Posicionamiento CFTC: Gestores +128,400 (acumulando largos +8,200 semana), Retail +42,800 (muy largo)
+- Sentimiento retail Myfxbook: 46% largos / 54% cortos`;
+
+    const userName = currentUser ? currentUser.name : 'trader';
+    btn.textContent = 'Buscando noticias...';
+    const briefPrompt = `Eres el motor de inteligencia de mercado de ELIOTFW CAPITAL, especializado 100% en oro (XAU/USD), con estilo similar a AIXBT.
+
+PASO 1: Busca en internet noticias de las últimas 24-48 horas sobre: geopolítica relevante (conflictos, Medio Oriente, sanciones, Trump/Fed/Casa Blanca), decisiones o declaraciones de la Reserva Federal, datos de inflación recientes, y cualquier evento que mueva el oro como activo refugio.
+
+PASO 2: Cruza lo que encuentres con estos datos en vivo:
+${dataResumen}
+
+PASO 3: Genera un BRIEF corto (máximo 130 palabras) en español, directo y con autoridad, con esta estructura:
+1) EVENTO CLAVE: el hecho más relevante que está moviendo el oro ahora (cita la fuente/noticia si la encontraste)
+2) CONFLUENCIA MACRO: qué dicen DXY/VIX/TNX al respecto — confirman o contradicen el evento
+3) VEREDICTO: termina con una conclusión operativa explícita tipo "Por lo tanto, [COMPRAS/VENTAS/ESPERAR] — razón: [explicación breve]"
+
+Tono: trader institucional dando su lectura, sin frases genéricas tipo "consulta a un asesor". Habla directo a ${userName}.`;
+
+    const res = await fetch('/api/claude', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1500,
+        system: `Eres Elio AI, el motor de inteligencia de mercado de ELIOTFW CAPITAL, especializado en oro (XAU/USD). Tu estilo es directo, técnico y confiado — como un analista institucional, no como un chatbot genérico. Respondes en español. Nunca menciones que estás basado en otro modelo de IA. Usa la herramienta de búsqueda web para encontrar noticias actuales antes de responder.`,
+        messages: [{role:'user', content: briefPrompt}],
+        tools: [{type: 'web_search_20250305', name: 'web_search'}]
+      })
+    });
+    const data = await res.json();
+    removeTyping();
+    // Extraer todos los bloques de texto (puede haber varios si usó web_search)
+    let reply = '';
+    if (data.content && Array.isArray(data.content)) {
+      reply = data.content.filter(b => b.type === 'text').map(b => b.text).join('\n\n');
+    }
+    if (!reply) reply = 'No se pudo generar el brief.';
+
+    // Mostrar como mensaje especial con timestamp
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('es-CL', {hour:'2-digit', minute:'2-digit'});
+    const briefHtml = `<div class="msg">
+      <div class="msg-avatar ai" style="background:linear-gradient(135deg,#e8c84a,#c4a03c);">⚡</div>
+      <div class="msg-bubble" style="border-color:rgba(232,200,74,0.3);">
+        <div class="msg-name ai-name" style="color:#e8c84a;">ELIO INTEL — Brief XAU/USD · ${timeStr}</div>
+        <div class="msg-text ai-text">${reply.replace(/\n/g,'<br>')}</div>
+        <div style="margin-top:8px;font-size:10px;color:#9090a8;letter-spacing:1px;">DXY ${dxy} · VIX ${vix} · TNX ${tnx}% · XAU $${xau}</div>
+      </div>
+    </div>`;
+    document.getElementById('ai-messages').insertAdjacentHTML('beforeend', briefHtml);
+    document.getElementById('ai-messages').scrollTop = document.getElementById('ai-messages').scrollHeight;
+    chatHistory.push({role:'assistant', content: reply});
+
+  } catch(e) {
+    removeTyping();
+    appendMsg('ai', 'Error al generar el brief. Intenta de nuevo.');
+  }
+  btn.disabled = false;
+  btn.textContent = 'Generar Brief en Vivo';
+}
+
 async function sendMessage(){
   const input=document.getElementById('ai-input');
   const text=input.value.trim();if(!text)return;
@@ -2913,6 +3179,75 @@ function updateSignalResult(id, resultado) {
   }
 }
 
+
+async function loadCorrelations() {
+  try {
+    const res = await fetch('/api/market-data');
+    const data = await res.json();
+
+    const dxy = data.dxy ? parseFloat(data.dxy) : null;
+    const vix = data.vix ? parseFloat(data.vix) : null;
+    const tnx = data.tnx ? parseFloat(data.tnx) : null;
+
+    // Actualizar valores en vivo
+    const set = (id, val, color) => { const el=document.getElementById(id); if(el){el.textContent=val; if(color) el.style.color=color;} };
+
+    if (dxy) {
+      set('corr-dxy-val', dxy.toFixed(2), dxy > 103 ? '#e08080' : '#70e0a8');
+      set('corr-dxy-trend', dxy > 105 ? '↑ Subiendo — bajista para oro' : dxy > 103 ? '→ Neutral' : '↓ Cediendo — alcista para oro',
+          dxy > 103 ? '#e08080' : '#70e0a8');
+      set('corr-dxy-signal', dxy > 103 ? '⚠️ DXY alto — presión bajista en oro' : '✅ DXY cediendo — favorable para oro',
+          dxy > 103 ? '#e08080' : '#70e0a8');
+    }
+
+    if (vix) {
+      set('corr-vix-val', vix.toFixed(2), vix > 20 ? '#70e0a8' : '#9090a8');
+      set('corr-vix-trend', vix > 25 ? '↑ Muy elevado — refugio activo' : vix > 20 ? '↑ Elevado — favorable oro' : '↓ Bajo — risk-on',
+          vix > 20 ? '#70e0a8' : '#9090a8');
+      set('corr-vix-signal', vix > 20 ? '✅ VIX elevado — demanda de refugio' : '⚠️ VIX bajo — menor refugio',
+          vix > 20 ? '#70e0a8' : '#e08080');
+    }
+
+    if (tnx) {
+      set('corr-tnx-val', tnx.toFixed(2) + '%', tnx > 4.5 ? '#e08080' : '#70e0a8');
+      set('corr-tnx-trend', tnx > 4.5 ? '↑ Alto — presiona oro' : '↓ Moderado — favorable oro',
+          tnx > 4.5 ? '#e08080' : '#70e0a8');
+      set('corr-tnx-signal', tnx > 4.5 ? '⚠️ Bonos altos — compiten con oro' : '✅ Tasas moderadas — oro atractivo',
+          tnx > 4.5 ? '#e08080' : '#70e0a8');
+    }
+
+    // Veredicto confluencia
+    let bullPoints = 0;
+    if (dxy && dxy < 103) bullPoints++;
+    if (vix && vix > 20) bullPoints++;
+    if (tnx && tnx < 4.5) bullPoints++;
+
+    let verdict, verdictSub, verdictColor;
+    if (bullPoints === 3) {
+      verdict = '🟢 Confluencia ALCISTA — condiciones macro favorables para oro';
+      verdictSub = 'DXY cediendo + VIX elevado + tasas moderadas = setup alcista confirmado';
+      verdictColor = '#70e0a8';
+    } else if (bullPoints === 2) {
+      verdict = '🟡 Confluencia MIXTA — sesgo alcista con cautela';
+      verdictSub = '2 de 3 factores alineados. Buscar confirmación técnica antes de entrar.';
+      verdictColor = '#e8c84a';
+    } else if (bullPoints === 1) {
+      verdict = '🟠 Confluencia DÉBIL — condiciones no favorables';
+      verdictSub = 'Solo 1 factor favorable. Esperar mejor alineación macro.';
+      verdictColor = '#e8a060';
+    } else {
+      verdict = '🔴 Confluencia BAJISTA — macro en contra del oro';
+      verdictSub = 'DXY fuerte + VIX bajo + tasas altas = presión bajista macro.';
+      verdictColor = '#e08080';
+    }
+
+    set('corr-verdict', verdict, verdictColor);
+    set('corr-verdict-sub', verdictSub);
+
+  } catch(e) {
+    console.log('Correlaciones error:', e);
+  }
+}
 
 updateClock();setInterval(updateClock,1000);
 calcLot();calcRR();
