@@ -6,8 +6,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
   const SUPABASE_URL = process.env.SUPABASE_URL || 'https://geyosraoygsdpllhlrjc.supabase.co'
-  const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY
-
+ const SUPABASE_KEY = process.env.SUPABASE_KEY
   const { action, user_id, binance_api_key, binance_secret, kucoin_api_key, kucoin_secret, kucoin_passphrase } = req.body
 
   try {
