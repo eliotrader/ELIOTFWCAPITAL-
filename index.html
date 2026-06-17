@@ -1348,6 +1348,97 @@ function ldSignIn() {
           </div>
         </div>
 
+        <!-- EXCHANGES EN VIVO -->
+        <div style="background:rgba(12,18,36,0.85);border:1px solid rgba(232,200,74,0.25);border-radius:6px;padding:1.3rem;margin-bottom:1.2rem;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+            <div>
+              <div style="font-size:11px;letter-spacing:2px;color:#e8c84a;font-weight:700;">⚡ EXCHANGES EN VIVO</div>
+              <div style="font-size:12px;color:#9090a8;margin-top:2px;">Conecta tu Binance y KuCoin para ver tu portafolio real</div>
+            </div>
+            <button class="btn-ghost" onclick="toggleExchangeConfig()" id="exchange-config-btn"><i class="ti ti-settings"></i> Configurar</button>
+          </div>
+
+          <!-- Panel configuración -->
+          <div id="exchange-config-panel" style="display:none;margin-bottom:1rem;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <!-- Binance -->
+              <div style="background:rgba(5,8,16,0.8);border:1px solid rgba(240,185,11,0.2);border-radius:6px;padding:1rem;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                  <div style="width:8px;height:8px;border-radius:50%;background:#f0b90b;"></div>
+                  <div style="font-size:12px;font-weight:700;color:#f0b90b;">BINANCE</div>
+                </div>
+                <div class="form-group" style="margin-bottom:8px;">
+                  <label class="form-label">API Key</label>
+                  <input class="form-input" id="bn-api-key" type="password" placeholder="Pega tu API Key aquí">
+                </div>
+                <div class="form-group" style="margin-bottom:10px;">
+                  <label class="form-label">Secret Key</label>
+                  <input class="form-input" id="bn-secret" type="password" placeholder="Pega tu Secret Key aquí">
+                </div>
+                <button class="btn-gold" style="width:100%;font-size:10px;" onclick="saveExchangeKeys('binance')">Guardar Binance</button>
+                <div style="font-size:10px;color:#9090a8;margin-top:6px;">Solo lectura — sin permisos de retiro</div>
+              </div>
+              <!-- KuCoin -->
+              <div style="background:rgba(5,8,16,0.8);border:1px solid rgba(10,180,80,0.2);border-radius:6px;padding:1rem;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                  <div style="width:8px;height:8px;border-radius:50%;background:#0ab450;"></div>
+                  <div style="font-size:12px;font-weight:700;color:#0ab450;">KUCOIN</div>
+                </div>
+                <div class="form-group" style="margin-bottom:8px;">
+                  <label class="form-label">API Key</label>
+                  <input class="form-input" id="kc-api-key" type="password" placeholder="Pega tu API Key aquí">
+                </div>
+                <div class="form-group" style="margin-bottom:8px;">
+                  <label class="form-label">Secret Key</label>
+                  <input class="form-input" id="kc-secret" type="password" placeholder="Pega tu Secret Key aquí">
+                </div>
+                <div class="form-group" style="margin-bottom:10px;">
+                  <label class="form-label">Passphrase</label>
+                  <input class="form-input" id="kc-passphrase" type="password" placeholder="Tu passphrase de KuCoin">
+                </div>
+                <button class="btn-gold" style="width:100%;font-size:10px;" onclick="saveExchangeKeys('kucoin')">Guardar KuCoin</button>
+                <div style="font-size:10px;color:#9090a8;margin-top:6px;">Solo lectura — sin permisos de retiro</div>
+              </div>
+            </div>
+            <div id="exchange-save-msg" style="text-align:center;margin-top:8px;font-size:12px;"></div>
+          </div>
+
+          <!-- Balance consolidado -->
+          <div id="exchange-loading" style="text-align:center;padding:1rem;color:#9090a8;font-size:12px;display:none;">Cargando balances...</div>
+          <div id="exchange-not-connected" style="text-align:center;padding:1.5rem;color:#9090a8;font-size:12px;">
+            <div style="font-size:24px;margin-bottom:8px;">🔗</div>
+            <div>Configura tus API keys para ver tu portafolio real en vivo</div>
+          </div>
+          <div id="exchange-data" style="display:none;">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:1rem;">
+              <div style="background:rgba(5,8,16,0.8);border-radius:6px;padding:12px;text-align:center;">
+                <div style="font-size:10px;color:#9090a8;margin-bottom:4px;">TOTAL USD</div>
+                <div style="font-size:22px;font-weight:700;font-family:'Orbitron',sans-serif;color:#e8c84a;" id="ex-total-usd">$0</div>
+              </div>
+              <div style="background:rgba(5,8,16,0.8);border-radius:6px;padding:12px;text-align:center;">
+                <div style="font-size:10px;color:#9090a8;margin-bottom:4px;">BINANCE</div>
+                <div style="font-size:18px;font-weight:700;color:#f0b90b;" id="ex-binance-usd">—</div>
+              </div>
+              <div style="background:rgba(5,8,16,0.8);border-radius:6px;padding:12px;text-align:center;">
+                <div style="font-size:10px;color:#9090a8;margin-bottom:4px;">KUCOIN</div>
+                <div style="font-size:18px;font-weight:700;color:#0ab450;" id="ex-kucoin-usd">—</div>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+              <!-- Gráfico torta -->
+              <div style="background:rgba(5,8,16,0.8);border-radius:6px;padding:1rem;">
+                <div style="font-size:10px;letter-spacing:2px;color:#9090a8;margin-bottom:10px;">DISTRIBUCIÓN POR ACTIVO</div>
+                <canvas id="portfolio-pie" width="260" height="260"></canvas>
+              </div>
+              <!-- Tabla de activos -->
+              <div style="background:rgba(5,8,16,0.8);border-radius:6px;padding:1rem;">
+                <div style="font-size:10px;letter-spacing:2px;color:#9090a8;margin-bottom:10px;">ACTIVOS</div>
+                <div id="ex-assets-table"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- RESUMEN -->
         <div class="summary-row" style="margin-bottom:1.2rem;">
           <div class="sum-card" style="border-color:rgba(240,180,41,0.3);">
@@ -2061,6 +2152,7 @@ function navigate(view,el){
   const titles={home:'ELIOTFW CAPITAL — TRADING HUB v2.0',journal:'TRADING JOURNAL',calc:'CALCULADORA DE POSICIONES',ai:'ASK ELIO AI',fund:'FUNDAMENTALES — XAUUSD',portfolio:'PORTAFOLIO — P&L EN VIVO',signals:'SEÑALES DIARIAS — XAUUSD',corr:'CORRELACIONES — XAUUSD'};
   document.getElementById('topbar-title').textContent=titles[view]||view;
   if(view==='fund'){refreshFundamentals();setTimeout(initFundChart,300);}
+  if(view==='portfolio'){loadExchangeBalances();}
   if(view==='corr'){loadCorrelations();}
   if(view==='portfolio'){loadPositions();fetchLivePrices();}
   if(view==='signals'){
@@ -3260,6 +3352,160 @@ async function loadCorrelations() {
   } catch(e) {
     console.log('Correlaciones error:', e);
   }
+}
+
+// ── EXCHANGES EN VIVO ──
+let pieChart = null;
+
+function toggleExchangeConfig() {
+  const panel = document.getElementById('exchange-config-panel');
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+}
+
+async function saveExchangeKeys(exchange) {
+  const msg = document.getElementById('exchange-save-msg');
+  msg.textContent = 'Guardando...';
+  msg.style.color = '#e8c84a';
+  const body = { action: 'save', user_id: currentUser.id };
+  if (exchange === 'binance') {
+    body.binance_api_key = document.getElementById('bn-api-key').value.trim();
+    body.binance_secret = document.getElementById('bn-secret').value.trim();
+  } else {
+    body.kucoin_api_key = document.getElementById('kc-api-key').value.trim();
+    body.kucoin_secret = document.getElementById('kc-secret').value.trim();
+    body.kucoin_passphrase = document.getElementById('kc-passphrase').value.trim();
+  }
+  try {
+    const r = await fetch('/api/exchange-keys', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    const d = await r.json();
+    if (d.ok) {
+      msg.textContent = '✅ Guardado correctamente';
+      msg.style.color = '#70e0a8';
+      setTimeout(() => loadExchangeBalances(), 500);
+    } else {
+      msg.textContent = '❌ Error: ' + (d.error || 'desconocido');
+      msg.style.color = '#e08080';
+    }
+  } catch(e) {
+    msg.textContent = '❌ Error de conexión';
+    msg.style.color = '#e08080';
+  }
+}
+
+async function loadExchangeBalances() {
+  document.getElementById('exchange-loading').style.display = 'block';
+  document.getElementById('exchange-not-connected').style.display = 'none';
+  document.getElementById('exchange-data').style.display = 'none';
+
+  // Obtener keys guardadas
+  let keys = {};
+  try {
+    const r = await fetch('/api/exchange-keys', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'get', user_id: currentUser.id }) });
+    keys = await r.json();
+  } catch(e) {}
+
+  const hasB = keys.binance_api_key && keys.binance_secret;
+  const hasK = keys.kucoin_api_key && keys.kucoin_secret && keys.kucoin_passphrase;
+
+  if (!hasB && !hasK) {
+    document.getElementById('exchange-loading').style.display = 'none';
+    document.getElementById('exchange-not-connected').style.display = 'block';
+    return;
+  }
+
+  // Obtener precios en vivo
+  let prices = {};
+  try {
+    const md = await fetch('/api/market-data');
+    const mdata = await md.json();
+    prices = { USDT:1, USDC:1, BUSD:1, BTC: mdata.btc, ETH: mdata.ethusd, PAXG: mdata.xauusd };
+  } catch(e) {}
+
+  let allBalances = [];
+  let binanceTotal = 0, kucoinTotal = 0;
+
+  // Binance
+  if (hasB) {
+    try {
+      const r = await fetch('/api/binance', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ api_key: keys.binance_api_key, secret: keys.binance_secret }) });
+      const d = await r.json();
+      if (d.balances) {
+        d.balances.forEach(b => {
+          const price = prices[b.asset] || 0;
+          const usdVal = b.total * price;
+          binanceTotal += usdVal;
+          allBalances.push({ asset: b.asset, total: b.total, usd: usdVal, exchange: 'Binance' });
+        });
+      }
+    } catch(e) {}
+  }
+
+  // KuCoin
+  if (hasK) {
+    try {
+      const r = await fetch('/api/kucoin', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ api_key: keys.kucoin_api_key, secret: keys.kucoin_secret, passphrase: keys.kucoin_passphrase }) });
+      const d = await r.json();
+      if (d.balances) {
+        d.balances.forEach(b => {
+          const price = prices[b.asset] || 0;
+          const usdVal = b.total * price;
+          kucoinTotal += usdVal;
+          allBalances.push({ asset: b.asset, total: b.total, usd: usdVal, exchange: 'KuCoin' });
+        });
+      }
+    } catch(e) {}
+  }
+
+  const totalUSD = binanceTotal + kucoinTotal;
+
+  // Consolidar por activo
+  const consolidated = {};
+  allBalances.forEach(b => {
+    if (!consolidated[b.asset]) consolidated[b.asset] = { total: 0, usd: 0 };
+    consolidated[b.asset].total += b.total;
+    consolidated[b.asset].usd += b.usd;
+  });
+
+  document.getElementById('exchange-loading').style.display = 'none';
+  document.getElementById('exchange-data').style.display = 'block';
+  document.getElementById('ex-total-usd').textContent = '$' + totalUSD.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+  document.getElementById('ex-binance-usd').textContent = hasB ? '$' + binanceTotal.toFixed(2) : '—';
+  document.getElementById('ex-kucoin-usd').textContent = hasK ? '$' + kucoinTotal.toFixed(2) : '—';
+
+  // Gráfico torta
+  const assets = Object.entries(consolidated).filter(([,v]) => v.usd > 0).sort((a,b) => b[1].usd - a[1].usd);
+  const colors = ['#e8c84a','#f0b90b','#70e0a8','#0ab450','#a0c0ff','#e08080','#c084fc','#fb923c','#38bdf8','#f472b6'];
+
+  if (pieChart) pieChart.destroy();
+  const ctx = document.getElementById('portfolio-pie').getContext('2d');
+  pieChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: assets.map(([a]) => a),
+      datasets: [{ data: assets.map(([,v]) => v.usd.toFixed(2)), backgroundColor: colors.slice(0, assets.length), borderWidth: 1, borderColor: '#050810' }]
+    },
+    options: {
+      plugins: { legend: { labels: { color: '#d8d0bc', font: { size: 11 } } } },
+      cutout: '60%'
+    }
+  });
+
+  // Tabla
+  let tableHtml = '';
+  assets.forEach(([asset, val], i) => {
+    const pct = totalUSD > 0 ? (val.usd / totalUSD * 100).toFixed(1) : 0;
+    tableHtml += `<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(196,160,60,0.08);">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="width:8px;height:8px;border-radius:50%;background:${colors[i]};"></div>
+        <div style="font-size:13px;font-weight:600;color:#f0eadc;">${asset}</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:12px;color:#e8c84a;font-weight:600;">$${val.usd.toFixed(2)}</div>
+        <div style="font-size:10px;color:#9090a8;">${pct}%</div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('ex-assets-table').innerHTML = tableHtml || '<div style="color:#9090a8;font-size:12px;">Sin activos con precio disponible</div>';
 }
 
 updateClock();setInterval(updateClock,1000);
