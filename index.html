@@ -2154,6 +2154,7 @@ function navigate(view,el){
   if(view==='fund'){refreshFundamentals();setTimeout(initFundChart,300);}
   if(view==='portfolio'){loadExchangeBalances();}
   if(view==='corr'){loadCorrelations();}
+  if(view==='ai'){loadChatHistory();}
   if(view==='portfolio'){loadPositions();fetchLivePrices();}
   if(view==='signals'){
     if(!isPremium() && !isTrialExpired() && getTrialDaysLeft() > 0){
@@ -3506,6 +3507,39 @@ async function loadExchangeBalances() {
     </div>`;
   });
   document.getElementById('ex-assets-table').innerHTML = tableHtml || '<div style="color:#9090a8;font-size:12px;">Sin activos con precio disponible</div>';
+}
+
+async function saveConversationMsg(role, content) {
+  try {
+    await fetch('/api/conversations', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ action: 'save', user_id: currentUser.id, role, content })
+    });
+  } catch(e) {}
+}
+
+async function loadChatHistory() {
+  if (!currentUser) return;
+  try {
+    const r = await fetch('/api/conversations', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ action: 'load', user_id: currentUser.id })
+    });
+    const msgs = await r.json();
+    if (!msgs || !msgs.length) return;
+    
+    // Limpiar mensajes iniciales y cargar historial
+    const container = document.getElementById('ai-messages');
+    container.innerHTML = '';
+    chatHistory = [];
+    
+    msgs.forEach(m => {
+      chatHistory.push({ role: m.role, content: m.content });
+      appendMsg(m.role === 'user' ? 'user' : 'ai', m.content);
+    });
+    
+    container.scrollTop = container.scrollHeight;
+  } catch(e) {}
 }
 
 updateClock();setInterval(updateClock,1000);
