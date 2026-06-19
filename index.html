@@ -631,6 +631,21 @@ body{background:#050810;color:#f0eadc;font-family:'Rajdhani',sans-serif;overflow
   /* Botones de acción más manejables */
   .mobile-menu-btn{font-size:18px;padding:4px 8px;}
 }
+
+/* ════════ LANDING (página de inicio) — MÓVIL ════════ */
+@media(max-width:768px){
+  /* La landing se apila en columna */
+  .lp{flex-direction:column;}
+  /* El panel de login deja de flotar: pasa a bloque normal arriba, ancho completo */
+  .lp-auth{position:static;width:100%;max-width:100%;top:auto;right:auto;max-height:none;border-radius:0;border-left:none;border-right:none;border-top:none;order:-1;padding:1.5rem 1.2rem;}
+  .auth-inner{max-width:360px;margin:0 auto;}
+  /* El texto del hero y secciones usan todo el ancho (sin el padding de 260px) */
+  .lp-main .hero{padding:2rem 1.2rem !important;}
+  .problem,.solution,.plans-section{padding-left:1.2rem !important;padding-right:1.2rem !important;}
+  /* Nav superior se acomoda sin desbordar */
+  .nav{flex-wrap:wrap;gap:0.6rem;}
+  .nav-links{gap:1rem;flex-wrap:wrap;}
+}
 </style>
 </head>
 <body>
