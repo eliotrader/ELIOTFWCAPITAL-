@@ -209,7 +209,8 @@ body{font-family:'Rajdhani',sans-serif;background:#050810;color:#f0eadc;min-heig
 .topbar-right{display:flex;align-items:center;gap:10px;}
 .status-badge{font-size:10px;padding:3px 9px;border:1px solid rgba(80,220,130,0.5);color:rgba(100,235,150,0.95);border-radius:2px;letter-spacing:1px;}
 .avatar{width:28px;height:28px;border-radius:50%;border:1px solid rgba(232,200,74,0.5);background:rgba(196,160,60,0.12);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:9px;color:#e8c84a;cursor:pointer;}
-.content{flex:1;overflow-y:auto;padding:1.3rem;}
+.content{flex:1;overflow-y:auto;padding:1.3rem 2rem;}
+.content>div{max-width:1080px;margin-left:auto;margin-right:auto;}
 .hero{border:1px solid rgba(196,160,60,0.28);border-radius:6px;padding:1.3rem 1.8rem;margin-bottom:1.3rem;position:relative;overflow:hidden;background:rgba(196,160,60,0.04);}
 .hero::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#e8c84a,rgba(232,200,74,0.3),transparent);}
 .hero-name{font-family:'Orbitron',sans-serif;font-size:20px;font-weight:800;letter-spacing:4px;color:#f0d060;}
@@ -573,6 +574,63 @@ body{background:#050810;color:#f0eadc;font-family:'Rajdhani',sans-serif;overflow
 .orb1{position:fixed;width:500px;height:500px;top:-200px;left:-150px;background:radial-gradient(circle,rgba(196,160,60,0.07) 0%,transparent 70%);border-radius:50%;}
 .orb2{position:fixed;width:400px;height:400px;bottom:-100px;right:-100px;background:radial-gradient(circle,rgba(100,140,220,0.06) 0%,transparent 70%);border-radius:50%;}
 #ld-landing-page{position:relative;z-index:1;}
+/* ════════ RESPONSIVE — MÓVIL Y TABLET ════════ */
+.mobile-menu-btn{display:none;background:transparent;border:1px solid rgba(232,200,74,0.25);color:#e8c84a;font-size:20px;padding:5px 9px;border-radius:6px;cursor:pointer;line-height:1;align-items:center;justify-content:center;}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:998;}
+
+@media(max-width:768px){
+  /* Sidebar como cajón deslizable */
+  .sidebar{position:fixed;top:0;left:0;height:100vh;z-index:999;transform:translateX(-100%);transition:transform 0.28s ease;overflow-y:auto;box-shadow:4px 0 24px rgba(0,0,0,0.5);}
+  .app.sidebar-open .sidebar{transform:translateX(0);}
+  .app.sidebar-open .sidebar-overlay{display:block;}
+  .mobile-menu-btn{display:inline-flex;}
+
+  /* Topbar compacta */
+  .topbar{padding:0.6rem 0.9rem;gap:10px;}
+  .topbar-left{font-size:8px;letter-spacing:1.5px;}
+  .topbar-right{gap:7px;}
+  .user-email{display:none;}
+
+  /* Contenido con menos padding */
+  .content{padding:1rem 0.9rem !important;}
+  .content .hero{padding:2rem 1rem 1.6rem !important;}
+
+  /* Grids a 2 columnas */
+  .stats-row,.summary-row{grid-template-columns:1fr 1fr !important;}
+  .apps-grid{grid-template-columns:1fr 1fr !important;}
+  .form-row{grid-template-columns:1fr !important;}
+  .calc-grid{grid-template-columns:1fr !important;}
+
+  /* Grids inline dentro del contenido → 2 columnas */
+  .content [style*="repeat(4,1fr)"],
+  .content [style*="1fr 1fr 1fr 1fr"],
+  .content [style*="repeat(3,1fr)"],
+  .content [style*="1fr 1fr 1fr"]{grid-template-columns:1fr 1fr !important;}
+
+  /* Reloj centrado y más chico */
+  .clock-widget{flex-direction:column;gap:1rem;}
+
+  /* Red de seguridad: nada se desborda horizontalmente */
+  .content table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:nowrap;max-width:100%;}
+  .content img,.content svg{max-width:100% !important;height:auto;}
+  .content iframe{max-width:100% !important;width:100% !important;}
+  .content canvas{max-width:100% !important;}
+}
+
+@media(max-width:480px){
+  /* Todo a una columna en teléfono */
+  .stats-row,.summary-row,.apps-grid{grid-template-columns:1fr !important;}
+  .content [style*="grid-template-columns"]{grid-template-columns:1fr !important;}
+  .content{padding:0.9rem 0.7rem !important;}
+
+  /* Headers de vista apilados */
+  .topbar-left{font-size:7px;}
+  .content .hero-name{font-size:1.6rem !important;}
+  .content .hero-meta{flex-wrap:wrap;gap:0.6rem !important;}
+
+  /* Botones de acción más manejables */
+  .mobile-menu-btn{font-size:18px;padding:4px 8px;}
+}
 </style>
 </head>
 <body>
@@ -993,6 +1051,7 @@ function ldSignIn() {
 <div class="orb orb1"></div>
 <div class="orb orb2"></div>
 <div class="app" id="app" style="display:none;">
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
   <aside class="sidebar">
     <div class="sidebar-logo">
       <div class="logo-mark">ELIOTFW</div>
@@ -1022,6 +1081,7 @@ function ldSignIn() {
   </aside>
   <div class="main">
     <div class="topbar">
+      <button class="mobile-menu-btn" onclick="toggleSidebar()" aria-label="Menú"><i class="ti ti-menu-2"></i></button>
       <div class="topbar-left" id="topbar-title">ELIOTFW CAPITAL — TRADING HUB v2.0</div>
       <div class="topbar-right">
         <div class="status-badge">● EN LÍNEA</div>
@@ -2142,9 +2202,14 @@ async function deleteTradeDB(id) {
 function saveTrades() {}
 
 let chatHistory=[];
+function toggleSidebar(){
+  document.querySelector('.app').classList.toggle('sidebar-open');
+}
 function navigate(view,el){
   document.querySelectorAll('.sidebar-item').forEach(i=>i.classList.remove('active'));
   if(el)el.classList.add('active');
+  // Cerrar el menú en móvil al elegir una sección
+  document.querySelector('.app').classList.remove('sidebar-open');
   ['home','journal','calc','ai','fund','portfolio','signals','corr'].forEach(v=>{
     const el2=document.getElementById('view-'+v);
     if(el2) el2.style.display=v===view?'block':'none';
