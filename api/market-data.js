@@ -73,11 +73,33 @@ export default async function handler(req, res) {
     if (p) result.spx = parseFloat(p).toFixed(2)
   } catch(e) {}
 
-  // XAU/USD fallback — Frankfurter
+  // XAU/USD — gold-api.com (gratis, sin key, precio del oro en vivo)
   if (!result.xauusd) {
     try {
-      const d = await safeFetch('https://api.frankfurter.app/latest?from=XAU&to=USD')
-      if (d?.rates?.USD) result.xauusd = d.rates.USD
+      const d = await safeFetch('https://api.gold-api.com/price/XAU')
+      if (d?.price) result.xauusd = parseFloat(d.price)
+    } catch(e) {}
+  }
+  // XAU/USD — CoinGecko PAX Gold (gratis, sin key; PAXG ≈ 1 oz oro)
+  if (!result.xauusd) {
+    try {
+      const d = await safeFetch('https://api.coingecko.com/api/v3/simple/price?ids=pax-gold&vs_currencies=usd')
+      if (d?.['pax-gold']?.usd) result.xauusd = parseFloat(d['pax-gold'].usd)
+    } catch(e) {}
+  }
+  // XAU/USD — Binance PAXG/USDT (gratis, sin key)
+  if (!result.xauusd) {
+    try {
+      const d = await safeFetch('https://api.binance.com/api/v3/ticker/price?symbol=PAXGUSDT')
+      if (d?.price) result.xauusd = parseFloat(d.price)
+    } catch(e) {}
+  }
+  // XAU/USD — Yahoo (último respaldo)
+  if (!result.xauusd) {
+    try {
+      const d = await safeFetch('https://query1.finance.yahoo.com/v8/finance/chart/GC=F?interval=1d&range=1d')
+      const p = d?.chart?.result?.[0]?.meta?.regularMarketPrice
+      if (p) result.xauusd = parseFloat(p)
     } catch(e) {}
   }
 
