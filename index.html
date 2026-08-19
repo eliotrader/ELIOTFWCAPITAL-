@@ -199,7 +199,7 @@ body{font-family:'Rajdhani',sans-serif;background:#050810;color:#f0eadc;min-heig
     <div id="form-forgot" style="display:none;">
       <div style="text-align:center;margin-bottom:1rem;">
         <div style="font-size:13px;color:#d8d0bc;margin-bottom:4px;">Ingresa tu email registrado</div>
-        <div style="font-size:11px;color:#9090a8;">Te enviaremos tu contraseña actual</div>
+        <div style="font-size:11px;color:#9090a8;">Te enviaremos un enlace seguro para crear una nueva contraseña</div>
       </div>
       <div class="auth-field"><label>Email</label><input type="email" id="forgot-email" placeholder="tu@email.com"></div>
       <button class="auth-btn" onclick="recoverPassword()">RECUPERAR CONTRASEÑA</button>
@@ -907,9 +907,38 @@ body{font-family:'Rajdhani',sans-serif;background:#050810;color:#f0eadc;min-heig
 
 <script>
 // ── AUTH CON SUPABASE REAL ──────────────────────────────────────
-const SUPABASE_URL = 'https://geyosraoygsdpllhlrjc.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdleW9zcmFveWdzZHBsbGhscmpjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0NzU0NjAsImV4cCI6MjA5NjA1MTQ2MH0.pdz5HjhdBxiuxM8TMZXRoYpFJQ4sd1IWxKBUZOUzF-I';
-const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const FALLBACK_SUPABASE_URL = "https://geyosraoygsdpllhlrjc.supabase.co";
+const FALLBACK_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdleW9zcmFveWdzZHBsbGhscmpjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0NzU0NjAsImV4cCI6MjA5NjA1MTQ2MH0.pdz5HjhdBxiuxM8TMZXRoYpFJQ4sd1IWxKBUZOUzF-I";
+let _supabase = null;
+
+async function initSupabaseClient() {
+  let url = FALLBACK_SUPABASE_URL;
+  let anonKey = FALLBACK_SUPABASE_ANON_KEY;
+
+  try {
+    const r = await fetch('/api/public-config', { cache: 'no-store' });
+    if (r.ok) {
+      const cfg = await r.json();
+      if (cfg.supabaseUrl) url = cfg.supabaseUrl;
+      if (cfg.supabaseAnonKey) anonKey = cfg.supabaseAnonKey;
+    }
+  } catch (e) {
+    console.warn('No se pudo leer /api/public-config; usando configuración de respaldo.');
+  }
+
+  if (!url || !anonKey || !window.supabase) {
+    throw new Error('Configuración de autenticación no disponible');
+  }
+
+  _supabase = window.supabase.createClient(url, anonKey, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true
+    }
+  });
+}
+
 
 let currentUser = null;
 let trades = [];
@@ -966,7 +995,17 @@ function showPaywall(type) {
 }
 
 async function initAuth() {
-  var { data: { session } } = await _supabase.auth.getSession();
+  try {
+    await initSupabaseClient();
+  } catch (e) {
+    const errEl = document.getElementById('login-error');
+    if (errEl) errEl.textContent = 'No se pudo conectar con el servicio de acceso. Intenta recargar.';
+    console.error(e);
+    return;
+  }
+
+  var { data: { session }, error: sessionError } = await _supabase.auth.getSession();
+  if (sessionError) console.warn('getSession:', sessionError.message);
   if (session && session.user) {
     await loadUserProfile(session.user);
     showApp();
@@ -1025,7 +1064,7 @@ async function signInWithGoogle() {
   errEl.textContent = '';
   var { error } = await _supabase.auth.signInWithOAuth({
     provider: 'google',
-    options: { redirectTo: window.location.origin + '/?reset=1' }
+    options: { redirectTo: window.location.origin + '/' }
   });
   if (error) errEl.textContent = error.message;
 }
@@ -1039,12 +1078,25 @@ async function signInWithEmail() {
   errEl.textContent = '';
   btn.textContent = 'INGRESANDO...';
   btn.disabled = true;
-  var { data, error } = await _supabase.auth.signInWithPassword({ email, password });
-  btn.textContent = 'INGRESAR';
-  btn.disabled = false;
-  if (error) { errEl.textContent = error.message === 'Invalid login credentials' ? 'Email o contraseña incorrectos' : error.message; return; }
-  await loadUserProfile(data.user);
-  showApp();
+  try {
+    if (!_supabase) await initSupabaseClient();
+    var { data, error } = await _supabase.auth.signInWithPassword({ email, password });
+    btn.textContent = 'INGRESAR';
+    btn.disabled = false;
+    if (error) {
+      errEl.textContent = error.message === 'Invalid login credentials'
+        ? 'Email o contraseña incorrectos'
+        : error.message;
+      return;
+    }
+    await loadUserProfile(data.user);
+    showApp();
+  } catch (e) {
+    btn.textContent = 'INGRESAR';
+    btn.disabled = false;
+    console.error('Login network error:', e);
+    errEl.textContent = 'No se pudo conectar con el servidor de acceso. Revisa la conexión y vuelve a intentar.';
+  }
 }
 
 async function signUpWithEmail() {
@@ -1104,11 +1156,18 @@ async function recoverPassword() {
   var sucEl = document.getElementById('forgot-success');
   if (!email) { errEl.textContent = 'Ingresa tu email'; return; }
   errEl.textContent = '';
-  var { error } = await _supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: window.location.href
-  });
-  if (error) { errEl.textContent = error.message; return; }
-  sucEl.textContent = '✓ Te enviamos un link para restablecer tu contraseña.';
+  try {
+    if (!_supabase) await initSupabaseClient();
+    var { error } = await _supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + '/?reset=1'
+    });
+    if (error) { errEl.textContent = error.message; return; }
+    sucEl.textContent = '✓ Te enviamos un enlace para crear una nueva contraseña.';
+  } catch (e) {
+    console.error('Recovery network error:', e);
+    errEl.textContent = 'No se pudo conectar con el servidor de acceso. Intenta nuevamente.';
+    return;
+  }
   sucEl.style.color = '#70e0a8';
 }
 
