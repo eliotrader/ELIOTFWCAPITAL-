@@ -87,4 +87,8 @@ export default async function handler(req, res) {
   } catch(e) {}
 
   res.setHeader('Cache-Control', 'no-store, max-age=0')
-return res.status(200).json({ ok: true, timestamp: new Date().toISOString(), data: result })
+return res.status(200).json({
+  ok: true,
+  timestamp: new Date().toISOString(),
+  ...result
+})
