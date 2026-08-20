@@ -12,6 +12,9 @@ export default async function handler(req, res) {
 
   const result = {};
 
+  // =========================================================
+  // FETCH SEGURO
+  // =========================================================
   async function safeFetch(url, timeout = 8000) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeout);
@@ -51,8 +54,8 @@ export default async function handler(req, res) {
     try {
       const gold = await safeFetch(
         `https://api.twelvedata.com/price` +
-        `?symbol=${encodeURIComponent("XAU/USD")}` +
-        `&apikey=${TWELVE_KEY}`
+          `?symbol=${encodeURIComponent("XAU/USD")}` +
+          `&apikey=${TWELVE_KEY}`
       );
 
       if (gold?.price) {
@@ -62,25 +65,6 @@ export default async function handler(req, res) {
       }
     } catch (error) {
       result.xau_error = error.message;
-    }
-
-    // =========================================================
-    // DXY — todavía en diagnóstico
-    // =========================================================
-    try {
-      const dxy = await safeFetch(
-        `https://api.twelvedata.com/price` +
-        `?symbol=${encodeURIComponent("DXY")}` +
-        `&apikey=${TWELVE_KEY}`
-      );
-
-      if (dxy?.price) {
-        result.dxy = Number(dxy.price);
-      } else {
-        result.dxy_debug = dxy;
-      }
-    } catch (error) {
-      result.dxy_error = error.message;
     }
   } else {
     result.twelve_error = "TWELVE_DATA_KEY missing";
@@ -96,17 +80,19 @@ export default async function handler(req, res) {
     try {
       const fed = await safeFetch(
         `https://api.stlouisfed.org/fred/series/observations` +
-        `?series_id=FEDFUNDS` +
-        `&sort_order=desc` +
-        `&limit=1` +
-        `&api_key=${FRED_KEY}` +
-        `&file_type=json`
+          `?series_id=FEDFUNDS` +
+          `&sort_order=desc` +
+          `&limit=1` +
+          `&api_key=${FRED_KEY}` +
+          `&file_type=json`
       );
 
       const value = fed?.observations?.[0]?.value;
 
       if (value && value !== ".") {
         result.fed_rate = Number(value);
+      } else {
+        result.fed_debug = fed;
       }
     } catch (error) {
       result.fed_error = error.message;
@@ -118,11 +104,11 @@ export default async function handler(req, res) {
     try {
       const cpi = await safeFetch(
         `https://api.stlouisfed.org/fred/series/observations` +
-        `?series_id=CPIAUCSL` +
-        `&sort_order=desc` +
-        `&limit=13` +
-        `&api_key=${FRED_KEY}` +
-        `&file_type=json`
+          `?series_id=CPIAUCSL` +
+          `&sort_order=desc` +
+          `&limit=13` +
+          `&api_key=${FRED_KEY}` +
+          `&file_type=json`
       );
 
       if (cpi?.observations?.length >= 13) {
@@ -138,6 +124,8 @@ export default async function handler(req, res) {
             (((current - yearAgo) / yearAgo) * 100).toFixed(2)
           );
         }
+      } else {
+        result.cpi_debug = cpi;
       }
     } catch (error) {
       result.cpi_error = error.message;
@@ -149,11 +137,11 @@ export default async function handler(req, res) {
     try {
       const us10y = await safeFetch(
         `https://api.stlouisfed.org/fred/series/observations` +
-        `?series_id=DGS10` +
-        `&sort_order=desc` +
-        `&limit=10` +
-        `&api_key=${FRED_KEY}` +
-        `&file_type=json`
+          `?series_id=DGS10` +
+          `&sort_order=desc` +
+          `&limit=10` +
+          `&api_key=${FRED_KEY}` +
+          `&file_type=json`
       );
 
       const observations = us10y?.observations || [];
@@ -173,6 +161,40 @@ export default async function handler(req, res) {
       }
     } catch (error) {
       result.us10y_error = error.message;
+    }
+
+    // ---------------------------------------------------------
+    // USD INDEX (FED) — DTWEXBGS
+    // Nominal Broad U.S. Dollar Index
+    // IMPORTANTE: no es el DXY clásico.
+    // ---------------------------------------------------------
+    try {
+      const usdIndex = await safeFetch(
+        `https://api.stlouisfed.org/fred/series/observations` +
+          `?series_id=DTWEXBGS` +
+          `&sort_order=desc` +
+          `&limit=10` +
+          `&api_key=${FRED_KEY}` +
+          `&file_type=json`
+      );
+
+      const observations = usdIndex?.observations || [];
+
+      const latestValid = observations.find(
+        (obs) =>
+          obs?.value &&
+          obs.value !== "." &&
+          Number.isFinite(Number(obs.value))
+      );
+
+      if (latestValid) {
+        result.usd_index_fed = Number(latestValid.value);
+        result.usd_index_fed_date = latestValid.date;
+      } else {
+        result.usd_index_fed_debug = usdIndex;
+      }
+    } catch (error) {
+      result.usd_index_fed_error = error.message;
     }
   } else {
     result.fred_error = "FRED_API_KEY missing";
