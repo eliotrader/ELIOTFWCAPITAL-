@@ -51,6 +51,11 @@ export default async function handler(req, res) {
 // TWELVE DATA — XAU/USD
 // Precio actual + Open + High + Low + Previous Close
 // =========================================================
+
+if (!TWELVE_KEY) {
+  result.twelve_error = "TWELVE_DATA_KEY missing";
+}
+
 if (TWELVE_KEY) {
   try {
     const gold = await safeFetch(
@@ -59,59 +64,42 @@ if (TWELVE_KEY) {
       `&apikey=${TWELVE_KEY}`
     );
 
+    if (gold?.error) {
+      result.xau_debug = gold;
+    }
+
     if (gold && !gold.error) {
-      // Precio actual
-      if (
-        gold.close !== undefined &&
-        Number.isFinite(Number(gold.close))
-      ) {
+      if (Number.isFinite(Number(gold.close))) {
         result.xauusd = Number(gold.close);
       }
 
-      // Apertura
-      if (
-        gold.open !== undefined &&
-        Number.isFinite(Number(gold.open))
-      ) {
+      if (Number.isFinite(Number(gold.open))) {
         result.xauusd_open = Number(gold.open);
       }
 
-      // Máximo del período/día devuelto por Twelve Data
-      if (
-        gold.high !== undefined &&
-        Number.isFinite(Number(gold.high))
-      ) {
+      if (Number.isFinite(Number(gold.high))) {
         result.xauusd_high = Number(gold.high);
       }
 
-      // Mínimo del período/día devuelto por Twelve Data
-      if (
-        gold.low !== undefined &&
-        Number.isFinite(Number(gold.low))
-      ) {
+      if (Number.isFinite(Number(gold.low))) {
         result.xauusd_low = Number(gold.low);
       }
 
-      // Cierre previo
-      if (
-        gold.previous_close !== undefined &&
-        Number.isFinite(Number(gold.previous_close))
-      ) {
+      if (Number.isFinite(Number(gold.previous_close))) {
         result.xauusd_close_prev = Number(gold.previous_close);
       }
 
       result.xauusd_datetime = gold.datetime || null;
-    } else {
-      result.xau_debug = gold;
     }
   } catch (error) {
     result.xau_error = error.message;
   }
-} else {
-  result.twelve_error = "TWELVE_DATA_KEY missing";
-}  
+}
 
-      
+ // =========================================================
+// FRED
+// =========================================================
+if (FRED_KEY) {     
     try {
       const fed = await safeFetch(
         `https://api.stlouisfed.org/fred/series/observations` +
