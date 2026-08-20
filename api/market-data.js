@@ -1,4 +1,7 @@
 export default async function handler(req, res) {
+  // =========================
+  // CORS
+  // =========================
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -7,11 +10,17 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
+  // =========================
+  // API KEYS
+  // =========================
   const TWELVE_KEY = process.env.TWELVE_DATA_KEY;
   const FRED_KEY = process.env.FRED_API_KEY;
 
   const result = {};
 
+  // =========================
+  // FETCH SEGURO
+  // =========================
   async function safeFetch(url, timeout = 8000) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeout);
@@ -23,110 +32,56 @@ export default async function handler(req, res) {
 
       clearTimeout(timer);
 
+      const data = await response.json();
+
       if (!response.ok) {
-        console.error("Fetch error:", response.status, url);
-        return null;
+        return {
+          error: true,
+          status: response.status,
+          data,
+        };
       }
 
-      return await response.json();
+      return data;
     } catch (error) {
       clearTimeout(timer);
-      console.error("safeFetch error:", error.message);
-      return null;
+
+      return {
+        error: true,
+        message: error.message,
+      };
     }
   }
 
-  // ==========================
-  // TWELVE DATA
-  // ==========================
-
+  // =========================
+  // TWELVE DATA — XAU/USD
+  // =========================
   if (TWELVE_KEY) {
     try {
-      const symbols =
-        "XAU/USD,DXY,VIX,TNX,BTC/USD,EUR/USD,GBP/USD,USD/JPY,ETH/USD";
-
       const url =
-        `https://api.twelvedata.com/price?symbol=` +
-        `${encodeURIComponent(symbols)}&apikey=${TWELVE_KEY}`;
-
-      const d = await safeFetch(url);
-
-      if (d) {
-        if (d["XAU/USD"]?.price) {
-          result.xauusd = Number(d["XAU/USD"].price);
-        }
-
-        if (d["DXY"]?.price) {
-          result.dxy = Number(d["DXY"].price);
-        }
-
-        if (d["VIX"]?.price) {
-          result.vix = Number(d["VIX"].price);
-        }
-
-        if (d["TNX"]?.price) {
-          result.tnx = Number(d["TNX"].price);
-        }
-
-        if (d["BTC/USD"]?.price) {
-          result.btc = Number(d["BTC/USD"].price);
-        }
-
-        if (d["EUR/USD"]?.price) {
-          result.eurusd = Number(d["EUR/USD"].price);
-        }
-
-        if (d["GBP/USD"]?.price) {
-          result.gbpusd = Number(d["GBP/USD"].price);
-        }
-
-        if (d["USD/JPY"]?.price) {
-          result.usdjpy = Number(d["USD/JPY"].price);
-        }
-
-        if (d["ETH/USD"]?.price) {
-          result.ethusd = Number(d["ETH/USD"].price);
-        }
-      }
-    } catch (error) {
-      console.error("Twelve batch error:", error.message);
-    }
-
-    // XAU OHLC
-    try {
-      const url =
-        `https://api.twelvedata.com/time_series` +
-        `?symbol=XAU/USD` +
-        `&interval=1day` +
-        `&outputsize=2` +
+        `https://api.twelvedata.com/price` +
+        `?symbol=${encodeURIComponent("XAU/USD")}` +
         `&apikey=${TWELVE_KEY}`;
 
-      const d = await safeFetch(url);
+      const gold = await safeFetch(url);
 
-      if (d?.values?.length) {
-        const latest = d.values[0];
-
-        result.xauusd_high = Number(latest.high);
-        result.xauusd_low = Number(latest.low);
-        result.xauusd_open = Number(latest.open);
-
-        if (d.values[1]?.close) {
-          result.xauusd_close_prev = Number(d.values[1].close);
-        }
+      if (gold?.price) {
+        result.xauusd = Number(gold.price);
+      } else {
+        // Temporal para diagnosticar Twelve Data
+        result.twelve_debug = gold;
       }
     } catch (error) {
-      console.error("XAU OHLC error:", error.message);
+      result.twelve_error = error.message;
     }
   } else {
     result.twelve_error = "TWELVE_DATA_KEY missing";
   }
 
-  // ==========================
-  // FRED
-  // ==========================
-
+  // =========================
+  // FRED — FED FUNDS RATE
+  // =========================
   if (FRED_KEY) {
-    // FED FUNDS
     try {
       const url =
         `https://api.stlouisfed.org/fred/series/observations` +
@@ -144,10 +99,12 @@ export default async function handler(req, res) {
         result.fed_rate = Number(value);
       }
     } catch (error) {
-      console.error("FED error:", error.message);
+      result.fred_error = error.message;
     }
 
-    // CPI YOY CORRECTO
+    // =========================
+    // FRED — CPI INTERANUAL
+    // =========================
     try {
       const url =
         `https://api.stlouisfed.org/fred/series/observations` +
@@ -174,12 +131,15 @@ export default async function handler(req, res) {
         }
       }
     } catch (error) {
-      console.error("CPI error:", error.message);
+      result.cpi_error = error.message;
     }
   } else {
     result.fred_error = "FRED_API_KEY missing";
   }
 
+  // =========================
+  // RESPUESTA
+  // =========================
   res.setHeader(
     "Cache-Control",
     "no-store, no-cache, must-revalidate, proxy-revalidate"
