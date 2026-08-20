@@ -45,13 +45,9 @@ export default async function handler(req, res) {
   }
 
   // =========================================================
-  // TWELVE DATA
+  // TWELVE DATA — XAU/USD
   // =========================================================
   if (TWELVE_KEY) {
-
-    // -------------------------
-    // XAU/USD
-    // -------------------------
     try {
       const gold = await safeFetch(
         `https://api.twelvedata.com/price` +
@@ -68,9 +64,9 @@ export default async function handler(req, res) {
       result.xau_error = error.message;
     }
 
-    // -------------------------
-    // DXY
-    // -------------------------
+    // =========================================================
+    // DXY — todavía en diagnóstico
+    // =========================================================
     try {
       const dxy = await safeFetch(
         `https://api.twelvedata.com/price` +
@@ -86,35 +82,17 @@ export default async function handler(req, res) {
     } catch (error) {
       result.dxy_error = error.message;
     }
-
-    // -------------------------
-    // US 10Y / TNX
-    // -------------------------
-    try {
-      const tnx = await safeFetch(
-        `https://api.twelvedata.com/price` +
-        `?symbol=${encodeURIComponent("TNX")}` +
-        `&apikey=${TWELVE_KEY}`
-      );
-
-      if (tnx?.price) {
-        result.tnx = Number(tnx.price);
-        result.us10y = Number(tnx.price);
-      } else {
-        result.tnx_debug = tnx;
-      }
-    } catch (error) {
-      result.tnx_error = error.message;
-    }
-
   } else {
     result.twelve_error = "TWELVE_DATA_KEY missing";
   }
 
   // =========================================================
-  // FRED — FED FUNDS
+  // FRED
   // =========================================================
   if (FRED_KEY) {
+    // ---------------------------------------------------------
+    // FED FUNDS RATE
+    // ---------------------------------------------------------
     try {
       const fed = await safeFetch(
         `https://api.stlouisfed.org/fred/series/observations` +
@@ -134,9 +112,9 @@ export default async function handler(req, res) {
       result.fed_error = error.message;
     }
 
-    // =========================================================
-    // FRED — CPI YOY
-    // =========================================================
+    // ---------------------------------------------------------
+    // CPI YOY
+    // ---------------------------------------------------------
     try {
       const cpi = await safeFetch(
         `https://api.stlouisfed.org/fred/series/observations` +
@@ -164,12 +142,44 @@ export default async function handler(req, res) {
     } catch (error) {
       result.cpi_error = error.message;
     }
+
+    // ---------------------------------------------------------
+    // US TREASURY 10Y — DGS10
+    // ---------------------------------------------------------
+    try {
+      const us10y = await safeFetch(
+        `https://api.stlouisfed.org/fred/series/observations` +
+        `?series_id=DGS10` +
+        `&sort_order=desc` +
+        `&limit=10` +
+        `&api_key=${FRED_KEY}` +
+        `&file_type=json`
+      );
+
+      const observations = us10y?.observations || [];
+
+      const latestValid = observations.find(
+        (obs) =>
+          obs?.value &&
+          obs.value !== "." &&
+          Number.isFinite(Number(obs.value))
+      );
+
+      if (latestValid) {
+        result.us10y = Number(latestValid.value);
+        result.us10y_date = latestValid.date;
+      } else {
+        result.us10y_debug = us10y;
+      }
+    } catch (error) {
+      result.us10y_error = error.message;
+    }
   } else {
     result.fred_error = "FRED_API_KEY missing";
   }
 
   // =========================================================
-  // RESPUESTA
+  // RESPUESTA FINAL
   // =========================================================
   res.setHeader(
     "Cache-Control",
@@ -179,7 +189,6 @@ export default async function handler(req, res) {
   return res.status(200).json({
     ok: true,
     timestamp: new Date().toISOString(),
-
     ...result,
   });
 }
