@@ -1415,7 +1415,26 @@ async function generateMacroContext(horizon='daily') {
     const d = await refreshMacroSnapshot();
     const periodo = horizon === 'weekly' ? 'SEMANAL (próximas sesiones de la semana)' : 'DIARIO / INTRADÍA (sesión actual)';
     const now = new Date();
+    const enfoque = horizon === 'weekly'
+  ? `
+ENFOQUE SEMANAL:
+- Analiza el régimen macro de varios días.
+- Prioriza Fed, inflación, Treasury 10Y y USD Index (Fed).
+- Identifica catalizadores que puedan dominar las próximas sesiones.
+- Distingue si el entorno favorece continuidad, corrección o rango.
+- No uses ruido intradía como base principal.
+- Devuelve sesgo semanal, escenario principal, escenario alternativo e invalidación.
+`
+  : `
+ENFOQUE DIARIO / INTRADÍA:
+- Analiza la sesión actual.
+- Prioriza el precio actual de XAU/USD, Treasury 10Y, USD Index (Fed), Fed e inflación.
+- Busca catalizadores inmediatos y posibles cambios de presión durante la sesión.
+- No conviertas una lectura macro de varios días en una entrada automática.
+- Devuelve sesgo intradía, confirmación necesaria, invalidación y riesgos de la sesión.
+`;
     const prompt = `Analiza el contexto macro de XAUUSD para un trader profesional. Horizonte: ${periodo}. Fecha/hora local del usuario: ${now.toLocaleString('es-CL')}.
+    ${enfoque}
 
 DATOS DISPONIBLES EN ELIOTFW CAPITAL:
 - XAU/USD spot: ${d.xauusd ?? 'N/D'}
