@@ -1392,10 +1392,10 @@ async function refreshMacroSnapshot() {
     const d = await res.json();
     _lastMacroSnapshot = d;
     setTextSafe('mc-gold', d.xauusd ? '$' + Number(d.xauusd).toFixed(2) : 'N/D');
-    setTextSafe('mc-dxy', d.dxy || 'N/D');
-    setTextSafe('mc-tnx', d.tnx ? d.tnx + '%' : 'N/D');
+    setTextSafe('mc-dxy', d.usd_index_fed ? Number(d.usd_index_fed).toFixed(2) : 'N/D');
+    setTextSafe('mc-tnx', d.us10y ? Number(d.us10y).toFixed(2) + '%' : 'N/D');
     setTextSafe('mc-fed', d.fed_rate ? d.fed_rate + '%' : 'N/D');
-    setTextSafe('mc-cpi', d.cpi ? d.cpi + '%' : 'N/D');
+    setTextSafe('mc-cpi', d.cpi_yoy ? Number(d.cpi_yoy).toFixed(2) + '%' : 'N/D');
     if (out) out.textContent = 'Datos actualizados: ' + new Date().toLocaleString('es-CL');
     return d;
   } catch (e) {
