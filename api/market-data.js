@@ -48,35 +48,70 @@ export default async function handler(req, res) {
   }
 
   // =========================================================
-  // TWELVE DATA — XAU/USD
-  // =========================================================
-  if (TWELVE_KEY) {
-    try {
-      const gold = await safeFetch(
-        `https://api.twelvedata.com/price` +
-          `?symbol=${encodeURIComponent("XAU/USD")}` +
-          `&apikey=${TWELVE_KEY}`
-      );
+// TWELVE DATA — XAU/USD
+// Precio actual + Open + High + Low + Previous Close
+// =========================================================
+if (TWELVE_KEY) {
+  try {
+    const gold = await safeFetch(
+      `https://api.twelvedata.com/quote` +
+      `?symbol=${encodeURIComponent("XAU/USD")}` +
+      `&apikey=${TWELVE_KEY}`
+    );
 
-      if (gold?.price) {
-        result.xauusd = Number(gold.price);
-      } else {
-        result.xau_debug = gold;
+    if (gold && !gold.error) {
+      // Precio actual
+      if (
+        gold.close !== undefined &&
+        Number.isFinite(Number(gold.close))
+      ) {
+        result.xauusd = Number(gold.close);
       }
-    } catch (error) {
-      result.xau_error = error.message;
-    }
-  } else {
-    result.twelve_error = "TWELVE_DATA_KEY missing";
-  }
 
-  // =========================================================
-  // FRED
-  // =========================================================
-  if (FRED_KEY) {
-    // ---------------------------------------------------------
-    // FED FUNDS RATE
-    // ---------------------------------------------------------
+      // Apertura
+      if (
+        gold.open !== undefined &&
+        Number.isFinite(Number(gold.open))
+      ) {
+        result.xauusd_open = Number(gold.open);
+      }
+
+      // Máximo del período/día devuelto por Twelve Data
+      if (
+        gold.high !== undefined &&
+        Number.isFinite(Number(gold.high))
+      ) {
+        result.xauusd_high = Number(gold.high);
+      }
+
+      // Mínimo del período/día devuelto por Twelve Data
+      if (
+        gold.low !== undefined &&
+        Number.isFinite(Number(gold.low))
+      ) {
+        result.xauusd_low = Number(gold.low);
+      }
+
+      // Cierre previo
+      if (
+        gold.previous_close !== undefined &&
+        Number.isFinite(Number(gold.previous_close))
+      ) {
+        result.xauusd_close_prev = Number(gold.previous_close);
+      }
+
+      result.xauusd_datetime = gold.datetime || null;
+    } else {
+      result.xau_debug = gold;
+    }
+  } catch (error) {
+    result.xau_error = error.message;
+  }
+} else {
+  result.twelve_error = "TWELVE_DATA_KEY missing";
+}  
+
+      
     try {
       const fed = await safeFetch(
         `https://api.stlouisfed.org/fred/series/observations` +
