@@ -1511,7 +1511,7 @@ async function sendMessage(){
   input.value='';appendMsg('user',text);chatHistory.push({role:'user',content:text});
   document.getElementById('ai-send-btn').disabled=true;appendTyping();
   try{
-    const res=await fetch('/api/claude',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:chatHistory})});
+    const res=await fetch('/api/claude',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:chatHistory,chartImageBase64,chartImageMediaType,chartImageName})});
     const data=await res.json();removeTyping();
     const reply=data.content?.[0]?.text||'Sin respuesta.';
     chatHistory.push({role:'assistant',content:reply});appendMsg('ai',reply);
