@@ -163,6 +163,148 @@ body{font-family:'Rajdhani',sans-serif;background:#050810;color:#f0eadc;min-heig
 .quick-btns{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px;flex-shrink:0;}
 .quick-btn{font-size:12px;padding:5px 11px;background:rgba(196,160,60,0.07);border:1px solid rgba(196,160,60,0.22);color:#c8b060;border-radius:3px;cursor:pointer;letter-spacing:0.5px;transition:all 0.2s;font-family:'Rajdhani',sans-serif;}
 .quick-btn:hover{background:rgba(196,160,60,0.14);color:#e8c84a;}
+  /* ===== RESPONSIVE MOBILE ELIOTFW CAPITAL ===== */
+
+@media (max-width: 768px) {
+
+  body{
+    overflow-x:hidden;
+    font-size:14px;
+  }
+
+  .app{
+    width:100%;
+    min-height:100vh;
+  }
+
+  .sidebar{
+    width:70px;
+    min-width:70px;
+  }
+
+  .sidebar-logo{
+    padding:14px 6px;
+  }
+
+  .logo-mark{
+    font-size:10px;
+    letter-spacing:1px;
+  }
+
+  .logo-sub{
+    font-size:7px;
+  }
+
+  .sidebar-section-label{
+    display:none;
+  }
+
+  .sidebar-item{
+    justify-content:center;
+    padding:12px 5px;
+    font-size:0;
+  }
+
+  .sidebar-item i{
+    font-size:18px;
+    margin:0;
+  }
+
+  .main{
+    width:calc(100% - 70px);
+    min-width:0;
+  }
+
+  .topbar{
+    padding:10px;
+    gap:7px;
+    flex-wrap:wrap;
+  }
+
+  .topbar-right{
+    gap:5px;
+    flex-wrap:wrap;
+  }
+
+  .content{
+    padding:10px;
+    width:100%;
+    overflow-x:hidden;
+  }
+
+  .hero{
+    padding:14px;
+    margin-bottom:12px;
+  }
+
+  .hero-name{
+    font-size:16px;
+  }
+
+  .stats-row{
+    grid-template-columns:1fr 1fr;
+    gap:7px;
+  }
+
+  .stat-card{
+    padding:9px;
+  }
+
+  .quick-btns{
+    gap:5px;
+    flex-wrap:wrap;
+  }
+
+  .quick-btn{
+    font-size:10px;
+    padding:7px;
+  }
+
+  .ai-messages,
+  .msg,
+  .msg-bubble{
+    max-width:100%;
+    overflow-wrap:anywhere;
+    word-break:break-word;
+  }
+
+  input,
+  textarea,
+  button,
+  iframe,
+  canvas,
+  img{
+    max-width:100%;
+  }
+}
+
+@media (max-width: 480px) {
+
+  .sidebar{
+    width:58px;
+    min-width:58px;
+  }
+
+  .main{
+    width:calc(100% - 58px);
+  }
+
+  .content{
+    padding:7px;
+  }
+
+  .stats-row{
+    grid-template-columns:1fr;
+  }
+
+  .hero{
+    padding:10px;
+  }
+
+  .quick-btn{
+    font-size:9px;
+  }
+}
 </style>
 </head>
 <body>
