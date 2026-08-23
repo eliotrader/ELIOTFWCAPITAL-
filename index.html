@@ -583,6 +583,8 @@ body{font-family:'Rajdhani',sans-serif;background:#050810;color:#f0eadc;min-heig
                 <button class="quick-btn" id="macro-daily-btn" onclick="generateMacroContext('daily')"><i class="ti ti-sun"></i> HOY</button>
                 <button class="quick-btn" id="macro-weekly-btn" onclick="generateMacroContext('weekly')"><i class="ti ti-calendar-week"></i> SEMANA</button>
                 <button class="btn-ghost" onclick="refreshMacroSnapshot()"><i class="ti ti-refresh"></i> Actualizar datos</button>
+                <button class="quick-btn" id="chart-upload-btn" onclick="document.getElementById('chart-image-input').click()"><i class="ti ti-photo"></i> GRÁFICA H1</button>
+<input type="file" id="chart-image-input" accept="image/png,image/jpeg,image/webp" style="display:none" onchange="handleChartImage(event)">
               </div>
             </div>
             <div id="macro-snapshot" style="display:grid;grid-template-columns:repeat(5,minmax(95px,1fr));gap:7px;margin-bottom:10px;">
@@ -1515,6 +1517,50 @@ async function sendMessage(){
     chatHistory.push({role:'assistant',content:reply});appendMsg('ai',reply);
   }catch(e){removeTyping();appendMsg('ai','Error de conexión.');}
   document.getElementById('ai-send-btn').disabled=false;document.getElementById('ai-input').focus();
+}
+  let chartImageBase64 = null;
+let chartImageMediaType = null;
+let chartImageName = null;
+
+function handleChartImage(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+
+  const allowedTypes = ['image/png', 'image/jpeg', 'image/webp'];
+
+  if (!allowedTypes.includes(file.type)) {
+    alert('Usa una imagen PNG, JPG o WEBP.');
+    event.target.value = '';
+    return;
+  }
+
+  const reader = new FileReader();
+
+  reader.onload = function(e) {
+    const dataUrl = e.target.result;
+
+    chartImageBase64 = dataUrl.split(',')[1];
+    chartImageMediaType = file.type;
+    chartImageName = file.name;
+
+    appendMsg(
+      'user',
+      '📊 GRÁFICA H1 CARGADA\n' +
+      chartImageName +
+      '\n\nLista para análisis técnico y confluencia macro.'
+    );
+
+    const btn = document.getElementById('chart-upload-btn');
+    if (btn) {
+      btn.innerHTML = '<i class="ti ti-check"></i> H1 CARGADA';
+    }
+  };
+
+  reader.onerror = function() {
+    alert('No se pudo leer la imagen.');
+  };
+
+  reader.readAsDataURL(file);
 }
 function quickAsk(q){document.getElementById('ai-input').value=q;sendMessage();}
 
