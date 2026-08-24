@@ -36,24 +36,40 @@ if (chartImageBase64 && chartImageMediaType) {
     .map(m => m.role)
     .lastIndexOf('user');
 
-  const technicalPrompt = `
+ const technicalPrompt = `
 Analiza la imagen adjunta exclusivamente como gráfica XAU/USD H1.
 
-Combina dos capas:
-1. CONTEXTO MACRO disponible en ELIO IA.
-2. ESTRUCTURA TÉCNICA visible en la gráfica H1.
+Combina:
+1. El contexto macro disponible en ELIO IA.
+2. La estructura técnica visible en la gráfica H1.
 
 Analiza estructura, tendencia, soportes, resistencias, liquidez,
-barridas, zonas potenciales de compra/venta, invalidación y objetivos.
+barridas, ruptura, rechazo y zonas relevantes.
 
-No inventes precios que no sean visibles en la gráfica.
+NO escribas un análisis largo.
+NO expliques todo el razonamiento.
+NO inventes precios que no sean visibles en la gráfica.
 
-CONFLUENCIA FINAL:
-- COMPRADOR
-- VENDEDOR
-- ESPERAR
+Responde EXACTAMENTE con este formato:
 
-Si macro y técnico no coinciden claramente, responde ESPERAR.
+TÉCNICO H1: ALCISTA / BAJISTA / NEUTRAL
+MACRO: ALCISTA / BAJISTA / NEUTRAL
+CONFLUENCIA: ALTA / MEDIA / BAJA
+
+DIRECCIÓN: COMPRADOR / VENDEDOR / ESPERAR
+
+ZONA: [precio o rango]
+INVALIDACIÓN: [precio]
+OBJETIVO 1: [precio]
+OBJETIVO 2: [precio]
+
+CONDICIÓN:
+[Una sola frase indicando qué debe hacer el precio para validar la operación.]
+
+Si técnico y macro no tienen suficiente confluencia:
+DIRECCIÓN: ESPERAR
+
+Sé breve, preciso y profesional.
 `;
 
   const imageContent = [
