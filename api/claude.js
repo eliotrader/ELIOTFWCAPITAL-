@@ -22,7 +22,76 @@ export default async function handler(req, res) {
       });
     }
 
-    const { messages = [] } = req.body || {};
+    const {
+  messages = [],
+  chartImageBase64 = null,
+  chartImageMediaType = null,
+  chartImageName = null
+} = req.body || {};
+
+let anthropicMessages = [...messages];
+
+if (chartImageBase64 && chartImageMediaType) {
+  const lastUserIndex = [...anthropicMessages]
+    .map(m => m.role)
+    .lastIndexOf('user');
+
+  const technicalPrompt = `
+Analiza la imagen adjunta exclusivamente como gráfica XAU/USD H1.
+
+Combina dos capas:
+1. CONTEXTO MACRO disponible en ELIO IA.
+2. ESTRUCTURA TÉCNICA visible en la gráfica H1.
+
+Analiza estructura, tendencia, soportes, resistencias, liquidez,
+barridas, zonas potenciales de compra/venta, invalidación y objetivos.
+
+No inventes precios que no sean visibles en la gráfica.
+
+CONFLUENCIA FINAL:
+- COMPRADOR
+- VENDEDOR
+- ESPERAR
+
+Si macro y técnico no coinciden claramente, responde ESPERAR.
+`;
+
+  const imageContent = [
+    {
+      type: 'image',
+      source: {
+        type: 'base64',
+        media_type: chartImageMediaType,
+        data: chartImageBase64
+      }
+    },
+    {
+      type: 'text',
+      text: technicalPrompt
+    }
+  ];
+
+  if (lastUserIndex >= 0) {
+    const original = anthropicMessages[lastUserIndex];
+
+    imageContent.unshift({
+      type: 'text',
+      text: typeof original.content === 'string'
+        ? original.content
+        : 'Analiza esta gráfica XAU/USD H1.'
+    });
+
+    anthropicMessages[lastUserIndex] = {
+      role: 'user',
+      content: imageContent
+    };
+  } else {
+    anthropicMessages.push({
+      role: 'user',
+      content: imageContent
+    });
+  }
+}
 
     if (!Array.isArray(messages) || messages.length === 0) {
       return res.status(400).json({
@@ -573,7 +642,7 @@ ${marketContext}
 
           system: ELIO_SYSTEM_PROMPT,
 
-          messages,
+          messages: anthropicMessages,
         }),
       }
     );
