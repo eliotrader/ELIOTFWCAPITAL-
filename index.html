@@ -306,6 +306,7 @@ body{font-family:'Rajdhani',sans-serif;background:#050810;color:#f0eadc;min-heig
     font-size:9px;
   }
 }
+.gold-flow-panel svg{display:block;width:100%;height:auto}.gold-flow-panel [id^="gold-flow-"]:empty{min-height:55px;border:1px dashed #253047;margin:8px 0;background:#080e19}.gold-flow-panel #gold-flow-price:empty{min-height:180px}
 </style>
 </head>
 <body>
@@ -627,6 +628,16 @@ body{font-family:'Rajdhani',sans-serif;background:#050810;color:#f0eadc;min-heig
             <div class="gold-panel"><div class="gold-label">Mínimo proveedor</div><div class="gold-value" id="gold-low">—</div></div>
           </div>
           <div class="gold-note" id="gold-status" role="status">Pulsa Actualizar datos para consultar Twelve Data.</div>
+          <div class="gold-panel gold-flow-panel">
+            <div class="gold-head"><div class="gold-label">Flujo de órdenes · GC / MGC</div><div class="gold-note">Burbujas desde <input id="gold-flow-threshold" type="number" min="1" step="1" value="100" aria-label="Umbral de contratos por intervalo" oninput="renderGoldOrderflow()" style="width:80px;background:#101827;color:#e8c84a;border:1px solid #526079;padding:5px"> contratos / intervalo</div></div>
+            <div class="gold-note" id="gold-flow-status" role="status">Feed GC/COMEX pendiente de conexión.</div>
+            <div class="gold-label" style="margin-top:14px">Precio y actividad de gran tamaño</div><div id="gold-flow-price"></div>
+            <div class="gold-label">Agresor</div><div id="gold-flow-aggressor"></div>
+            <div class="gold-label">Total · contratos</div><div id="gold-flow-total"></div>
+            <div class="gold-label">Delta · compras agresivas − ventas agresivas</div><div id="gold-flow-delta"></div>
+            <div class="gold-note" id="gold-flow-summary">Sin datos de operaciones.</div>
+            <div class="gold-note">Burbujas = volumen por intervalo sobre el umbral, sin identificar al participante. Los futuros GC/MGC tienen un precio distinto al spot XAUUSD. La fórmula de “Q DELTA” de la referencia no está documentada; este panel calcula delta de volumen.</div>
+          </div>
           <div class="gold-grid">
             <div class="gold-panel"><div class="gold-label">Gráfico · TradingView XAUUSD</div><div class="gold-chart" id="gold-chart"></div><div class="gold-note">El gráfico usa el feed de TradingView; sus precios y horarios pueden diferir de Twelve Data y de tu broker.</div></div>
             <div class="gold-terminal">
@@ -1385,6 +1396,7 @@ function initGoldChart(){
   slot.appendChild(frame);
 }
 async function refreshGoldTerminal(){
+  if(typeof refreshGoldOrderflow==='function')refreshGoldOrderflow();
   const status=document.getElementById('gold-status');
   status.textContent='Consultando datos…';
   try {
@@ -2639,5 +2651,6 @@ function clearAnacrusaHistory(){
 }
 
 </script>
+<script src="/gold-orderflow.js"></script>
 </body>
 </html>
