@@ -114,6 +114,7 @@ if (FRED_KEY) {
 
       if (value && value !== ".") {
         result.fed_rate = Number(value);
+        result.fed_rate_date = fed.observations[0].date;
       } else {
         result.fed_debug = fed;
       }
@@ -146,6 +147,7 @@ if (FRED_KEY) {
           result.cpi_yoy = Number(
             (((current - yearAgo) / yearAgo) * 100).toFixed(2)
           );
+          result.cpi_yoy_date = cpi.observations[0].date;
         }
       } else {
         result.cpi_debug = cpi;
