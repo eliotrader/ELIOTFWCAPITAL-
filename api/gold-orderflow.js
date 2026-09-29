@@ -1,6 +1,7 @@
 // Read-only adapter for a licensed GC/MGC provider. Credentials stay server-side.
 // Provider payload: source, instrument, interval_seconds, asof, delay_seconds,
 // bars: [{time, price, buy_volume, sell_volume, unknown_volume?}].
+import {fetchDatabentoGold} from '../lib/databento-gold.js';
 export function normalizeOrderflow(data) {
   if (!data || typeof data.source !== 'string' || !data.source.trim() ||
       typeof data.instrument !== 'string' || !/^(GC|MGC)(?:[FGHJKMNQUVXZ]\d{1,4})?$/.test(data.instrument) ||
@@ -29,6 +30,12 @@ export default async function handler(req,res) {
   res.setHeader('Cache-Control','no-store');
   if(req.method!=='GET') return res.status(405).json({ok:false,error:'Method not allowed'});
   const url=process.env.GOLD_ORDERFLOW_URL;
+  if(!url && process.env.DATABENTO_API_KEY){
+    try{
+      const data=await fetchDatabentoGold({key:process.env.DATABENTO_API_KEY,symbol:process.env.DATABENTO_GOLD_SYMBOL});
+      return res.status(200).json({ok:true,...normalizeOrderflow(data),mode:'historical'});
+    }catch(e){return res.status(502).json({ok:false,code:e.code||'PROVIDER_UNAVAILABLE'});}
+  }
   if(!url) return res.status(503).json({ok:false,code:'NOT_CONFIGURED'});
   try {
     if(new URL(url).protocol!=='https:') throw new Error('HTTPS required');
