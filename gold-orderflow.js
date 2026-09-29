@@ -73,7 +73,8 @@
     try{
       const r=await fetch('/api/gold-orderflow',{cache:'no-store'});
       const data=await r.json();
-      if(!r.ok||!data.ok)throw new Error(data.code==='NOT_CONFIGURED'?'Feed GC/COMEX pendiente de conexión.':'No se pudo consultar el proveedor.');
+      const messages={NOT_CONFIGURED:'Databento pendiente de activación: falta acceso al proveedor.',SYMBOL_REQUIRED:'Falta seleccionar el contrato de oro del proveedor.',ACCESS_REQUIRED:'El proveedor requiere una clave válida y acceso al dataset CME.',NO_TRADES:'Sin operaciones en la ventana reciente disponible. El contrato puede no tener actividad.',WINDOW_TOO_BUSY:'Ventana incompleta por exceso de operaciones; no se muestran cálculos parciales.'};
+      if(!r.ok||!data.ok)throw new Error(messages[data.code]||'No se pudo consultar el proveedor.');
       snapshot=data;
       window.renderGoldOrderflow();
       status.textContent=`${data.source} · ${data.instrument} · intervalos de ${data.interval_seconds}s · demora declarada ${data.delay_seconds}s · dato ${new Date(data.asof).toLocaleString('es-CL',{timeZone:'America/Santiago'})} (Chile)`;
