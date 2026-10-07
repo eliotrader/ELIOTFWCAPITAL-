@@ -5,6 +5,7 @@
   let snapshot=null;
   const total=b=>b.buy_volume+b.sell_volume+b.unknown_volume;
   const delta=b=>b.buy_volume-b.sell_volume;
+  const flowColor=b=>delta(b)>0?'#70e0a8':delta(b)<0?'#e08080':'#e8c84a';
   const fmt=n=>n.toLocaleString('es-CL',{maximumFractionDigits:2});
   const time=t=>new Date(t).toLocaleTimeString('es-CL',{timeZone:'America/New_York',hour:'2-digit',minute:'2-digit'});
   function add(parent,tag,attrs={},text){
@@ -45,8 +46,8 @@
     const maxTotal=Math.max(1,...bars.map(total));
     bars.forEach((b,i)=>{
       if(total(b)<threshold)return;
-      const c=add(price,'circle',{cx:x(i),cy:y(b.price),r:5+15*Math.sqrt(total(b)/maxTotal),fill:'#e8c84a','fill-opacity':.25,stroke:'#e8c84a'});
-      add(c,'title',{},`${time(b.time)} NY · Precio ${fmt(b.price)} · Total ${fmt(total(b))} contratos · Delta ${fmt(delta(b))}`);
+      const c=add(price,'circle',{cx:x(i),cy:y(b.price),r:5+15*Math.sqrt(total(b)/maxTotal),fill:flowColor(b),'fill-opacity':.25,stroke:flowColor(b)});
+      add(c,'title',{},`${time(b.time)} NY · Precio ${fmt(b.price)} · Total ${fmt(total(b))} contratos · Compras ${fmt(b.buy_volume)} · Ventas ${fmt(b.sell_volume)} · Sin clasificar ${fmt(b.unknown_volume)} · Delta ${fmt(delta(b))}`);
     });
     const width=Math.max(1,Math.min(20,790/bars.length*.75));
     const aggression=svg('gold-flow-aggressor','Agresor por intervalo: compras y ventas',75);
@@ -64,11 +65,26 @@
     axes(ds,15,145,-maxDelta,maxDelta,bars);
     add(ds,'line',{x1:15,y1:80,x2:810,y2:80,stroke:'#a5adbc','stroke-dasharray':'4 4'});
     bars.forEach((b,i)=>add(ds,'rect',{x:x(i)-width/2,y:delta(b)>=0?80-delta(b)/maxDelta*65:80,width,height:Math.abs(delta(b))/maxDelta*65,fill:delta(b)>=0?'#70e0a8':'#e08080'}));
+    // Reset at the start of each loaded window, not at the session open.
+    let running=0;
+    const cumulative=bars.map(b=>running+=delta(b));
+    const cvdLimit=Math.max(1,...cumulative.map(Math.abs));
+    const cvdY=value=>80-value/cvdLimit*65;
+    const cvd=svg('gold-flow-cvd','Delta acumulado de la ventana cargada, en contratos',175);
+    axes(cvd,15,145,-cvdLimit,cvdLimit,bars);
+    add(cvd,'line',{x1:15,y1:80,x2:810,y2:80,stroke:'#a5adbc','stroke-dasharray':'4 4'});
+    add(cvd,'polyline',{points:[`${x(0)},80`,...cumulative.map((value,i)=>`${x(i)},${cvdY(value)}`)].join(' '),fill:'none',stroke:'#a0c0ff','stroke-width':2.5});
+    cumulative.forEach((value,i)=>{
+      const point=add(cvd,'circle',{cx:x(i),cy:cvdY(value),r:3,fill:value>0?'#70e0a8':value<0?'#e08080':'#e8c84a'});
+      add(point,'title',{},`${time(bars[i].time)} NY · Delta intervalo ${fmt(delta(bars[i]))} · Acumulado ${fmt(value)} contratos`);
+    });
     const sum=bars.reduce((a,b)=>({total:a.total+total(b),delta:a.delta+delta(b)}),{total:0,delta:0});
-    el('gold-flow-summary').textContent=`Ventana cargada · Total ${fmt(sum.total)} contratos · Delta neto ${fmt(sum.delta)} · ${bars.filter(b=>total(b)>=threshold).length} intervalos sobre el umbral`;
+    el('gold-flow-summary').textContent=`Ventana cargada · Total ${fmt(sum.total)} contratos · Delta acumulado final ${fmt(sum.delta)} · ${bars.filter(b=>total(b)>=threshold).length} intervalos sobre el umbral`;
   };
   window.refreshGoldOrderflow=async function(){
     const status=el('gold-flow-status');if(!status)return;
+    if(window.goldOrderflowLoading)return;
+    window.goldOrderflowLoading=true;
     status.textContent='Consultando flujo de operaciones…';
     try{
       const r=await fetch('/api/gold-orderflow',{cache:'no-store'});
@@ -77,12 +93,16 @@
       if(!r.ok||!data.ok)throw new Error(messages[data.code]||'No se pudo consultar el proveedor.');
       snapshot=data;
       window.renderGoldOrderflow();
-      status.textContent=`${data.source} · ${data.instrument} · intervalos de ${data.interval_seconds}s · demora declarada ${data.delay_seconds}s · dato ${new Date(data.asof).toLocaleString('es-CL',{timeZone:'America/Santiago'})} (Chile)`;
+      const delay=Math.max(data.delay_seconds,Math.floor((Date.now()-Date.parse(data.asof))/1000),0);
+      const hours=Math.floor(delay/3600),minutes=Math.floor(delay%3600/60),seconds=delay%60;
+      status.textContent=`${data.mode==='historical'?'HISTÓRICO · ':''}${data.source} · ${data.instrument} · intervalos de ${data.interval_seconds}s · retraso al consultar ${hours}h ${minutes}m ${seconds}s · dato ${new Date(data.asof).toLocaleString('es-CL',{timeZone:'America/Santiago'})} (Chile) · actualización manual`;
     }catch(e){
       snapshot=null;
-      ['price','aggressor','total','delta'].forEach(id=>el('gold-flow-'+id).replaceChildren());
+      ['price','aggressor','total','delta','cvd'].forEach(id=>el('gold-flow-'+id).replaceChildren());
       el('gold-flow-summary').textContent='Sin datos de operaciones.';
       status.textContent=e.message;
+    }finally{
+      window.goldOrderflowLoading=false;
     }
   };
 })();
