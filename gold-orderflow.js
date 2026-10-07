@@ -8,6 +8,39 @@
   const flowColor=b=>delta(b)>0?'#70e0a8':delta(b)<0?'#e08080':'#e8c84a';
   const fmt=n=>n.toLocaleString('es-CL',{maximumFractionDigits:2});
   const time=t=>new Date(t).toLocaleTimeString('es-CL',{timeZone:'America/New_York',hour:'2-digit',minute:'2-digit'});
+  // Closing prices only: no intraminute highs/lows or ATR are available here.
+  window.calculateGoldVolatility=function(data){
+    const bars=data.bars;
+    const step=data.interval_seconds*1000;
+    const prices=bars.map(b=>b.price);
+    const moves=[],returns=[];
+    let gaps=0;
+    for(let i=1;i<bars.length;i++){
+      if(Date.parse(bars[i].time)-Date.parse(bars[i-1].time)!==step){gaps++;continue;}
+      moves.push(Math.abs(prices[i]-prices[i-1]));
+      returns.push(Math.log(prices[i]/prices[i-1]));
+    }
+    const mean=returns.length?returns.reduce((a,b)=>a+b,0)/returns.length:0;
+    const variance=returns.length>1?returns.reduce((a,b)=>a+(b-mean)**2,0)/(returns.length-1):null;
+    return {range:Math.max(...prices)-Math.min(...prices),
+      averageMove:moves.length?moves.reduce((a,b)=>a+b,0)/moves.length:null,
+      sigmaPercent:variance===null?null:Math.sqrt(variance)*100,
+      realizedPercent:returns.length?Math.sqrt(returns.reduce((a,b)=>a+b*b,0))*100:null,
+      pairs:moves.length,gaps,bars:bars.length};
+  };
+  function renderVolatility(){
+    const v=window.calculateGoldVolatility(snapshot);
+    const money=value=>value===null?'—':'$'+fmt(value);
+    el('gold-vol-range').textContent=money(v.range);
+    el('gold-vol-move').textContent=money(v.averageMove);
+    el('gold-vol-sigma').textContent=v.sigmaPercent===null?'—':v.sigmaPercent.toLocaleString('es-CL',{minimumFractionDigits:4,maximumFractionDigits:4})+'%';
+    el('gold-vol-realized').textContent=v.realizedPercent===null?'—':v.realizedPercent.toLocaleString('es-CL',{minimumFractionDigits:4,maximumFractionDigits:4})+'%';
+    const volumes=snapshot.bars.reduce((a,b)=>({buy:a.buy+b.buy_volume,sell:a.sell+b.sell_volume,unknown:a.unknown+b.unknown_volume}),{buy:0,sell:0,unknown:0});
+    const classified=volumes.buy+volumes.sell,all=classified+volumes.unknown;
+    const pressure=classified?100*(volumes.buy-volumes.sell)/classified:null;
+    el('gold-vol-quality').textContent=`Volumen clasificado: ${fmt(classified)} contratos · sin clasificar: ${fmt(volumes.unknown)} (${all?fmt(100*volumes.unknown/all):'—'}%) · presión neta sobre volumen clasificado: ${pressure===null?'—':fmt(pressure)+'%'}.`;
+    el('gold-vol-status').textContent=`${snapshot.instrument} · ${time(snapshot.bars[0].time)}–${time(snapshot.bars[v.bars-1].time)} NY · ${v.bars} precios de cierre · ${v.pairs} cambios consecutivos de ${snapshot.interval_seconds}s${v.gaps?` · ${v.gaps} saltos excluidos de movimiento y volatilidad`:''}${v.pairs<2?' · datos insuficientes para calcular σ':''}. La última barra puede estar incompleta.`;
+  }
   function add(parent,tag,attrs={},text){
     const node=document.createElementNS(NS,tag);
     Object.entries(attrs).forEach(([k,v])=>node.setAttribute(k,v));
@@ -33,6 +66,7 @@
   window.renderGoldOrderflow=function(){
     if(!snapshot)return;
     const bars=snapshot.bars;
+    renderVolatility();
     const threshold=Number(el('gold-flow-threshold').value);
     if(!Number.isFinite(threshold)||threshold<=0)return;
     const span=Math.max(snapshot.interval_seconds*1000,Date.parse(bars[bars.length-1].time)-Date.parse(bars[0].time));
@@ -100,6 +134,9 @@
       snapshot=null;
       ['price','aggressor','total','delta','cvd'].forEach(id=>el('gold-flow-'+id).replaceChildren());
       el('gold-flow-summary').textContent='Sin datos de operaciones.';
+      ['range','move','sigma','realized'].forEach(id=>el('gold-vol-'+id).textContent='—');
+      el('gold-vol-status').textContent='Sin datos históricos para medir volatilidad.';
+      el('gold-vol-quality').textContent='Esperando volumen clasificado y controles de cobertura.';
       status.textContent=e.message;
     }finally{
       window.goldOrderflowLoading=false;

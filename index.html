@@ -641,6 +641,27 @@ body{font-family:'Rajdhani',sans-serif;background:#050810;color:#f0eadc;min-heig
             <div class="gold-label">Delta acumulado · ventana cargada</div><div id="gold-flow-cvd"></div>
             <div class="gold-note">El acumulado parte de cero al inicio de cada ventana cargada; no representa toda la sesión.</div>
             <div class="gold-note" id="gold-flow-summary">Sin datos de operaciones.</div>
+            <div style="border-top:1px solid #253047;margin-top:18px;padding-top:16px">
+              <div class="gold-label">Volatilidad histórica · ventana cargada</div>
+              <div class="gold-metrics" style="margin:12px 0">
+                <div><div class="gold-label">Rango entre cierres · USD/oz</div><div class="gold-value" id="gold-vol-range">—</div></div>
+                <div><div class="gold-label">Cambio absoluto medio · USD/oz</div><div class="gold-value" id="gold-vol-move">—</div></div>
+                <div><div class="gold-label">σ de retornos · por intervalo</div><div class="gold-value" id="gold-vol-sigma">—</div></div>
+                <div><div class="gold-label">Volatilidad realizada · ventana</div><div class="gold-value" id="gold-vol-realized">—</div></div>
+              </div>
+              <div class="gold-note" id="gold-vol-status">Sin datos históricos para medir volatilidad.</div>
+              <div class="gold-note" id="gold-vol-quality">Esperando volumen clasificado y controles de cobertura.</div>
+              <div class="gold-note">Calculado con cierres de GC/MGC de la misma ventana que el delta. Rango = mayor cierre − menor cierre; movimiento medio = promedio de cambios absolutos consecutivos; σ = desviación estándar muestral de retornos logarítmicos, sin anualizar.</div>
+              <div class="gold-note" style="margin-top:8px">Mide cuánto varió el precio, no su dirección. No es ATR ni volatilidad actual; usa la estructura y el delta para estudiar la ventana. No fija entradas ni stops automáticamente.</div>
+              <details style="margin-top:12px;color:#a5adbc;font-size:13px;line-height:1.7">
+                <summary style="cursor:pointer;color:#e8c84a">Metodología y controles de datos</summary>
+                <p>Por cada intervalo, P es el último precio negociado. Solo se comparan cierres separados exactamente por la duración declarada; los saltos se excluyen de los cambios y retornos, sin rellenar precios.</p>
+                <p>Retorno: r = ln(P actual / P anterior). σ = 100 × √[Σ(r − media r)² / (n − 1)], con al menos dos retornos. Volatilidad realizada = 100 × √Σr² sobre los cambios válidos. Ninguna se anualiza ni pronostica el próximo movimiento; ventanas con distinta duración o cobertura no son directamente comparables.</p>
+                <p>Movimiento medio = Σ|P actual − P anterior| / n. El rango solo usa cierres: puede omitir máximos y mínimos dentro de cada minuto. Sin OHLC completo no se calcula ATR.</p>
+                <p>Delta = compras agresivas − ventas agresivas. CVD = suma del delta desde cero al comienzo de la ventana. Presión neta = 100 × delta total / (compras + ventas), entre −100% y +100%; no es una probabilidad. El volumen sin clasificar cuenta en el total y en el tamaño de las burbujas, pero se excluye del delta y de la presión.</p>
+                <p>El retraso y la fecha del dato aparecen arriba. La ventana histórica corta sirve para estudiar ese tramo, sin etiquetar un régimen alto/bajo de toda la sesión. GC/MGC son futuros y pueden diferir de XAUUSD spot; estas medidas no se trasladan automáticamente al precio de tu broker.</p>
+              </details>
+            </div>
             <div class="gold-note">Burbujas = volumen por intervalo sobre el umbral, sin identificar al participante. Los futuros GC/MGC tienen un precio distinto al spot XAUUSD. La fórmula de “Q DELTA” de la referencia no está documentada; este panel calcula delta de volumen.</div>
           </div>
           <div class="gold-grid">
