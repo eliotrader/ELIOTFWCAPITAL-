@@ -49,7 +49,7 @@
   }
   function svg(id,label,height){
     const host=el(id);host.replaceChildren();
-    const s=add(host,'svg',{viewBox:`0 0 900 ${height}`,role:'img','aria-label':label});
+    const s=add(host,'svg',{viewBox:`0 0 900 ${height}`,role:id==='gold-flow-price'?'group':'img','aria-label':label});
     add(s,'title',{},label);return s;
   }
   function axes(s,top,bottom,lo,hi,bars){
@@ -59,7 +59,7 @@
       add(s,'text',{x:820,y:y+4,fill:'#a5adbc','font-size':12},fmt(hi-j*(hi-lo)/2));
     }
     for(const i of [...new Set([0,Math.floor((bars.length-1)/2),bars.length-1])]){
-      const span=Math.max(1,Date.parse(bars[bars.length-1].time)-Date.parse(bars[0].time));
+      const span=Math.max(snapshot.interval_seconds*1000,Date.parse(bars[bars.length-1].time)-Date.parse(bars[0].time));
       add(s,'text',{x:15+(Date.parse(bars[i].time)-Date.parse(bars[0].time))*790/span,y:bottom+18,fill:'#a5adbc','font-size':12,'text-anchor':i===0?'start':'middle'},time(bars[i].time));
     }
   }
@@ -81,6 +81,15 @@
     bars.forEach((b,i)=>{
       if(total(b)<threshold)return;
       const c=add(price,'circle',{cx:x(i),cy:y(b.price),r:5+15*Math.sqrt(total(b)/maxTotal),fill:flowColor(b),'fill-opacity':.25,stroke:flowColor(b)});
+      c.setAttribute('tabindex','0');
+      c.setAttribute('role','button');
+      c.setAttribute('aria-label',`Ver intervalo ${time(b.time)} Nueva York, delta ${fmt(delta(b))} contratos`);
+      const show=()=>{
+        el('gold-flow-detail').textContent=`${snapshot.instrument} · inicio del intervalo ${new Date(b.time).toLocaleString('es-CL',{timeZone:'America/New_York'})} (Nueva York) · duración ${snapshot.interval_seconds}s · último precio negociado: ${fmt(b.price)} USD/oz · total ${fmt(total(b))} contratos · compras agresivas ${fmt(b.buy_volume)} · ventas agresivas ${fmt(b.sell_volume)} · sin clasificar ${fmt(b.unknown_volume)} · delta ${fmt(delta(b))}. El último precio no identifica el precio de todas las operaciones.`;
+      };
+      c.addEventListener('click',show);
+      c.addEventListener('focus',show);
+      c.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();show();}});
       add(c,'title',{},`${time(b.time)} NY · Precio ${fmt(b.price)} · Total ${fmt(total(b))} contratos · Compras ${fmt(b.buy_volume)} · Ventas ${fmt(b.sell_volume)} · Sin clasificar ${fmt(b.unknown_volume)} · Delta ${fmt(delta(b))}`);
     });
     const width=Math.max(1,Math.min(20,790/bars.length*.75));
@@ -88,7 +97,7 @@
     bars.forEach((b,i)=>{
       const n=b.buy_volume+b.sell_volume;
       const share=n?b.buy_volume/n:.5;
-      const c=add(aggression,'rect',{x:x(i)-width/2,y:8,width,height:40,fill:n?(share>=.5?'#70e0a8':'#e08080'):'#596272','fill-opacity':n?.25+Math.abs(share-.5)*1.5:.3});
+      const c=add(aggression,'rect',{x:x(i)-width/2,y:8,width,height:40,fill:n?flowColor(b):'#596272','fill-opacity':n?.25+Math.abs(share-.5)*1.5:.3});
       add(c,'title',{},`${time(b.time)} · Compra ${fmt(b.buy_volume)} / venta ${fmt(b.sell_volume)} / sin clasificar ${fmt(b.unknown_volume)}`);
     });
     const volume=svg('gold-flow-total','Volumen total por intervalo, en contratos',145);
@@ -119,13 +128,19 @@
     const status=el('gold-flow-status');if(!status)return;
     if(window.goldOrderflowLoading)return;
     window.goldOrderflowLoading=true;
+    const button=el('gold-flow-refresh');
+    button.disabled=true;button.textContent='Consultando…';
+    status.setAttribute('aria-busy','true');
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),45000);
     status.textContent='Consultando flujo de operaciones…';
     try{
-      const r=await fetch('/api/gold-orderflow',{cache:'no-store'});
+      const r=await fetch('/api/gold-orderflow',{cache:'no-store',signal:controller.signal});
       const data=await r.json();
       const messages={NOT_CONFIGURED:'Databento pendiente de activación: falta acceso al proveedor.',SYMBOL_REQUIRED:'Falta seleccionar el contrato de oro del proveedor.',ACCESS_REQUIRED:'El proveedor requiere una clave válida y acceso al dataset CME.',NO_TRADES:'Sin operaciones en la ventana reciente disponible. El contrato puede no tener actividad.',WINDOW_TOO_BUSY:'Ventana incompleta por exceso de operaciones; no se muestran cálculos parciales.'};
       if(!r.ok||!data.ok)throw new Error(messages[data.code]||'No se pudo consultar el proveedor.');
       snapshot=data;
+      el('gold-flow-detail').textContent='Toca una burbuja para consultar su intervalo. Horarios de los gráficos: Nueva York.';
       window.renderGoldOrderflow();
       const delay=Math.max(data.delay_seconds,Math.floor((Date.now()-Date.parse(data.asof))/1000),0);
       const hours=Math.floor(delay/3600),minutes=Math.floor(delay%3600/60),seconds=delay%60;
@@ -137,9 +152,13 @@
       ['range','move','sigma','realized'].forEach(id=>el('gold-vol-'+id).textContent='—');
       el('gold-vol-status').textContent='Sin datos históricos para medir volatilidad.';
       el('gold-vol-quality').textContent='Esperando volumen clasificado y controles de cobertura.';
-      status.textContent=e.message;
+      el('gold-flow-detail').textContent='Sin intervalo seleccionado.';
+      status.textContent=e.name==='AbortError'?'La consulta agotó el tiempo de espera. Vuelve a intentarlo.':e.message;
     }finally{
+      clearTimeout(timeout);
       window.goldOrderflowLoading=false;
+      button.disabled=false;button.textContent='Consultar flujo histórico';
+      status.setAttribute('aria-busy','false');
     }
   };
 })();

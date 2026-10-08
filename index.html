@@ -306,7 +306,7 @@ body{font-family:'Rajdhani',sans-serif;background:#050810;color:#f0eadc;min-heig
     font-size:9px;
   }
 }
-.gold-flow-panel svg{display:block;width:100%;height:auto}.gold-flow-panel [id^="gold-flow-"]:empty{min-height:55px;border:1px dashed #253047;margin:8px 0;background:#080e19}.gold-flow-panel #gold-flow-price:empty{min-height:180px}
+.gold-flow-panel svg{display:block;width:100%;height:auto;min-width:640px}.gold-flow-panel [id^="gold-flow-"]:has(>svg){overflow-x:auto;padding-bottom:6px}.gold-terminal{min-width:0}.gold-panel{min-width:0}.gold-flow-panel [id^="gold-flow-"]{max-width:100%}.gold-note{overflow-wrap:anywhere}.gold-flow-detail{padding:10px 12px;margin:8px 0 14px;background:#080e19;border-left:2px solid #818bff}.gold-terminal button:disabled{opacity:.6;cursor:wait}.gold-terminal button:focus-visible,.gold-flow-panel circle:focus-visible{outline:2px solid #fff;outline-offset:3px}.gold-flow-panel circle[role="button"]{cursor:pointer}.gold-flow-panel [id^="gold-flow-"]:empty{min-height:55px;border:1px dashed #253047;margin:8px 0;background:#080e19}.gold-flow-panel #gold-flow-price:empty{min-height:180px}
 </style>
 </head>
 <body>
@@ -620,21 +620,21 @@ body{font-family:'Rajdhani',sans-serif;background:#050810;color:#f0eadc;min-heig
 
       <div id="view-gold" style="display:none;">
         <div class="gold-terminal">
-          <div class="gold-head"><div><div class="panel-title">FW GOLD TERMINAL · XAUUSD</div><div class="gold-note">Oro spot · lectura de mercado con fuente y hora visibles</div></div><button onclick="refreshGoldTerminal()">Actualizar datos</button></div>
+          <div class="gold-head"><div><div class="panel-title">FW GOLD TERMINAL · XAUUSD</div><div class="gold-note">Oro spot · lectura de mercado con fuente y hora visibles</div></div><button id="gold-refresh" onclick="refreshGoldTerminal()">Actualizar spot y macro</button></div>
           <div class="gold-metrics">
             <div class="gold-panel"><div class="gold-label">Último precio</div><div class="gold-value" id="gold-price">—</div></div>
             <div class="gold-panel"><div class="gold-label">Apertura proveedor</div><div class="gold-value" id="gold-open">—</div></div>
             <div class="gold-panel"><div class="gold-label">Máximo proveedor</div><div class="gold-value" id="gold-high">—</div></div>
             <div class="gold-panel"><div class="gold-label">Mínimo proveedor</div><div class="gold-value" id="gold-low">—</div></div>
           </div>
-          <div class="gold-note" id="gold-status" role="status">Pulsa Actualizar datos para consultar Twelve Data.</div>
+          <div class="gold-note" id="gold-status" role="status">Pulsa Actualizar spot y macro para consultar Twelve Data.</div>
           <div class="gold-panel gold-flow-panel">
             <div class="gold-head"><div class="gold-label">Flujo de órdenes · GC / MGC</div><div class="gold-note">Burbujas desde <input id="gold-flow-threshold" type="number" min="1" step="1" value="100" aria-label="Umbral de contratos por intervalo" oninput="renderGoldOrderflow()" style="width:80px;background:#101827;color:#e8c84a;border:1px solid #526079;padding:5px"> contratos / intervalo</div></div>
-            <div style="margin:12px 0"><button onclick="refreshGoldOrderflow()">Consultar flujo histórico</button></div>
+            <div style="margin:12px 0"><button id="gold-flow-refresh" onclick="refreshGoldOrderflow()">Consultar flujo histórico</button></div>
             <div class="gold-note">Consulta manual: el proveedor puede cobrar por consumo. Cambiar el umbral solo recalcula los datos cargados.</div>
             <div class="gold-note" id="gold-flow-status" role="status">Sin consulta de flujo. Pulsa Consultar flujo histórico para cargar datos.</div>
             <div class="gold-note">Burbujas: verde = delta comprador · rojo = delta vendedor · amarillo = delta cero. El tamaño representa volumen total, incluido el volumen sin clasificar.</div>
-            <div class="gold-label" style="margin-top:14px">Precio y actividad de gran tamaño</div><div id="gold-flow-price"></div>
+            <div class="gold-label" style="margin-top:14px">Precio y actividad de gran tamaño</div><div id="gold-flow-price"></div><div class="gold-note gold-flow-detail" id="gold-flow-detail" role="status">Toca una burbuja para consultar su intervalo. Horarios de los gráficos: Nueva York.</div>
             <div class="gold-label">Agresor</div><div id="gold-flow-aggressor"></div>
             <div class="gold-label">Total · contratos</div><div id="gold-flow-total"></div>
             <div class="gold-label">Delta · compras agresivas − ventas agresivas</div><div id="gold-flow-delta"></div>
@@ -662,14 +662,14 @@ body{font-family:'Rajdhani',sans-serif;background:#050810;color:#f0eadc;min-heig
                 <p>El retraso y la fecha del dato aparecen arriba. La ventana histórica corta sirve para estudiar ese tramo, sin etiquetar un régimen alto/bajo de toda la sesión. GC/MGC son futuros y pueden diferir de XAUUSD spot; estas medidas no se trasladan automáticamente al precio de tu broker.</p>
               </details>
             </div>
-            <div class="gold-note">Burbujas = volumen por intervalo sobre el umbral, sin identificar al participante. Los futuros GC/MGC tienen un precio distinto al spot XAUUSD. La fórmula de “Q DELTA” de la referencia no está documentada; este panel calcula delta de volumen.</div>
+            <div class="gold-note">Burbujas = volumen por intervalo sobre el umbral, sin identificar al participante. Los futuros GC/MGC tienen un precio distinto al spot XAUUSD. El precio de cada punto es el último negociado en ese intervalo.</div>
           </div>
           <div class="gold-grid">
             <div class="gold-panel"><div class="gold-label">Gráfico · TradingView XAUUSD</div><div class="gold-chart" id="gold-chart"></div><div class="gold-note">El gráfico usa el feed de TradingView; sus precios y horarios pueden diferir de Twelve Data y de tu broker.</div></div>
             <div class="gold-terminal">
               <div class="gold-panel"><div class="gold-label">Radar macro</div><div class="gold-note" id="gold-macro">Actualiza para ver los datos disponibles.</div><div style="margin-top:12px"><button onclick="navigate('ai',document.getElementById('sb-ai'))">Abrir ELIO IA</button></div></div>
               <div class="gold-panel"><div class="gold-label">Mapa de niveles</div><div class="gold-note" id="gold-levels">Esperando datos. El rango mostrado pertenece al periodo del proveedor.</div><div class="gold-note" style="margin-top:10px">PDH/PDL, Asia y zonas D1/H4/H1 requieren series históricas verificadas.</div></div>
-              <div class="gold-panel"><div class="gold-label">Futuros y opciones · GC / MGC</div><div class="gold-note">Volumen, delta, open interest y gamma: sin conexión a datos autorizados. No se muestran cifras estimadas.</div></div>
+              <div class="gold-panel"><div class="gold-label">Futuros y opciones · GC / MGC</div><div class="gold-note">Volumen y delta históricos disponibles en el panel de flujo. Open interest y gamma pendientes de una fuente autorizada.</div></div>
             </div>
           </div>
         </div>
@@ -1423,9 +1423,17 @@ function initGoldChart(){
 }
 async function refreshGoldTerminal(){
   const status=document.getElementById('gold-status');
+  if(window.goldSpotLoading)return;
+  window.goldSpotLoading=true;
+  const button=document.getElementById('gold-refresh');
+  button.disabled=true;
+  button.textContent='Consultando…';
+  status.setAttribute('aria-busy','true');
+  const controller=new AbortController();
+  const timeout=setTimeout(()=>controller.abort(),25000);
   status.textContent='Consultando datos…';
   try {
-    const response=await fetch('/api/market-data',{cache:'no-store'});
+    const response=await fetch('/api/market-data',{cache:'no-store',signal:controller.signal});
     if(!response.ok) throw new Error('HTTP '+response.status);
     const data=await response.json();
     const fmt=v=>Number.isFinite(Number(v))&&v!==null&&v!==undefined?'$'+Number(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'—';
@@ -1436,7 +1444,19 @@ async function refreshGoldTerminal(){
     const stamp=data.xauusd_datetime?` · cotización ${data.xauusd_datetime} (zona horaria del proveedor)`:' · hora de la cotización no informada';
     status.textContent=data.xauusd?`Twelve Data${stamp} · consulta ${new Date().toLocaleString('es-CL',{timeZone:'America/Santiago'})} (Chile)`:'Cotización XAUUSD no disponible. Revisa la conexión o la clave de Twelve Data.';
     goldLoadedAt=Date.now();
-  } catch(e){status.textContent='No se pudieron cargar datos de mercado: '+e.message;}
+  } catch(e){
+    ['price','open','high','low'].forEach(id=>document.getElementById('gold-'+id).textContent='—');
+    document.getElementById('gold-macro').textContent='Datos macro no disponibles. Vuelve a consultar.';
+    document.getElementById('gold-levels').textContent='Niveles no disponibles. Vuelve a consultar.';
+    goldLoadedAt=0;
+    status.textContent=e.name==='AbortError'?'La consulta agotó el tiempo de espera. Vuelve a intentarlo.':'No se pudieron cargar datos de mercado: '+e.message;
+  } finally {
+    clearTimeout(timeout);
+    window.goldSpotLoading=false;
+    button.disabled=false;
+    button.textContent='Actualizar spot y macro';
+    status.setAttribute('aria-busy','false');
+  }
 }
 function navigate(view,el){
   document.querySelectorAll('.sidebar-item').forEach(i=>i.classList.remove('active'));
