@@ -24,6 +24,7 @@ body{font-family:'Rajdhani',sans-serif;background:#050810;color:#f0eadc;min-heig
 .sidebar-item{display:flex;align-items:center;gap:9px;padding:0.42rem 1rem;font-size:14px;color:#a8a090;cursor:pointer;border-left:2px solid transparent;transition:all 0.2s;letter-spacing:0.5px;}
 .sidebar-item:hover,.sidebar-item.active{color:#e8c84a;background:rgba(196,160,60,0.07);border-left-color:#e8c84a;}
 .sidebar-item i{font-size:14px;}
+.gold-terminal{display:grid;gap:14px}.gold-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.gold-grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(270px,1fr);gap:14px}.gold-panel{background:#0b1120;border:1px solid rgba(232,200,74,.24);border-radius:8px;padding:16px}.gold-label{font-size:11px;letter-spacing:1.5px;color:#a69a72;text-transform:uppercase}.gold-value{font-size:24px;color:#e8c84a;font-weight:700;margin-top:6px}.gold-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.gold-note{font-size:12px;color:#a5adbc;line-height:1.6}.gold-chart{height:480px}.gold-chart iframe{width:100%;height:100%;border:0}.gold-terminal button{background:#e8c84a;border:0;border-radius:4px;padding:9px 13px;color:#121620;font-weight:700;cursor:pointer}@media(max-width:850px){.gold-grid{grid-template-columns:1fr}.gold-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.gold-chart{height:380px}}
 .main{flex:1;display:flex;flex-direction:column;min-width:0;}
 .topbar{padding:0.7rem 1.4rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(196,160,60,0.13);background:rgba(5,8,16,0.9);flex-shrink:0;}
 .topbar-left{font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:3px;color:rgba(232,200,74,0.65);}
@@ -305,6 +306,7 @@ body{font-family:'Rajdhani',sans-serif;background:#050810;color:#f0eadc;min-heig
     font-size:9px;
   }
 }
+.gold-flow-panel svg{display:block;width:100%;height:auto}.gold-flow-panel [id^="gold-flow-"]:empty{min-height:55px;border:1px dashed #253047;margin:8px 0;background:#080e19}.gold-flow-panel #gold-flow-price:empty{min-height:180px}
 </style>
 </head>
 <body>
@@ -391,6 +393,7 @@ body{font-family:'Rajdhani',sans-serif;background:#050810;color:#f0eadc;min-heig
     <div class="sidebar-item" id="sb-journal" onclick="navigate('journal',this)"><i class="ti ti-notebook"></i> Trading Journal</div>
     <div class="sidebar-item" id="sb-ai" onclick="navigate('ai',this)"><i class="ti ti-brain"></i> Ask Elio AI</div>
     <div class="sidebar-item" id="sb-anacrusa" onclick="navigate('anacrusa',this)"><i class="ti ti-wave-sine"></i> ANACRUSA</div>
+    <div class="sidebar-item" id="sb-gold" onclick="navigate('gold',this)"><i class="ti ti-chart-candle"></i> FW GOLD TERMINAL</div>
     <div class="sidebar-item" id="sb-calc" onclick="navigate('calc',this)"><i class="ti ti-calculator"></i> Calculadora</div>
 
   </aside>
@@ -441,6 +444,7 @@ body{font-family:'Rajdhani',sans-serif;background:#050810;color:#f0eadc;min-heig
             <div class="app-card" onclick="window.open('https://kitco.com','_blank')"><div class="app-icon-wrap"><i class="ti ti-coin"></i></div><div class="app-name">Kitco Gold</div><div class="app-type">Website</div></div>
             <div class="app-card" onclick="window.open('https://forexfactory.com','_blank')"><div class="app-icon-wrap"><i class="ti ti-currency-dollar"></i></div><div class="app-name">ForexFactory</div><div class="app-type">Website</div></div>
             <div class="app-card" onclick="navigate('ai',document.getElementById('sb-ai'))"><div class="app-icon-wrap"><i class="ti ti-brain"></i></div><div class="app-name">Ask Elio AI</div><div class="app-type">IA con Claude</div></div>
+            <div class="app-card" onclick="navigate('gold',document.getElementById('sb-gold'))"><div class="app-icon-wrap"><i class="ti ti-chart-candle"></i></div><div class="app-name">FW GOLD TERMINAL</div><div class="app-type">Centro de análisis XAUUSD</div></div>
             <div class="app-card" onclick="window.open('https://discord.gg/ZJJrSEjS','_blank')"><div class="app-icon-wrap"><i class="ti ti-brand-discord"></i></div><div class="app-name">Discord</div><div class="app-type">Comunidad</div></div>
 
           </div>
@@ -614,6 +618,62 @@ body{font-family:'Rajdhani',sans-serif;background:#050810;color:#f0eadc;min-heig
       </div>
 
 
+      <div id="view-gold" style="display:none;">
+        <div class="gold-terminal">
+          <div class="gold-head"><div><div class="panel-title">FW GOLD TERMINAL · XAUUSD</div><div class="gold-note">Oro spot · lectura de mercado con fuente y hora visibles</div></div><button onclick="refreshGoldTerminal()">Actualizar datos</button></div>
+          <div class="gold-metrics">
+            <div class="gold-panel"><div class="gold-label">Último precio</div><div class="gold-value" id="gold-price">—</div></div>
+            <div class="gold-panel"><div class="gold-label">Apertura proveedor</div><div class="gold-value" id="gold-open">—</div></div>
+            <div class="gold-panel"><div class="gold-label">Máximo proveedor</div><div class="gold-value" id="gold-high">—</div></div>
+            <div class="gold-panel"><div class="gold-label">Mínimo proveedor</div><div class="gold-value" id="gold-low">—</div></div>
+          </div>
+          <div class="gold-note" id="gold-status" role="status">Pulsa Actualizar datos para consultar Twelve Data.</div>
+          <div class="gold-panel gold-flow-panel">
+            <div class="gold-head"><div class="gold-label">Flujo de órdenes · GC / MGC</div><div class="gold-note">Burbujas desde <input id="gold-flow-threshold" type="number" min="1" step="1" value="100" aria-label="Umbral de contratos por intervalo" oninput="renderGoldOrderflow()" style="width:80px;background:#101827;color:#e8c84a;border:1px solid #526079;padding:5px"> contratos / intervalo</div></div>
+            <div style="margin:12px 0"><button onclick="refreshGoldOrderflow()">Consultar flujo histórico</button></div>
+            <div class="gold-note">Consulta manual: el proveedor puede cobrar por consumo. Cambiar el umbral solo recalcula los datos cargados.</div>
+            <div class="gold-note" id="gold-flow-status" role="status">Sin consulta de flujo. Pulsa Consultar flujo histórico para cargar datos.</div>
+            <div class="gold-note">Burbujas: verde = delta comprador · rojo = delta vendedor · amarillo = delta cero. El tamaño representa volumen total, incluido el volumen sin clasificar.</div>
+            <div class="gold-label" style="margin-top:14px">Precio y actividad de gran tamaño</div><div id="gold-flow-price"></div>
+            <div class="gold-label">Agresor</div><div id="gold-flow-aggressor"></div>
+            <div class="gold-label">Total · contratos</div><div id="gold-flow-total"></div>
+            <div class="gold-label">Delta · compras agresivas − ventas agresivas</div><div id="gold-flow-delta"></div>
+            <div class="gold-label">Delta acumulado · ventana cargada</div><div id="gold-flow-cvd"></div>
+            <div class="gold-note">El acumulado parte de cero al inicio de cada ventana cargada; no representa toda la sesión.</div>
+            <div class="gold-note" id="gold-flow-summary">Sin datos de operaciones.</div>
+            <div style="border-top:1px solid #253047;margin-top:18px;padding-top:16px">
+              <div class="gold-label">Volatilidad histórica · ventana cargada</div>
+              <div class="gold-metrics" style="margin:12px 0">
+                <div><div class="gold-label">Rango entre cierres · USD/oz</div><div class="gold-value" id="gold-vol-range">—</div></div>
+                <div><div class="gold-label">Cambio absoluto medio · USD/oz</div><div class="gold-value" id="gold-vol-move">—</div></div>
+                <div><div class="gold-label">σ de retornos · por intervalo</div><div class="gold-value" id="gold-vol-sigma">—</div></div>
+                <div><div class="gold-label">Volatilidad realizada · ventana</div><div class="gold-value" id="gold-vol-realized">—</div></div>
+              </div>
+              <div class="gold-note" id="gold-vol-status">Sin datos históricos para medir volatilidad.</div>
+              <div class="gold-note" id="gold-vol-quality">Esperando volumen clasificado y controles de cobertura.</div>
+              <div class="gold-note">Calculado con cierres de GC/MGC de la misma ventana que el delta. Rango = mayor cierre − menor cierre; movimiento medio = promedio de cambios absolutos consecutivos; σ = desviación estándar muestral de retornos logarítmicos, sin anualizar.</div>
+              <div class="gold-note" style="margin-top:8px">Mide cuánto varió el precio, no su dirección. No es ATR ni volatilidad actual; usa la estructura y el delta para estudiar la ventana. No fija entradas ni stops automáticamente.</div>
+              <details style="margin-top:12px;color:#a5adbc;font-size:13px;line-height:1.7">
+                <summary style="cursor:pointer;color:#e8c84a">Metodología y controles de datos</summary>
+                <p>Por cada intervalo, P es el último precio negociado. Solo se comparan cierres separados exactamente por la duración declarada; los saltos se excluyen de los cambios y retornos, sin rellenar precios.</p>
+                <p>Retorno: r = ln(P actual / P anterior). σ = 100 × √[Σ(r − media r)² / (n − 1)], con al menos dos retornos. Volatilidad realizada = 100 × √Σr² sobre los cambios válidos. Ninguna se anualiza ni pronostica el próximo movimiento; ventanas con distinta duración o cobertura no son directamente comparables.</p>
+                <p>Movimiento medio = Σ|P actual − P anterior| / n. El rango solo usa cierres: puede omitir máximos y mínimos dentro de cada minuto. Sin OHLC completo no se calcula ATR.</p>
+                <p>Delta = compras agresivas − ventas agresivas. CVD = suma del delta desde cero al comienzo de la ventana. Presión neta = 100 × delta total / (compras + ventas), entre −100% y +100%; no es una probabilidad. El volumen sin clasificar cuenta en el total y en el tamaño de las burbujas, pero se excluye del delta y de la presión.</p>
+                <p>El retraso y la fecha del dato aparecen arriba. La ventana histórica corta sirve para estudiar ese tramo, sin etiquetar un régimen alto/bajo de toda la sesión. GC/MGC son futuros y pueden diferir de XAUUSD spot; estas medidas no se trasladan automáticamente al precio de tu broker.</p>
+              </details>
+            </div>
+            <div class="gold-note">Burbujas = volumen por intervalo sobre el umbral, sin identificar al participante. Los futuros GC/MGC tienen un precio distinto al spot XAUUSD. La fórmula de “Q DELTA” de la referencia no está documentada; este panel calcula delta de volumen.</div>
+          </div>
+          <div class="gold-grid">
+            <div class="gold-panel"><div class="gold-label">Gráfico · TradingView XAUUSD</div><div class="gold-chart" id="gold-chart"></div><div class="gold-note">El gráfico usa el feed de TradingView; sus precios y horarios pueden diferir de Twelve Data y de tu broker.</div></div>
+            <div class="gold-terminal">
+              <div class="gold-panel"><div class="gold-label">Radar macro</div><div class="gold-note" id="gold-macro">Actualiza para ver los datos disponibles.</div><div style="margin-top:12px"><button onclick="navigate('ai',document.getElementById('sb-ai'))">Abrir ELIO IA</button></div></div>
+              <div class="gold-panel"><div class="gold-label">Mapa de niveles</div><div class="gold-note" id="gold-levels">Esperando datos. El rango mostrado pertenece al periodo del proveedor.</div><div class="gold-note" style="margin-top:10px">PDH/PDL, Asia y zonas D1/H4/H1 requieren series históricas verificadas.</div></div>
+              <div class="gold-panel"><div class="gold-label">Futuros y opciones · GC / MGC</div><div class="gold-note">Volumen, delta, open interest y gamma: sin conexión a datos autorizados. No se muestran cifras estimadas.</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
       <!-- ANACRUSA -->
       <div id="view-anacrusa" style="display:none;">
         <div class="panel-header">
@@ -1350,17 +1410,46 @@ async function deleteTradeDB(id) {
 function saveTrades() {}
 
 let chatHistory=[];
+let goldLoadedAt=0;
+function initGoldChart(){
+  const slot=document.getElementById('gold-chart');
+  if(!slot || slot.firstChild) return;
+  const frame=document.createElement('iframe');
+  frame.title='Gráfico XAUUSD de TradingView';
+  frame.loading='lazy';
+  frame.referrerPolicy='origin';
+  frame.src='https://s.tradingview.com/widgetembed/?symbol=OANDA%3AXAUUSD&interval=60&theme=dark&style=1&locale=es&hide_side_toolbar=0&allow_symbol_change=0';
+  slot.appendChild(frame);
+}
+async function refreshGoldTerminal(){
+  const status=document.getElementById('gold-status');
+  status.textContent='Consultando datos…';
+  try {
+    const response=await fetch('/api/market-data',{cache:'no-store'});
+    if(!response.ok) throw new Error('HTTP '+response.status);
+    const data=await response.json();
+    const fmt=v=>Number.isFinite(Number(v))&&v!==null&&v!==undefined?'$'+Number(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'—';
+    [['gold-price','xauusd'],['gold-open','xauusd_open'],['gold-high','xauusd_high'],['gold-low','xauusd_low']].forEach(([id,key])=>document.getElementById(id).textContent=fmt(data[key]));
+    const macro=[['US10Y',data.us10y,data.us10y_date,'%'],['Índice amplio USD (Fed)',data.usd_index_fed,data.usd_index_fed_date,''],['Tasa efectiva Fed',data.fed_rate,data.fed_rate_date,'%'],['IPC interanual',data.cpi_yoy,data.cpi_yoy_date,'%']].filter(([,v])=>v!==null&&v!==undefined&&v!==''&&Number.isFinite(Number(v)));
+    document.getElementById('gold-macro').textContent=macro.length?'FRED · '+macro.map(([k,v,date,unit])=>`${k}: ${v}${unit} (${date||'fecha no informada'})`).join(' · ')+'. Índice amplio USD distinto del DXY. DXY y US2Y pendientes de conexión.':'Datos FRED no disponibles en el proveedor actual. DXY y US2Y pendientes de conexión.';
+    document.getElementById('gold-levels').textContent=`Apertura: ${fmt(data.xauusd_open)} · Máximo: ${fmt(data.xauusd_high)} · Mínimo: ${fmt(data.xauusd_low)} · Cierre anterior: ${fmt(data.xauusd_close_prev)}. Verifica el periodo de la cotización antes de operar.`;
+    const stamp=data.xauusd_datetime?` · cotización ${data.xauusd_datetime} (zona horaria del proveedor)`:' · hora de la cotización no informada';
+    status.textContent=data.xauusd?`Twelve Data${stamp} · consulta ${new Date().toLocaleString('es-CL',{timeZone:'America/Santiago'})} (Chile)`:'Cotización XAUUSD no disponible. Revisa la conexión o la clave de Twelve Data.';
+    goldLoadedAt=Date.now();
+  } catch(e){status.textContent='No se pudieron cargar datos de mercado: '+e.message;}
+}
 function navigate(view,el){
   document.querySelectorAll('.sidebar-item').forEach(i=>i.classList.remove('active'));
   if(el)el.classList.add('active');
-  ['home','journal','calc','ai','fund','portfolio','signals','anacrusa'].forEach(v=>{
+  ['home','journal','calc','ai','fund','portfolio','signals','anacrusa','gold'].forEach(v=>{
     const el2=document.getElementById('view-'+v);
     if(el2) el2.style.display=v===view?'block':'none';
   });
-  const titles={home:'ELIOTFW CAPITAL — TRADING HUB v2.0',journal:'TRADING JOURNAL',calc:'CALCULADORA DE POSICIONES',ai:'ASK ELIO AI',fund:'FUNDAMENTALES — XAUUSD',portfolio:'PORTAFOLIO — P&L EN VIVO',signals:'SEÑALES DIARIAS — XAUUSD',anacrusa:'ANACRUSA — XAUUSD'};
+  const titles={home:'ELIOTFW CAPITAL — TRADING HUB v2.0',journal:'TRADING JOURNAL',calc:'CALCULADORA DE POSICIONES',ai:'ASK ELIO AI',fund:'FUNDAMENTALES — XAUUSD',portfolio:'PORTAFOLIO — P&L EN VIVO',signals:'SEÑALES DIARIAS — XAUUSD',anacrusa:'ANACRUSA — XAUUSD',gold:'FW GOLD TERMINAL — XAUUSD'};
   document.getElementById('topbar-title').textContent=titles[view]||view;
   if(view==='fund'){refreshFundamentals();setTimeout(initFundChart,300);}
   if(view==='anacrusa'){refreshAnacrusa();setTimeout(initAnacrusaChart,300);}
+  if(view==='gold'){initGoldChart();if(Date.now()-goldLoadedAt>60000)refreshGoldTerminal();}
   if(view==='ai'){setTimeout(()=>refreshMacroSnapshot().catch(()=>{}),150);}
   if(view==='portfolio'){loadPositions();fetchLivePrices();}
   if(view==='signals'){
@@ -2587,5 +2676,6 @@ function clearAnacrusaHistory(){
 }
 
 </script>
+<script src="/gold-orderflow.js"></script>
 </body>
 </html>
